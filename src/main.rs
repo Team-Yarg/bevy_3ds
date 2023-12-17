@@ -1,3 +1,5 @@
+use std::io::Write;
+use std::{fs::File, panic::PanicInfo};
 
 use bevy::{
     app::{App, Startup},
@@ -10,13 +12,22 @@ use bevy::{
     },
     DefaultPlugins,
 };
-use ctru::services::{gfx::Gfx, hid::{Hid, KeyPad}, apt::Apt};
+use ctru::services::{
+    self,
+    apt::Apt,
+    gfx::Gfx,
+    hid::{Hid, KeyPad},
+};
 
 mod shims;
 
 //use libc::c_void;
 
 fn main() {
+    std::panic::set_hook(Box::new(|info| {
+        let mut f = File::create("panics.log").unwrap();
+        write!(f, "{}", info).ok();
+    }));
     let mut hid = Hid::new().unwrap();
     let apt = Apt::new().unwrap();
     let gfx = Gfx::new().unwrap();

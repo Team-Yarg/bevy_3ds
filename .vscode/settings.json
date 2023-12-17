@@ -1,5 +1,5 @@
 {
-    "editor.formatOnSave": false,
+    "editor.formatOnSave": true,
     "rust-analyzer.check.overrideCommand": [
         "cargo",
         "3ds",
