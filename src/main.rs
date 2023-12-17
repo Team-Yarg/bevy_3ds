@@ -25,20 +25,19 @@ fn main() {
         //libc::open("".as_ptr(), 0);
         libc::getrandom(buf.as_mut_ptr() as *mut c_void, buf.len(), 0);
     }*/
-
-    /*let mut app = App::new();
-    app.add_plugins(DefaultPlugins);
-    app.add_systems(Startup, setup);*/
     let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());
-    println!("hello");
-    while apt.main_loop() {
-        gfx.wait_for_vblank();
-        hid.scan_input();
-        if hid.keys_down().contains(KeyPad::START) {
-            break;
+
+    let mut app = App::new();
+    app.set_runner(move |mut app| {
+        while apt.main_loop() {
+            //gfx.wait_for_vblank();
+            app.update();
         }
-    }
-    //app.run();
+    });
+    app.add_plugins(DefaultPlugins);
+    app.add_systems(Startup, setup);
+    println!("hello");
+    app.run();
 }
 
 fn setup(mut cmds: Commands) {
