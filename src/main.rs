@@ -10,22 +10,35 @@ use bevy::{
     },
     DefaultPlugins,
 };
+use ctru::services::{gfx::Gfx, hid::{Hid, KeyPad}, apt::Apt};
 
 mod shims;
 
 //use libc::c_void;
 
 fn main() {
+    let mut hid = Hid::new().unwrap();
+    let apt = Apt::new().unwrap();
+    let gfx = Gfx::new().unwrap();
     /*let mut buf = [0u8; 32];
     unsafe {
         //libc::open("".as_ptr(), 0);
         libc::getrandom(buf.as_mut_ptr() as *mut c_void, buf.len(), 0);
     }*/
 
-    let mut app = App::new();
+    /*let mut app = App::new();
     app.add_plugins(DefaultPlugins);
-    app.add_systems(Startup, setup);
-    app.run();
+    app.add_systems(Startup, setup);*/
+    let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());
+    println!("hello");
+    while apt.main_loop() {
+        gfx.wait_for_vblank();
+        hid.scan_input();
+        if hid.keys_down().contains(KeyPad::START) {
+            break;
+        }
+    }
+    //app.run();
 }
 
 fn setup(mut cmds: Commands) {
