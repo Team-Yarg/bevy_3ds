@@ -1,3 +1,11 @@
 {
-    "editor.formatOnSave": true
+    "editor.formatOnSave": false,
+    "rust-analyzer.check.overrideCommand": [
+        "cargo",
+        "3ds",
+        "clippy",
+        "--message-format=json-diagnostic-rendered-ansi",
+    ],
+    "rust-analyzer.cargo.target": "armv6k-nintendo-3ds",
+    "rust-analyzer.server.extraEnv": {}
 }
