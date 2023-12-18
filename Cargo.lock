@@ -327,7 +327,10 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "ctru-rs",
+ "indexmap 2.1.0",
  "libc",
+ "petgraph",
+ "pthread-3ds",
  "shim-3ds",
 ]
 
@@ -2338,7 +2341,7 @@ checksum = "1de09527cd2ea2c2d59fb6c2f8c1ab8c71709ed9d1b6d60b0e1c9fbb6fdcb33c"
 [[package]]
 name = "pthread-3ds"
 version = "0.1.0"
-source = "git+https://github.com/rust3ds/pthread-3ds.git#c885d8cda6d0c5b429b5db3a2408bf204fc1097e"
+source = "git+https://github.com/rust3ds/pthread-3ds#c885d8cda6d0c5b429b5db3a2408bf204fc1097e"
 dependencies = [
  "ctru-sys",
  "libc",

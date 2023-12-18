@@ -7,5 +7,6 @@
         "--message-format=json-diagnostic-rendered-ansi",
     ],
     "rust-analyzer.cargo.target": "armv6k-nintendo-3ds",
-    "rust-analyzer.server.extraEnv": {}
+    "rust-analyzer.server.extraEnv": {},
+    "rust-analyzer.showUnlinkedFileNotification": false
 }

@@ -1,6 +1,9 @@
+use std::alloc::Layout;
 use std::io::Write;
 use std::{fs::File, panic::PanicInfo};
 
+use bevy::ecs::schedule::{Schedule, ScheduleGraph};
+use bevy::utils::hashbrown::{HashMap, HashSet};
 use bevy::{
     app::{App, Startup},
     core_pipeline::core_2d::Camera2dBundle,
@@ -12,6 +15,7 @@ use bevy::{
     },
     DefaultPlugins,
 };
+#[cfg(target_os = "horizon")]
 use ctru::services::{
     self,
     apt::Apt,
@@ -19,23 +23,19 @@ use ctru::services::{
     hid::{Hid, KeyPad},
 };
 
+#[cfg(target_os = "horizon")]
 mod shims;
 
 //use libc::c_void;
 
-fn main() {
-    std::panic::set_hook(Box::new(|info| {
-        let mut f = File::create("panics.log").unwrap();
-        write!(f, "{}", info).ok();
-    }));
-    let mut hid = Hid::new().unwrap();
+#[cfg(target_os = "horizon")]
+fn ds_main() {
+    use std::{cell::Cell, hash::RandomState};
+
+    use indexmap::IndexMap;
+
     let apt = Apt::new().unwrap();
     let gfx = Gfx::new().unwrap();
-    /*let mut buf = [0u8; 32];
-    unsafe {
-        //libc::open("".as_ptr(), 0);
-        libc::getrandom(buf.as_mut_ptr() as *mut c_void, buf.len(), 0);
-    }*/
     let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());
 
     let mut app = App::new();
@@ -46,10 +46,79 @@ fn main() {
         }
     });
     app.add_plugins(DefaultPlugins);
+    //let mut g = UnGraphMap::<&str, i32>::new();
+    //
+    //
+    /*thread_local!(static KEYS: Cell<u32> = {
+        Cell::new(0)
+    });*/
+
+    /*thread_local!(static KEYS: u64 = {
+        10
+    });
+
+    KEYS.with(|keys| {
+        println!("keys: {keys:#?}");
+        /*let (k0, k1) = keys.get();
+        keys.set((k0.wrapping_add(1), k1));*/
+    });*/
+
+    //let mut m = Cell::<u128>::new(0);
+    //println!("keys: {m:#?}");
+    //let mut s = RandomState::new();
+    //let mut i = IndexMap::<&str, i32>::new();
+    //let mut v = Vec::with_capacity(0);
+    //let mut v = Vec::new();
+    //v.push(5);
+    //println!("v: {v:#?}");
+    //g.add_edge("x", "y", 5);
+    //let mut shed = ScheduleGraph::new();
+
+    //let mut m0 = HashMap::<i8, char>::new();
+    //let mut m = HashSet::<char>::new();
+    //shed.set_executor_kind(bevy::ecs::schedule::ExecutorKind::Simple);
+    //app.add_schedule(shed);
     app.add_systems(Startup, setup);
+    //app.add_systems(Startup, noop);
     println!("hello");
+
     app.run();
 }
+#[cfg(not(target_os = "horizon"))]
+fn ds_main() {
+    let mut app = App::empty();
+    let mut shed = ScheduleGraph::new();
+
+    let mut v = Vec::with_capacity(0);
+    //let mut v = Vec::new();
+    v.push(5);
+    println!("v: {v:#?}");
+}
+
+fn main() {
+    /*std::panic::set_hook(Box::new(|info| {
+        let mut f = File::create("panics.log").unwrap();
+        write!(f, "{}", info).ok();
+    }));*/
+
+    /*app.set_runner(move |mut app| {
+        while apt.main_loop() {
+            //gfx.wait_for_vblank();
+            app.update();
+        }
+    });*/
+    //app.add_plugins(DefaultPlugins);
+    //let mut m0 = HashMap::<i8, char>::new();
+    //let mut m = HashSet::<char>::new();
+    //shed.set_executor_kind(bevy::ecs::schedule::ExecutorKind::Simple);
+    //app.add_schedule(shed);
+    //app.add_systems(Startup, setup);
+    //app.add_systems(Startup, noop);
+    //app.run();
+    ds_main();
+}
+
+fn noop(mut cmds: Commands) {}
 
 fn setup(mut cmds: Commands) {
     cmds.spawn(Camera2dBundle::default());
