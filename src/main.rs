@@ -26,61 +26,43 @@ use ctru::services::{
 #[cfg(target_os = "horizon")]
 mod shims;
 
+#[cfg(target_os = "horizon")]
+mod plugin_3ds;
+
 //use libc::c_void;
 
 #[cfg(target_os = "horizon")]
 fn ds_main() {
     use std::{cell::Cell, hash::RandomState};
 
+    use bevy::{
+        asset::AssetPlugin, core_pipeline::CorePipelinePlugin, hierarchy::HierarchyPlugin,
+        render::texture::ImagePlugin, sprite::SpritePlugin, text::TextPlugin,
+        transform::TransformPlugin, ui::UiPlugin, MinimalPlugins,
+    };
     use indexmap::IndexMap;
 
-    let apt = Apt::new().unwrap();
+    use crate::plugin_3ds::Render3dsPlugin;
+
     let gfx = Gfx::new().unwrap();
     let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());
 
+    std::env::set_var("BEVY_ASSET_ROOT", "romfs://");
+
     let mut app = App::new();
-    app.set_runner(move |mut app| {
-        while apt.main_loop() {
-            //gfx.wait_for_vblank();
-            app.update();
-        }
-    });
-    app.add_plugins(DefaultPlugins);
-    //let mut g = UnGraphMap::<&str, i32>::new();
-    //
-    //
-    /*thread_local!(static KEYS: Cell<u32> = {
-        Cell::new(0)
-    });*/
-
-    /*thread_local!(static KEYS: u64 = {
-        10
-    });
-
-    KEYS.with(|keys| {
-        println!("keys: {keys:#?}");
-        /*let (k0, k1) = keys.get();
-        keys.set((k0.wrapping_add(1), k1));*/
-    });*/
-
-    //let mut m = Cell::<u128>::new(0);
-    //println!("keys: {m:#?}");
-    //let mut s = RandomState::new();
-    //let mut i = IndexMap::<&str, i32>::new();
-    //let mut v = Vec::with_capacity(0);
-    //let mut v = Vec::new();
-    //v.push(5);
-    //println!("v: {v:#?}");
-    //g.add_edge("x", "y", 5);
-    //let mut shed = ScheduleGraph::new();
-
-    //let mut m0 = HashMap::<i8, char>::new();
-    //let mut m = HashSet::<char>::new();
-    //shed.set_executor_kind(bevy::ecs::schedule::ExecutorKind::Simple);
-    //app.add_schedule(shed);
+    app.add_plugins(MinimalPlugins)
+        .add_plugins((TransformPlugin, HierarchyPlugin, bevy::input::InputPlugin))
+        .add_plugins(bevy::asset::AssetPlugin {
+            file_path: "romfs://".to_owned(),
+            processed_file_path: "res://".to_owned(),
+            watch_for_changes_override: None,
+            mode: bevy::asset::AssetMode::Unprocessed,
+        })
+        .add_plugins((SpritePlugin, TextPlugin, CorePipelinePlugin));
+    app.add_plugins(Render3dsPlugin)
+        .add_plugins(UiPlugin)
+        .add_plugins(ImagePlugin::default());
     app.add_systems(Startup, setup);
-    //app.add_systems(Startup, noop);
-    println!("hello");
 
     app.run();
 }
@@ -96,10 +78,10 @@ fn ds_main() {
 }
 
 fn main() {
-    /*std::panic::set_hook(Box::new(|info| {
+    std::panic::set_hook(Box::new(|info| {
         let mut f = File::create("panics.log").unwrap();
         write!(f, "{}", info).ok();
-    }));*/
+    }));
 
     /*app.set_runner(move |mut app| {
         while apt.main_loop() {
