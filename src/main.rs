@@ -36,9 +36,16 @@ fn ds_main() {
     use std::{cell::Cell, hash::RandomState};
 
     use bevy::{
-        asset::AssetPlugin, core_pipeline::CorePipelinePlugin, hierarchy::HierarchyPlugin,
-        render::texture::ImagePlugin, sprite::SpritePlugin, text::TextPlugin,
-        transform::TransformPlugin, ui::UiPlugin, MinimalPlugins,
+        asset::AssetPlugin,
+        core_pipeline::CorePipelinePlugin,
+        hierarchy::HierarchyPlugin,
+        render::{render_resource::RenderPipeline, texture::ImagePlugin},
+        sprite::SpritePlugin,
+        text::TextPlugin,
+        transform::TransformPlugin,
+        ui::UiPlugin,
+        window::{PrimaryWindow, Window, WindowPlugin, WindowResolution},
+        MinimalPlugins,
     };
     use indexmap::IndexMap;
 
@@ -59,10 +66,23 @@ fn ds_main() {
             mode: bevy::asset::AssetMode::Unprocessed,
         })
         .add_plugins(Render3dsPlugin)
-        .add_plugins((SpritePlugin, TextPlugin, CorePipelinePlugin));
-    app.add_plugins(UiPlugin)
-        .add_plugins(ImagePlugin::default());
+        .add_plugins(ImagePlugin::default())
+        .add_plugins(CorePipelinePlugin)
+        .add_plugins((
+            SpritePlugin,
+            TextPlugin,
+            WindowPlugin {
+                primary_window: Some(Window {
+                    resolution: WindowResolution::new(480., 240.),
+                    resizable: false,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        ));
+    app.add_plugins(UiPlugin);
     app.add_systems(Startup, setup);
+    println!("hello");
 
     app.run();
 }
