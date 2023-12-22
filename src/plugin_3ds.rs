@@ -86,7 +86,21 @@ fn init_render_app(parent: &mut App) {
     let mut app = App::empty();
     app.main_schedule_label = Render.intern();
     let mut base_shed = Render::base_schedule();
-    base_shed.configure_sets(RenderSet::PrepareAssets.run_if(|| false));
+    base_shed.configure_sets(
+        (
+            RenderSet::Queue,
+            RenderSet::QueueMeshes,
+            RenderSet::ManageViews,
+            RenderSet::ManageViewsFlush,
+            RenderSet::Prepare,
+            RenderSet::PrepareAssets,
+            RenderSet::PrepareResources,
+            RenderSet::PrepareResourcesFlush,
+            RenderSet::PrepareBindGroups,
+            RenderSet::PrepareFlush,
+        )
+            .run_if(|| false),
+    );
     app.add_schedule(extract_schedule)
         .add_schedule(base_shed)
         .init_resource::<bevy::render::render_graph::RenderGraph>()
