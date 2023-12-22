@@ -58,9 +58,9 @@ fn ds_main() {
             watch_for_changes_override: None,
             mode: bevy::asset::AssetMode::Unprocessed,
         })
+        .add_plugins(Render3dsPlugin)
         .add_plugins((SpritePlugin, TextPlugin, CorePipelinePlugin));
-    app.add_plugins(Render3dsPlugin)
-        .add_plugins(UiPlugin)
+    app.add_plugins(UiPlugin)
         .add_plugins(ImagePlugin::default());
     app.add_systems(Startup, setup);
 
