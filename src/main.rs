@@ -1,3 +1,5 @@
+#![feature(allocator_api)]
+
 use std::alloc::Layout;
 use std::io::Write;
 use std::{fs::File, panic::PanicInfo};
@@ -22,6 +24,12 @@ use ctru::services::{
     gfx::Gfx,
     hid::{Hid, KeyPad},
 };
+
+#[cfg(target_os = "horizon")]
+mod render;
+
+#[cfg(target_os = "horizon")]
+mod gpu_buffer;
 
 #[cfg(target_os = "horizon")]
 mod shims;

@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.12.1", default-features = false, features = ["bevy_ui", "bevy_asset"] }
+citro3d = { git = "https://github.com/rust3ds/citro3d-rs", version = "0.1.0" }
+citro3d-sys = { git = "https://github.com/rust3ds/citro3d-rs", version = "0.1.0" }
 #bevy = { version = "0.12.1", default-features = false }
 indexmap = "2.1.0"
 petgraph = "0.6.4"
