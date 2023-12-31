@@ -30,6 +30,7 @@ use ctru::{
     services::{apt::Apt, gfx::Gfx},
 };
 
+use super::prep_asset::RenderAssets;
 use super::{mesh, RenderSet3ds};
 
 struct AptRes(Apt);
@@ -168,6 +169,9 @@ fn render_ui(nodes: Res<ExtractedUiNodes>) {
     for (ent, node) in &nodes.uinodes {
         println!("node: {ent:#?}");
     }
+}
+fn render_meshes(meshes: Res<RenderAssets<Mesh>>) {
+    for (id, mesh) in meshes.iter() {}
 }
 
 fn render_system(world: &mut World) {

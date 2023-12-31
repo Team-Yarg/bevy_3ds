@@ -5,7 +5,7 @@ mod mesh;
 mod plugin;
 mod prep_asset;
 
-#[derive(SystemSet)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, SystemSet)]
 pub enum RenderSet3ds {
     PrepareAssets,
 }

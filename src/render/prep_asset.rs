@@ -12,6 +12,7 @@ use bevy::{
             Commands, Res, ResMut, Resource, StaticSystemParam, SystemParam, SystemParamItem,
         },
     },
+    prelude::*,
     render::{
         render_asset::{
             PrepareAssetError, PrepareNextFrameAssets, RenderAsset, RenderAssetDependency,
@@ -73,15 +74,57 @@ pub trait PrepareAsset: RenderAsset {
 #[derive(Resource)]
 pub struct RenderAssets<R: PrepareAsset>(HashMap<AssetId<R>, <R as PrepareAsset>::PreparedAsset>);
 
+impl<R: PrepareAsset> RenderAssets<R> {
+    pub fn get(&self, id: impl Into<AssetId<R>>) -> Option<&<R as PrepareAsset>::PreparedAsset> {
+        self.0.get(&id.into())
+    }
+
+    pub fn insert(&mut self, id: impl Into<AssetId<R>>, asset: <R as PrepareAsset>::PreparedAsset) {
+        self.0.insert(id.into(), asset);
+    }
+
+    pub fn remove(
+        &mut self,
+        id: impl Into<AssetId<R>>,
+    ) -> Option<<R as PrepareAsset>::PreparedAsset> {
+        self.0.remove(&id.into())
+    }
+    pub fn iter(&self) -> impl Iterator<Item = (AssetId<R>, &<R as PrepareAsset>::PreparedAsset)> {
+        self.0.iter().map(|(k, v)| (*k, v))
+    }
+}
+
+impl<R: PrepareAsset> Default for RenderAssets<R> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
 #[derive(Resource)]
 struct ExtractedAssets<R: PrepareAsset> {
     extracted: Vec<(AssetId<R>, R::ExtractedAsset)>,
     removed: Vec<AssetId<R>>,
 }
 
+impl<R: PrepareAsset> Default for ExtractedAssets<R> {
+    fn default() -> Self {
+        Self {
+            extracted: Default::default(),
+            removed: Default::default(),
+        }
+    }
+}
+
 #[derive(Resource)]
 struct PrepNextFrameAssets<R: PrepareAsset> {
     assets: Vec<(AssetId<R>, R::ExtractedAsset)>,
+}
+impl<R: PrepareAsset> Default for PrepNextFrameAssets<R> {
+    fn default() -> Self {
+        Self {
+            assets: Default::default(),
+        }
+    }
 }
 
 fn extract_render_asset<A: PrepareAsset>(
@@ -89,7 +132,7 @@ fn extract_render_asset<A: PrepareAsset>(
     mut events: Extract<EventReader<AssetEvent<A>>>,
     assets: Extract<Res<Assets<A>>>,
 ) {
-    let mut changed_assets = HashSet::default();
+    let mut changed_assets = HashSet::<AssetId<A>>::new();
     let mut removed = Vec::new();
     for event in events.read() {
         match event {
@@ -97,7 +140,7 @@ fn extract_render_asset<A: PrepareAsset>(
                 changed_assets.insert(*id);
             }
             AssetEvent::Removed { id } => {
-                changed_assets.remove(*id);
+                changed_assets.remove(&id);
                 removed.push(*id);
             }
             AssetEvent::LoadedWithDependencies { .. } => {
