@@ -132,6 +132,7 @@ fn extract_render_asset<A: PrepareAsset>(
     mut events: Extract<EventReader<AssetEvent<A>>>,
     assets: Extract<Res<Assets<A>>>,
 ) {
+    println!("extract render assets");
     let mut changed_assets = HashSet::<AssetId<A>>::new();
     let mut removed = Vec::new();
     for event in events.read() {
@@ -144,6 +145,7 @@ fn extract_render_asset<A: PrepareAsset>(
                 removed.push(*id);
             }
             AssetEvent::LoadedWithDependencies { .. } => {
+                todo!();
                 // TODO: handle this
             }
         }
@@ -161,7 +163,7 @@ fn extract_render_asset<A: PrepareAsset>(
         removed,
     });
 }
-pub fn prepare_assets<R: PrepareAsset>(
+fn prepare_assets<R: PrepareAsset>(
     mut extracted_assets: ResMut<ExtractedAssets<R>>,
     mut render_assets: ResMut<RenderAssets<R>>,
     mut prepare_next_frame: ResMut<PrepNextFrameAssets<R>>,

@@ -27,6 +27,7 @@ impl PrepareAsset for Mesh {
         <Self as PrepareAsset>::PreparedAsset,
         bevy::render::render_asset::PrepareAssetError<Self::ExtractedAsset>,
     > {
+        println!("prep asset 3ds");
         let vbo = mesh.get_vertex_buffer_data();
         let indecies = mesh
             .get_index_buffer_bytes()

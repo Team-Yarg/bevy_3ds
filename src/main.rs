@@ -4,7 +4,11 @@ use std::alloc::Layout;
 use std::io::Write;
 use std::{fs::File, panic::PanicInfo};
 
+use bevy::asset::{AssetServer, Assets};
 use bevy::ecs::schedule::{Schedule, ScheduleGraph};
+use bevy::ecs::system::{Res, ResMut};
+use bevy::render::mesh::Mesh;
+use bevy::sprite::SpriteBundle;
 use bevy::utils::hashbrown::{HashMap, HashSet};
 use bevy::{
     app::{App, Startup},
@@ -24,6 +28,12 @@ use ctru::services::{
     gfx::Gfx,
     hid::{Hid, KeyPad},
 };
+
+#[cfg(target_os = "horizon")]
+mod ui;
+
+#[cfg(target_os = "horizon")]
+mod sprites;
 
 #[cfg(target_os = "horizon")]
 mod render;
@@ -57,7 +67,7 @@ fn ds_main() {
     };
     use indexmap::IndexMap;
 
-    use crate::plugin_3ds::Render3dsPlugin;
+    use crate::render::Render3dsPlugin;
 
     let gfx = Gfx::new().unwrap();
     let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());
@@ -130,7 +140,24 @@ fn main() {
 
 fn noop(mut cmds: Commands) {}
 
-fn setup(mut cmds: Commands) {
+fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
+    let tri = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList)
+        .with_inserted_attribute(
+            Mesh::ATTRIBUTE_POSITION,
+            vec![
+                [0.0, 0.0, 0.0],
+                [1.0, 2.0, 0.0],
+                [2.0, 2.0, 0.0],
+                [1.0, 0.0, 0.0],
+            ],
+        )
+        .with_indices(Some(bevy::render::mesh::Indices::U32(vec![
+            0, 3, 1, 1, 3, 2,
+        ])));
+    cmds.spawn(SpriteBundle {
+        texture: assets.load("assets/peach.png"),
+        ..Default::default()
+    });
     cmds.spawn(Camera2dBundle::default());
     cmds.spawn(NodeBundle {
         style: Style {

@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use std::ops::Deref;
 
+use bevy::sprite::ExtractedSprites;
 use bevy::{
     app::{App, Plugin, SubApp},
     ecs::{
@@ -31,7 +32,7 @@ use ctru::{
 };
 
 use super::prep_asset::RenderAssets;
-use super::{mesh, RenderSet3ds};
+use super::{mesh, texture, GpuDevice, RenderSet3ds};
 
 struct AptRes(Apt);
 
@@ -58,6 +59,7 @@ impl Plugin for Render3dsPlugin {
         });
         app.init_asset::<Shader>()
             .init_asset_loader::<ShaderLoader>();
+        app.init_resource::<GpuDevice>();
         init_render_app(app);
         app.add_plugins((
             ValidParentCheckPlugin::<view::InheritedVisibility>::default(),
@@ -65,6 +67,8 @@ impl Plugin for Render3dsPlugin {
             ViewPlugin,
             MeshPlugin,
             mesh::MeshPlugin,
+            ImagePlugin,
+            texture::TexturePlugin,
             GlobalsPlugin,
             MorphPlugin,
         ));
@@ -115,7 +119,7 @@ fn init_render_app(parent: &mut App) {
             Render,
             (
                 apply_extract_commands.in_set(RenderSet::ExtractCommands),
-                (render_system, render_ui).in_set(RenderSet::Render),
+                (render_system, render_ui, render_meshes, render_sprites).in_set(RenderSet::Render),
                 World::clear_entities.in_set(RenderSet::Cleanup),
             ),
         );
@@ -165,17 +169,23 @@ fn extract(main_world: &mut World, render_app: &mut App) {
     main_world.insert_resource(ScratchMainWorld(inserted_world));
 }
 fn render_ui(nodes: Res<ExtractedUiNodes>) {
-    println!("render ui");
+    //println!("render ui");
     for (ent, node) in &nodes.uinodes {
         println!("node: {ent:#?}");
     }
 }
 fn render_meshes(meshes: Res<RenderAssets<Mesh>>) {
-    for (id, mesh) in meshes.iter() {}
+    println!("render meshes: {}", meshes.iter().count());
+    for (id, mesh) in meshes.iter() {
+        println!("render mesh: {id:#?}");
+    }
+}
+fn render_sprites(sprites: Res<ExtractedSprites>) {
+    println!("sprites: {}", sprites.sprites.len());
 }
 
 fn render_system(world: &mut World) {
-    println!("render");
+    //println!("render");
     draw_triangle();
 }
 

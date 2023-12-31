@@ -1,0 +1,51 @@
+; Sprite shader
+
+; Model matrix uniform - loaded by the renderer before rendering a given model
+.fvec modelMtx[4]
+
+; Projection matrix uniform - loaded by the renderer before any given render
+.fvec projMtx[4]
+
+; Constant vec4 of all ones, as floats
+.constf ones(1.0, 1.0, 1.0, 1.0)
+
+; Output registers, written to by the shader
+.out outpos pos
+.out outcol clr
+.out outtex texcoord0
+
+; Inputs (passed in through v0..=v15, with aliases for convenience)
+.alias inpos v0
+.alias incol v1
+.alias intex v2
+
+; The actual shader function
+.proc main
+    ; r0.xyz = xyz components of inpos
+    mov r0.xyz, inpos
+
+    ; r0.w = w component of ones constant (1.0)
+    mov r0.w, ones
+
+    ; r1 = modelMatrix * r0
+    ; perform matrix * vector multiplication via dot product instruction one component at a time
+    dp4 r1.x, modelMtx[0], r0
+    dp4 r1.y, modelMtx[1], r0
+    dp4 r1.z, modelMtx[2], r0
+    dp4 r1.w, modelMtx[3], r0
+
+    ; outpos = projectionMatrix * r1
+    dp4 outpos.x, projMtx[0], r1
+    dp4 outpos.y, projMtx[1], r1
+    dp4 outpos.z, projMtx[2], r1
+    dp4 outpos.w, projMtx[3], r1
+
+    ; outtex = intex
+    mov outtex, intex
+
+    ; outcol = incol
+    mov outcol, incol
+
+    ; Done!
+    end
+.end ; main
