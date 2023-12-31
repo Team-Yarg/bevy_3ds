@@ -1,25 +1,33 @@
-use std::marker::PhantomData;
+use std::{
+    collections::{HashMap, HashSet},
+    marker::PhantomData,
+};
 
 use bevy::{
     app::Plugin,
-    asset::{Asset, AssetId},
-    ecs::system::{ResMut, Resource, StaticSystemParam, SystemParam, SystemParamItem},
+    asset::{Asset, AssetEvent, AssetId, Assets},
+    ecs::{
+        event::EventReader,
+        system::{
+            Commands, Res, ResMut, Resource, StaticSystemParam, SystemParam, SystemParamItem,
+        },
+    },
     render::{
         render_asset::{
-            prepare_assets, ExtractedAssets, PrepareAssetError, PrepareNextFrameAssets,
-            RenderAsset, RenderAssetDependency, RenderAssetPlugin, RenderAssets,
+            PrepareAssetError, PrepareNextFrameAssets, RenderAsset, RenderAssetDependency,
+            RenderAssetPlugin,
         },
-        RenderApp,
+        Extract, ExtractSchedule, RenderApp,
     },
 };
 
 use super::RenderSet3ds;
 
-pub struct PrepareAssetsPlugin<R: RenderAsset, After: RenderAssetDependency + 'static = ()> {
+pub struct PrepareAssetsPlugin<R: PrepareAsset, After: RenderAssetDependency + 'static = ()> {
     p: PhantomData<fn() -> (R, After)>,
 }
 
-impl<R: RenderAsset, After: RenderAssetDependency + 'static> Default
+impl<R: PrepareAsset, After: RenderAssetDependency + 'static> Default
     for PrepareAssetsPlugin<R, After>
 {
     fn default() -> Self {
@@ -29,12 +37,17 @@ impl<R: RenderAsset, After: RenderAssetDependency + 'static> Default
     }
 }
 
-impl<R: RenderAsset, After: RenderAssetDependency + 'static> Plugin
+impl<R: PrepareAsset, After: RenderAssetDependency + 'static> Plugin
     for PrepareAssetsPlugin<R, After>
 {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins(RenderAssetPlugin::<R, After>::default());
         if let Ok(render) = app.get_sub_app_mut(RenderApp) {
+            render
+                .init_resource::<ExtractedAssets<R>>()
+                .init_resource::<RenderAssets<R>>()
+                .init_resource::<PrepNextFrameAssets<R>>()
+                .add_systems(ExtractSchedule, extract_render_asset::<R>);
+
             After::register_system(
                 render,
                 prepare_assets::<R>.in_set(RenderSet3ds::PrepareAssets),
@@ -45,23 +58,101 @@ impl<R: RenderAsset, After: RenderAssetDependency + 'static> Plugin
 
 /// 3ds gpu specific asset preparation trait
 pub trait PrepareAsset: RenderAsset {
+    type PreparedAsset: Send + Sync + 'static;
     type Param: SystemParam;
 
     fn prepare_asset_3ds(
         extracted: <Self as RenderAsset>::ExtractedAsset,
         param: &mut SystemParamItem<<Self as PrepareAsset>::Param>,
     ) -> Result<
-        <Self as RenderAsset>::PreparedAsset,
+        <Self as PrepareAsset>::PreparedAsset,
         PrepareAssetError<<Self as RenderAsset>::ExtractedAsset>,
     >;
 }
 
-/*
 #[derive(Resource)]
-struct PrepNextFrameAssets<R: RenderAsset> {
+pub struct RenderAssets<R: PrepareAsset>(HashMap<AssetId<R>, <R as PrepareAsset>::PreparedAsset>);
+
+#[derive(Resource)]
+struct ExtractedAssets<R: PrepareAsset> {
+    extracted: Vec<(AssetId<R>, R::ExtractedAsset)>,
+    removed: Vec<AssetId<R>>,
+}
+
+#[derive(Resource)]
+struct PrepNextFrameAssets<R: PrepareAsset> {
     assets: Vec<(AssetId<R>, R::ExtractedAsset)>,
 }
 
+fn extract_render_asset<A: PrepareAsset>(
+    mut commands: Commands,
+    mut events: Extract<EventReader<AssetEvent<A>>>,
+    assets: Extract<Res<Assets<A>>>,
+) {
+    let mut changed_assets = HashSet::default();
+    let mut removed = Vec::new();
+    for event in events.read() {
+        match event {
+            AssetEvent::Added { id } | AssetEvent::Modified { id } => {
+                changed_assets.insert(*id);
+            }
+            AssetEvent::Removed { id } => {
+                changed_assets.remove(*id);
+                removed.push(*id);
+            }
+            AssetEvent::LoadedWithDependencies { .. } => {
+                // TODO: handle this
+            }
+        }
+    }
+
+    let mut extracted_assets = Vec::new();
+    for id in changed_assets.drain() {
+        if let Some(asset) = assets.get(id) {
+            extracted_assets.push((id, asset.extract_asset()));
+        }
+    }
+
+    commands.insert_resource(ExtractedAssets {
+        extracted: extracted_assets,
+        removed,
+    });
+}
+pub fn prepare_assets<R: PrepareAsset>(
+    mut extracted_assets: ResMut<ExtractedAssets<R>>,
+    mut render_assets: ResMut<RenderAssets<R>>,
+    mut prepare_next_frame: ResMut<PrepNextFrameAssets<R>>,
+    param: StaticSystemParam<<R as PrepareAsset>::Param>,
+) {
+    let mut param = param.into_inner();
+    let queued_assets = std::mem::take(&mut prepare_next_frame.assets);
+    for (id, extracted_asset) in queued_assets {
+        match R::prepare_asset_3ds(extracted_asset, &mut param) {
+            Ok(prepared_asset) => {
+                render_assets.insert(id, prepared_asset);
+            }
+            Err(PrepareAssetError::RetryNextUpdate(extracted_asset)) => {
+                prepare_next_frame.assets.push((id, extracted_asset));
+            }
+        }
+    }
+
+    for removed in std::mem::take(&mut extracted_assets.removed) {
+        render_assets.remove(removed);
+    }
+
+    for (id, extracted_asset) in std::mem::take(&mut extracted_assets.extracted) {
+        match R::prepare_asset_3ds(extracted_asset, &mut param) {
+            Ok(prepared_asset) => {
+                render_assets.insert(id, prepared_asset);
+            }
+            Err(PrepareAssetError::RetryNextUpdate(extracted_asset)) => {
+                prepare_next_frame.assets.push((id, extracted_asset));
+            }
+        }
+    }
+}
+/*
 
 fn prepare_assets<R: RenderAsset>(
     mut extracted: ResMut<ExtractedAssets<R>>,
@@ -82,8 +173,8 @@ fn prepare_assets<R: RenderAsset>(
             }
         }
     };
-        let todo = std::mem::take(&mut next_frame.assets);
-        try_prepare_assets(todo);
+    let todo = std::mem::take(&mut next_frame.assets);
+    try_prepare_assets(todo);
 
     let mut param = param.into_inner();
     let todo = std::mem::take(&mut next_frame.assets);
@@ -98,5 +189,4 @@ fn prepare_assets<R: RenderAsset>(
         }
     }
 }
-
 */

@@ -30,7 +30,7 @@ use ctru::{
     services::{apt::Apt, gfx::Gfx},
 };
 
-use super::RenderSet3ds;
+use super::{mesh, RenderSet3ds};
 
 struct AptRes(Apt);
 
@@ -63,6 +63,7 @@ impl Plugin for Render3dsPlugin {
             CameraPlugin,
             ViewPlugin,
             MeshPlugin,
+            mesh::MeshPlugin,
             GlobalsPlugin,
             MorphPlugin,
         ));

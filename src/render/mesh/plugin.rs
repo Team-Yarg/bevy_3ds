@@ -1,9 +1,14 @@
-use bevy::app::Plugin;
+use bevy::{
+    app::Plugin,
+    render::{mesh::Mesh, texture::Image},
+};
 
-pub struct MeshExtractPlugin;
+use crate::render::prep_asset::PrepareAssetsPlugin;
 
-impl Plugin for MeshExtractPlugin {
+pub struct MeshPlugin;
+
+impl Plugin for MeshPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        todo!()
+        app.add_plugins(PrepareAssetsPlugin::<Mesh, Image>::default());
     }
 }

@@ -1,4 +1,7 @@
-use bevy::{render::{mesh::Mesh, render_asset::RenderAsset, render_resource::IndexFormat}, asset::Asset};
+use bevy::{
+    asset::Asset,
+    render::{mesh::Mesh, render_asset::RenderAsset, render_resource::IndexFormat},
+};
 use ctru::linear::LinearAllocator;
 
 use crate::gpu_buffer::LinearBuffer;
@@ -8,26 +11,20 @@ use self::gpu::{BufKind, GpuMesh};
 use super::prep_asset::PrepareAsset;
 
 pub mod gpu;
-pub mod plugin;
+mod plugin;
 pub mod systems;
 
-#[derive(Asset)]
-struct GpuMeshProxy(Mesh);
+pub use plugin::MeshPlugin;
 
-impl RenderAsset for GpuMeshProxy {
-    type ExtractedAsset = Mesh;
+impl PrepareAsset for Mesh {
     type PreparedAsset = GpuMesh;
     type Param = ();
 
-    fn extract_asset(&self) -> Self::ExtractedAsset {
-        self.0.clone()
-    }
-
-    fn prepare_asset(
+    fn prepare_asset_3ds(
         mesh: Self::ExtractedAsset,
-        param: &mut bevy::ecs::system::SystemParamItem<Self::Param>,
+        param: &mut bevy::ecs::system::SystemParamItem<<Self as PrepareAsset>::Param>,
     ) -> Result<
-        Self::PreparedAsset,
+        <Self as PrepareAsset>::PreparedAsset,
         bevy::render::render_asset::PrepareAssetError<Self::ExtractedAsset>,
     > {
         let vbo = mesh.get_vertex_buffer_data();
@@ -52,6 +49,5 @@ impl RenderAsset for GpuMeshProxy {
             indices: indecies,
             prim_kind: mesh.primitive_topology(),
         })
-        unimplemented!()
     }
 }
