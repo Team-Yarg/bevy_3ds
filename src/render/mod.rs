@@ -5,9 +5,10 @@ use bevy::ecs::{schedule::SystemSet, system::Resource};
 mod extract;
 mod mesh;
 pub mod pass;
-mod pipeline;
+pub mod pipeline;
 mod plugin;
 mod prep_asset;
+pub mod shader;
 mod texture;
 
 use citro3d::buffer::{self, Primitive};

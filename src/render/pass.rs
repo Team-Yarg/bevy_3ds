@@ -1,7 +1,7 @@
 use std::{error::Error, marker::PhantomData};
 
 use bevy::ecs::{
-    query::ROQueryItem,
+    query::{ROQueryItem, ReadOnlyWorldQuery},
     system::{SystemParam, SystemParamItem},
 };
 use citro3d::{buffer::Primitive, shader::Program};
@@ -87,11 +87,11 @@ pub enum RenderError {
 
 pub trait RenderCommand {
     type Param: SystemParam;
-    type ItemData: ReadOnlyQueryData;
+    type ItemData: ReadOnlyWorldQuery;
 
-    fn render<'w>(
+    fn render<'w, 'f, 'g>(
         entity: ROQueryItem<'w, Self::ItemData>,
-        param: &SystemParamItem<'w, '_, Self::Param>,
-        pass: &mut RenderPass,
+        param: &SystemParamItem<'w, 'f, Self::Param>,
+        pass: &'f mut RenderPass<'g>,
     ) -> Result<(), RenderError>;
 }

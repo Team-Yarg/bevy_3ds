@@ -31,8 +31,9 @@ use ctru::{
     services::{apt::Apt, gfx::Gfx},
 };
 
+use super::pass::RenderPass;
 use super::prep_asset::RenderAssets;
-use super::{mesh, texture, GpuDevice, RenderSet3ds};
+use super::{mesh, shader, texture, GpuDevice, RenderSet3ds};
 
 struct AptRes(Apt);
 
@@ -71,6 +72,7 @@ impl Plugin for Render3dsPlugin {
             texture::TexturePlugin,
             GlobalsPlugin,
             MorphPlugin,
+            shader::PicaShaderPlugin,
         ));
     }
 }
@@ -198,4 +200,4 @@ fn apply_extract_commands(render_world: &mut World) {
     });
 }
 
-fn draw_triangle() {}
+fn draw_triangle(mut gpu: ResMut<GpuDevice>) {}

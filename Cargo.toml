@@ -12,9 +12,11 @@ citro3d-sys = { git = "https://github.com/rust3ds/citro3d-rs", version = "0.1.0"
 #bevy = { version = "0.12.1", default-features = false }
 indexmap = "2.1.0"
 petgraph = "0.6.4"
+thiserror = "1.0.56"
 
 [target.'cfg(target_os = "horizon")'.dependencies]
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
+ctru-sys = { git = "https://github.com/rust3ds/ctru-rs" }
 libc = "0.2.151"
 #ctru-sys = { git = "https://github.com/rust3ds/ctru-rs", version = "0.5.0" }
 #libc = { version = "0.2.151", features = ["std"] }

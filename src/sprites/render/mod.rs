@@ -1,7 +1,7 @@
 use std::ops::Add;
 
 use bevy::{
-    asset::AssetId,
+    asset::{AssetId, AssetServer},
     ecs::{
         component::Component,
         system::{
@@ -13,11 +13,15 @@ use bevy::{
     render::texture::Image,
     sprite::{ExtractedSprite, ExtractedSprites},
 };
-use citro3d::{attrib::Register, buffer, math::Matrix4};
+use citro3d::{attrib::Register, buffer, macros::include_shader, math::Matrix4};
 
 use crate::{
     gpu_buffer::LinearBuffer,
-    render::{pass::RenderCommand, GpuDevice, RenderAssets},
+    render::{
+        pass::{RenderCommand, RenderPass},
+        pipeline::{RenderPipelineDescriptor, VertexState},
+        GpuDevice, RenderAssets,
+    },
 };
 
 /// Holds all the rendering information for every sprite in this pass
@@ -105,6 +109,41 @@ fn prepare_sprites(
         cmds.spawn(batch);
     }
 }
+//const SHADER_BYTES: &[u8] = include_shader!("./sprite.pica");
+
+fn draw_triangle(mut gpu: ResMut<GpuDevice>, assets: Res<AssetServer>) {
+    let shader = assets.load("./sprite.pica");
+    let mut p = RenderPass::new(gpu.into_inner());
+    let verts = [
+        Vertex {
+            pos: Vec3::new(-0.5, 0.5, 0.0),
+            colour: Vec3::new(0.0, 0.0, 0.0),
+            uv: Vec2::new(0., 0.),
+        },
+        Vertex {
+            pos: Vec3::new(-0.5, -0.5, 0.0),
+            colour: Vec3::new(0.0, 0.0, 0.0),
+            uv: Vec2::new(0., 0.),
+        },
+        Vertex {
+            pos: Vec3::new(0.5, -0.5, 0.0),
+            colour: Vec3::new(0.0, 0.0, 0.0),
+            uv: Vec2::new(0., 0.),
+        },
+        Vertex {
+            pos: Vec3::new(0.5, 0.5, 0.0),
+            colour: Vec3::new(0.0, 0.0, 0.0),
+            uv: Vec2::new(0., 0.),
+        },
+    ];
+    p.set_pipeline(RenderPipelineDescriptor {
+        label: Some("triangle"),
+        vertex: VertexState {
+            shader: &shader,
+            entry_point: 0,
+        },
+    })
+}
 
 pub struct DrawSprites;
 
@@ -112,11 +151,15 @@ impl RenderCommand for DrawSprites {
     type Param = ();
     type ItemData = Read<SpriteBatch>;
 
-    fn render<'w>(
+    fn render<'w, 'f, 'g>(
         entity: bevy::ecs::query::ROQueryItem<'w, Self::ItemData>,
-        param: &bevy::ecs::system::SystemParamItem<'w, '_, Self::Param>,
-        pass: &mut crate::render::pass::RenderPass,
+        param: &bevy::ecs::system::SystemParamItem<'w, 'f, Self::Param>,
+        pass: &'f mut crate::render::pass::RenderPass<'g>,
     ) -> Result<(), crate::render::pass::RenderError> {
-        todo!()
+        for ent in entity {
+            let ent: &SpriteBatch = ent;
+            for sprite in &ent.sprites {}
+        }
+        Ok(())
     }
 }
