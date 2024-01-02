@@ -67,7 +67,7 @@ impl Plugin for Render3dsPlugin {
             ViewPlugin,
             MeshPlugin,
             mesh::MeshPlugin,
-            ImagePlugin,
+            ImagePlugin::default(),
             texture::TexturePlugin,
             GlobalsPlugin,
             MorphPlugin,
