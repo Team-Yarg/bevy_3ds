@@ -11,6 +11,7 @@ citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 citro3d-sys = { git = "https://github.com/rust3ds/citro3d-rs", version = "0.1.0" }
 #bevy = { version = "0.12.1", default-features = false }
 indexmap = "2.1.0"
+lazy_static = "1.4.0"
 petgraph = "0.6.4"
 thiserror = "1.0.56"
 

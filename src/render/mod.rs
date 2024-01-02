@@ -84,7 +84,7 @@ pub struct GpuDevice {
 }
 impl Default for GpuDevice {
     fn default() -> Self {
-        let buf_info: BufferState = Default::default();
+        let mut buf_info: BufferState = Default::default();
         let instance = citro3d::Instance::new().unwrap();
         unsafe {
             citro3d_sys::C3D_SetBufInfo(&mut buf_info.0);

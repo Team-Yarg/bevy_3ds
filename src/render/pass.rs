@@ -19,10 +19,10 @@ use super::{
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
 pub struct RenderPass<'g> {
-    gpu: &'g GpuDevice,
+    gpu: &'g mut GpuDevice,
 }
 impl<'g> RenderPass<'g> {
-    pub fn new(gpu: &'g GpuDevice) -> Self {
+    pub fn new(gpu: &'g mut GpuDevice) -> Self {
         Self { gpu }
     }
 

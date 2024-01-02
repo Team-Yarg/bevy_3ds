@@ -14,6 +14,7 @@ use bevy::{
     sprite::{ExtractedSprite, ExtractedSprites},
 };
 use citro3d::{attrib::Register, buffer, macros::include_shader, math::Matrix4};
+use lazy_static::lazy_static;
 
 use crate::{
     gpu_buffer::LinearBuffer,
@@ -61,7 +62,7 @@ struct SpriteBatch {
 }
 
 #[derive(Resource)]
-struct SpriteBatches {
+pub struct SpriteBatches {
     batches: Vec<SpriteBatch>,
 }
 
@@ -111,8 +112,11 @@ fn prepare_sprites(
     }
 }
 const SHADER_BYTES: &[u8] = include_shader!("./sprite.pica");
-static SPRITE_SHADER: PicaShader =
-    PicaShader::load_from_bytes(SHADER_BYTES).expect("failed to load sprite shader");
+
+lazy_static! {
+    static ref SPRITE_SHADER: PicaShader =
+        PicaShader::load_from_bytes(SHADER_BYTES).expect("failed to load sprite shader");
+}
 
 fn draw_triangle(p: &mut RenderPass) {
     let verts = LinearBuffer::new(&[
@@ -144,7 +148,8 @@ fn draw_triangle(p: &mut RenderPass) {
             entry_point: 0,
             attrs: VertexAttrs::from_citro3d(Vertex::attr_info()),
         },
-    });
+    })
+    .expect("failed to set triangle pipeline");
     let vbo = p
         .add_vertex_buffer(&verts)
         .expect("failed to set vertex buffer");

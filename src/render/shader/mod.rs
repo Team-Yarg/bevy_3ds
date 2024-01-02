@@ -26,7 +26,7 @@ impl PicaShader {
             .map_err(|e| PicaShaderLoadError::ShaderParse(e.to_string()))?;
         Ok(Self(shader))
     }
-    pub fn entry_point(&mut self, index: usize) -> Option<Entrypoint> {
+    pub fn entry_point(&self, index: usize) -> Option<Entrypoint> {
         self.0.get(index)
     }
 }

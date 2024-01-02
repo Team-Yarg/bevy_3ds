@@ -331,6 +331,7 @@ dependencies = [
  "ctru-rs",
  "ctru-sys",
  "indexmap 2.1.0",
+ "lazy_static",
  "libc",
  "petgraph",
  "pthread-3ds",
