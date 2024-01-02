@@ -1,13 +1,19 @@
 use std::{error::Error, marker::PhantomData};
 
-use bevy::ecs::{
-    query::{ROQueryItem, ReadOnlyWorldQuery},
-    system::{SystemParam, SystemParamItem},
+use bevy::{
+    asset::Handle,
+    ecs::{
+        query::{ROQueryItem, ReadOnlyWorldQuery},
+        system::{SystemParam, SystemParamItem},
+    },
 };
 use citro3d::{buffer::Primitive, shader::Program};
 
+use crate::gpu_buffer::LinearBuffer;
+
 use super::{
     pipeline::{RenderPipelineDescriptor, ShaderLib, VertexAttrs},
+    shader::PicaShader,
     GpuDevice, VboSlice,
 };
 type Result<T, E = RenderError> = std::result::Result<T, E>;
@@ -22,15 +28,14 @@ impl<'g> RenderPass<'g> {
 
     fn set_vertex_shader<'f>(
         &'f mut self,
-        shader: &'f ShaderLib,
+        shader: &'f PicaShader,
         entry_point: usize,
     ) -> Result<()> {
         let prog = Program::new(
             shader
-                .get(entry_point)
-                .ok_or(RenderError::InvalidEntryPoint(entry_point))?,
-        )
-        .map_err(|e| e.into())?;
+                .entry_point(entry_point)
+                .ok_or(RenderError::InvalidEntryPoint { index: entry_point })?,
+        )?;
         // Safety: The lifetime bounds on this method prevent it going out of frame
         unsafe {
             self.gpu.set_shader(&prog);
@@ -44,6 +49,7 @@ impl<'g> RenderPass<'g> {
     ) -> Result<()> {
         let mut act = move || {
             self.set_vertex_shader(pl.vertex.shader, pl.vertex.entry_point)?;
+            self.gpu.set_attr_info(&pl.vertex.attrs);
             Ok(())
         };
         act().map_err(|e| RenderError::PipelineError {
@@ -51,15 +57,9 @@ impl<'g> RenderPass<'g> {
             error: e,
         })
     }
-    pub fn add_vertex_buffer<'f, T>(
-        &'f mut self,
-        verts: &'f [T],
-        attrs: &'f VertexAttrs,
-    ) -> Result<VboSlice> {
-        unsafe {
-            self.gpu.add_vertex_buffer(verts, attrs)?;
-        }
-        Ok(())
+    pub fn add_vertex_buffer<'f, T>(&'f mut self, verts: &'f LinearBuffer<T>) -> Result<VboSlice> {
+        let slice = unsafe { self.gpu.add_vertex_buffer(verts)? };
+        Ok(slice)
     }
     pub fn draw<'f>(&mut self, verts: &VboSlice, prim: Primitive) {
         unsafe {
@@ -86,12 +86,12 @@ pub enum RenderError {
 }
 
 pub trait RenderCommand {
-    type Param: SystemParam;
-    type ItemData: ReadOnlyWorldQuery;
+    type Param<'w, 's>: SystemParam;
+    type ItemData<'w, 's>: SystemParam;
 
     fn render<'w, 'f, 'g>(
-        entity: ROQueryItem<'w, Self::ItemData>,
-        param: &SystemParamItem<'w, 'f, Self::Param>,
+        entity: SystemParamItem<'w, 'f, Self::ItemData<'w, 'f>>,
+        param: &SystemParamItem<'w, 'f, Self::Param<'w, 'f>>,
         pass: &'f mut RenderPass<'g>,
     ) -> Result<(), RenderError>;
 }

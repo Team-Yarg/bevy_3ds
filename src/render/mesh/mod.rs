@@ -38,14 +38,14 @@ impl PrepareAsset for Mesh {
                     "can't use non-u32 index format"
                 );
                 BufKind::Elements {
-                    index_buf: idx.to_vec_in(LinearAllocator),
+                    index_buf: LinearBuffer::new(&idx),
                     nb: mesh.indices().unwrap().len() as u32,
                 }
             })
             .unwrap_or(BufKind::Array);
 
         Ok(GpuMesh {
-            vert_buf: vbo.as_slice().to_vec_in(LinearAllocator),
+            vert_buf: LinearBuffer::new(vbo.as_slice()),
             nb_verts: mesh.count_vertices() as u32,
             indices: indecies,
             prim_kind: mesh.primitive_topology(),

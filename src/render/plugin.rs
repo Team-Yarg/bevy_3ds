@@ -188,7 +188,6 @@ fn render_sprites(sprites: Res<ExtractedSprites>) {
 
 fn render_system(world: &mut World) {
     //println!("render");
-    draw_triangle();
 }
 
 fn apply_extract_commands(render_world: &mut World) {
@@ -199,5 +198,3 @@ fn apply_extract_commands(render_world: &mut World) {
             .apply_deferred(render_world);
     });
 }
-
-fn draw_triangle(mut gpu: ResMut<GpuDevice>) {}
