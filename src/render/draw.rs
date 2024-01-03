@@ -60,7 +60,7 @@ pub struct DrawCommands {
     inner: RwLock<DrawCommandsInner>,
 }
 impl DrawCommands {
-    pub fn run(&mut self, world: &World, pass: &mut RenderPass) -> Result<(), RenderError> {
+    pub fn run(&self, world: &World, pass: &mut RenderPass) -> Result<(), RenderError> {
         let mut cmds = self.inner.write().unwrap();
         for act in cmds.commands.iter_mut() {
             act.draw(world, pass)?;

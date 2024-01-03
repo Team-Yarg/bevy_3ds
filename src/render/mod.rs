@@ -1,4 +1,4 @@
-use std::{mem::MaybeUninit, ops::Range};
+use std::{mem::MaybeUninit, ops::Range, sync::Mutex};
 
 use bevy::ecs::{schedule::SystemSet, system::Resource};
 
@@ -79,35 +79,35 @@ pub struct VboSlice {
 
 #[derive(Resource)]
 pub struct GpuDevice {
-    instance: citro3d::Instance,
+    instance: Mutex<citro3d::Instance>,
     /// this is set to the global buf info for the instance
-    buf_info: BufferState,
+    buf_info: Mutex<BufferState>,
 }
 impl Default for GpuDevice {
     fn default() -> Self {
-        let mut buf_info: BufferState = Default::default();
-        let instance = citro3d::Instance::new().unwrap();
+        let mut buf_info = BufferState::default();
+        let instance = Mutex::new(citro3d::Instance::new().unwrap());
         unsafe {
             citro3d_sys::C3D_SetBufInfo(&mut buf_info.0);
         };
-        Self { instance, buf_info }
+        Self {
+            instance,
+            buf_info: Mutex::new(buf_info),
+        }
     }
 }
 impl GpuDevice {
-    pub fn raw(&self) -> &citro3d::Instance {
-        &self.instance
-    }
     /// set the shader program to use for subsequent draw calls
     ///
     /// # Safety
     /// If the shader is drop'd before the frame ends then it will result in a use-after-free
-    pub unsafe fn set_shader(&mut self, shader: &citro3d::shader::Program) {
-        self.instance.bind_program(shader);
+    pub unsafe fn set_shader(&self, shader: &citro3d::shader::Program) {
+        self.instance.lock().unwrap().bind_program(shader);
     }
 
     /// Set the attribute info for subsequent draw calls
-    pub fn set_attr_info(&mut self, attr: &VertexAttrs) {
-        self.instance.set_attr_info(&attr.0);
+    pub fn set_attr_info(&self, attr: &VertexAttrs) {
+        self.instance.lock().unwrap().set_attr_info(&attr.0);
     }
 
     /// Set the vertex buffer to use
@@ -115,12 +115,13 @@ impl GpuDevice {
     /// # Safety
     /// If `verts` goes out of scope before the frame ends it will result in a use-after-free by the gpu
     pub unsafe fn add_vertex_buffer<T>(
-        &mut self,
+        &self,
         verts: &LinearBuffer<T>,
     ) -> citro3d::Result<VboSlice> {
-        self.buf_info.add(verts, &self.instance.attr_info().expect("call to add_vertex_buffer without setting attribute info, did you forget to set the pipeline?"))
+        self.buf_info.lock().unwrap().add(verts, &self.instance.lock().unwrap().attr_info().expect("call to add_vertex_buffer without setting attribute info, did you forget to set the pipeline?"))
     }
-    pub unsafe fn draw(&mut self, prim: Primitive, verts: &VboSlice) {
+    pub unsafe fn draw(&self, prim: Primitive, verts: &VboSlice) {
+        let _l = self.instance.lock().unwrap();
         unsafe {
             citro3d_sys::C3D_DrawArrays(
                 prim as ctru_sys::GPU_Primitive_t,

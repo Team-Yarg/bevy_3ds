@@ -19,10 +19,10 @@ use super::{
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
 pub struct RenderPass<'g> {
-    gpu: &'g mut GpuDevice,
+    gpu: &'g GpuDevice,
 }
 impl<'g> RenderPass<'g> {
-    pub fn new(gpu: &'g mut GpuDevice) -> Self {
+    pub fn new(gpu: &'g GpuDevice) -> Self {
         unsafe {
             citro3d_sys::C3D_FrameBegin(citro3d_sys::C3D_FRAME_SYNCDRAW.try_into().unwrap());
         }

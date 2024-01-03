@@ -196,13 +196,11 @@ fn render_sprites(sprites: Res<ExtractedSprites>) {
     println!("sprites: {}", sprites.sprites.len());
 }
 
-fn render_system(
-    world: &mut World,
-) {
+fn render_system(world: &World) {
     //println!("render");
-    let gpu = world.resource_mut::<GpuDevice>();
-    let commands = world.resource_mut::<DrawCommands>();
-    let mut pass = RenderPass::new(&mut gpu);
+    let gpu = world.resource::<GpuDevice>();
+    let commands = world.resource::<DrawCommands>();
+    let mut pass = RenderPass::new(&gpu);
     commands.run(world, &mut pass);
 }
 
