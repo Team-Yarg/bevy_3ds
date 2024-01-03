@@ -7,7 +7,7 @@ use bevy::{
         system::{SystemParam, SystemParamItem},
     },
 };
-use citro3d::{buffer::Primitive, shader::Program};
+use citro3d::{buffer::Primitive, shader::Program, uniform::Index};
 
 use crate::gpu_buffer::LinearBuffer;
 
@@ -63,6 +63,13 @@ impl<'g> RenderPass<'g> {
     pub fn add_vertex_buffer<'f, T>(&'f mut self, verts: &'f LinearBuffer<T>) -> Result<VboSlice> {
         let slice = unsafe { self.gpu.add_vertex_buffer(verts)? };
         Ok(slice)
+    }
+    pub fn bind_vertex_uniform(&mut self, index: Index, uni: impl citro3d::uniform::Uniform) {
+        self.gpu
+            .instance
+            .lock()
+            .unwrap()
+            .bind_vertex_uniform(index, uni);
     }
     pub fn draw<'f>(&mut self, verts: &VboSlice, prim: Primitive) {
         unsafe {

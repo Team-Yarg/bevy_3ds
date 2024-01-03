@@ -4,7 +4,7 @@ use bevy::{
     ecs::system::Resource,
     reflect::TypePath,
 };
-use citro3d::shader::Entrypoint;
+use citro3d::{shader::Entrypoint, uniform::Uniform};
 
 use super::{pipeline::ShaderLib, prep_asset::PrepareAsset};
 
@@ -28,6 +28,9 @@ impl PicaShader {
     }
     pub fn entry_point(&self, index: usize) -> Option<Entrypoint> {
         self.0.get(index)
+    }
+    pub fn get_uniform(&self, name: &str) -> Option<citro3d::uniform::Index> {
+        self.0.get_uniform(name)
     }
 }
 

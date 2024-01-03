@@ -1149,7 +1149,7 @@ checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 [[package]]
 name = "citro3d"
 version = "0.1.0"
-source = "git+https://github.com/Team-Yarg/citro3d-rs#93c772fa48cd97fa904c7c65b6bf9067cee9ece9"
+source = "git+https://github.com/Team-Yarg/citro3d-rs#d2f2067ad81faeeedf385a5494b286eb5e46eedc"
 dependencies = [
  "bitflags 1.3.2",
  "bytemuck",
@@ -1165,7 +1165,7 @@ dependencies = [
 [[package]]
 name = "citro3d-macros"
 version = "0.1.0"
-source = "git+https://github.com/Team-Yarg/citro3d-rs#93c772fa48cd97fa904c7c65b6bf9067cee9ece9"
+source = "git+https://github.com/Team-Yarg/citro3d-rs#d2f2067ad81faeeedf385a5494b286eb5e46eedc"
 dependencies = [
  "litrs",
  "quote",
@@ -1330,7 +1330,7 @@ dependencies = [
 [[package]]
 name = "ctru-rs"
 version = "0.7.1"
-source = "git+https://github.com/rust3ds/ctru-rs#4c0ebcd60771a1e759940d76c9e8bc8f9197d543"
+source = "git+https://github.com/rust3ds/ctru-rs#157824ad8b6d3d55b5a4e652166be0a70cc5e2c2"
 dependencies = [
  "bitflags 2.4.1",
  "cfg-if",
@@ -1346,7 +1346,7 @@ dependencies = [
 [[package]]
 name = "ctru-sys"
 version = "0.5.0"
-source = "git+https://github.com/rust3ds/ctru-rs#4c0ebcd60771a1e759940d76c9e8bc8f9197d543"
+source = "git+https://github.com/rust3ds/ctru-rs#157824ad8b6d3d55b5a4e652166be0a70cc5e2c2"
 dependencies = [
  "bindgen 0.65.1",
  "cc",

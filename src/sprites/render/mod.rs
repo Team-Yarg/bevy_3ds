@@ -10,10 +10,15 @@ use bevy::{
         },
     },
     math::{Mat4, Vec2, Vec3, Vec4},
-    render::{render_resource::VertexAttribute, texture::Image},
+    render::{render_resource::VertexAttribute, texture::Image, view},
     sprite::{ExtractedSprite, ExtractedSprites},
 };
-use citro3d::{attrib::Register, buffer, macros::include_shader, math::Matrix4};
+use citro3d::{
+    attrib::Register,
+    buffer,
+    macros::include_shader,
+    math::{AspectRatio, ClipPlanes, Matrix4, Projection},
+};
 use lazy_static::lazy_static;
 
 use crate::{
@@ -114,6 +119,8 @@ lazy_static! {
 }
 
 fn draw_triangle(p: &mut RenderPass) {
+    let model_uniform = SPRITE_SHADER.get_uniform("modelMtx").unwrap();
+    let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
     let verts = LinearBuffer::new(&[
         Vertex {
             pos: Vec3::new(-0.5, 0.5, 0.0),
@@ -148,7 +155,27 @@ fn draw_triangle(p: &mut RenderPass) {
     let vbo = p
         .add_vertex_buffer(&verts)
         .expect("failed to set vertex buffer");
+    p.bind_vertex_uniform(model_uniform, &Matrix4::identity());
+    p.bind_vertex_uniform(view_uniform, &calculate_projections());
     p.draw(&vbo, buffer::Primitive::TriangleFan);
+}
+
+fn calculate_projections() -> Matrix4 {
+    // TODO: it would be cool to allow playing around with these parameters on
+    // the fly with D-pad, etc.
+    let slider_val = ctru::os::current_3d_slider_state();
+    let interocular_distance = slider_val / 2.0;
+
+    let vertical_fov = 40.0_f32.to_radians();
+    let screen_depth = 2.0;
+
+    let clip_planes = ClipPlanes {
+        near: 0.01,
+        far: 100.0,
+    };
+
+    let proj = Projection::perspective(vertical_fov, AspectRatio::TopScreen, clip_planes).into();
+    proj
 }
 
 pub struct DrawSprites;
