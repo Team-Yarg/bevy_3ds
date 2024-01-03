@@ -7,11 +7,14 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.12.1", default-features = false, features = ["bevy_ui", "bevy_asset"] }
+chrono = { version = "0.4.31", default-features = false, features = ["std", "clock"] }
 citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 citro3d-sys = { git = "https://github.com/rust3ds/citro3d-rs", version = "0.1.0" }
+fern = "0.6.2"
 #bevy = { version = "0.12.1", default-features = false }
 indexmap = "2.1.0"
 lazy_static = "1.4.0"
+log = "0.4.20"
 petgraph = "0.6.4"
 thiserror = "1.0.56"
 

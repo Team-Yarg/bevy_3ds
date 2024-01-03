@@ -2,6 +2,7 @@
 
 use std::alloc::Layout;
 use std::io::Write;
+use std::time::SystemTime;
 use std::{fs::File, panic::PanicInfo};
 
 use bevy::asset::{AssetServer, Assets};
@@ -48,6 +49,24 @@ mod shims;
 mod plugin_3ds;
 
 //use libc::c_void;
+
+fn setup_logger() -> Result<(), fern::InitError> {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "[{} {} {}] {}",
+                chrono::Local::now().format("%+"),
+                record.level(),
+                record.target(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Debug)
+        .chain(std::io::stdout())
+        .chain(fern::log_file("output.log")?)
+        .apply()?;
+    Ok(())
+}
 
 #[cfg(target_os = "horizon")]
 fn ds_main() {
@@ -120,6 +139,7 @@ fn main() {
         let mut f = File::create("panics.log").unwrap();
         write!(f, "{}", info).ok();
     }));
+    setup_logger().expect("failed to init logger");
 
     /*app.set_runner(move |mut app| {
         while apt.main_loop() {
