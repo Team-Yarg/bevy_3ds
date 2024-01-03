@@ -215,6 +215,7 @@ fn render_system(world: &World) {
     target.clear(ClearFlags::ALL, 0, 0);
 
     let mut pass = RenderPass::new(gpu, &target).expect("failed to create render pass");
+    commands.prepare(world);
     commands.run(world, &mut pass).expect("failed to run draws");
     drop(pass);
     log::debug!("render fin");
