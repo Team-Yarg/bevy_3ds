@@ -14,7 +14,7 @@ use crate::gpu_buffer::LinearBuffer;
 use super::{
     pipeline::{RenderPipelineDescriptor, ShaderLib, VertexAttrs},
     shader::PicaShader,
-    GpuDevice, VboSlice,
+    GpuDevice, GpuImage, VboSlice,
 };
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
@@ -58,6 +58,9 @@ impl<'g> RenderPass<'g> {
         let mut gpu = self.gpu.inst();
         let env = gpu.texenv(stage);
         f(env)
+    }
+    pub fn bind_texture(&self, index: i32, tex: &'g GpuImage) {
+        tex.0.bind(index);
     }
 
     pub fn bind_vertex_uniform(&mut self, index: Index, uni: impl citro3d::uniform::Uniform) {

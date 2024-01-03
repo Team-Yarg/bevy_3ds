@@ -9,7 +9,7 @@ use bevy::{
             Commands, Query, Res, ResMut, Resource,
         },
     },
-    math::{Mat4, Vec2, Vec3, Vec4},
+    math::{Affine2, Mat3, Mat4, Vec2, Vec3, Vec4},
     render::{color::Color, render_resource::VertexAttribute, texture::Image, view},
     sprite::{ExtractedSprite, ExtractedSprites},
 };
@@ -36,7 +36,7 @@ use crate::{
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct Vertex {
-    pos: Vec3,
+    pos: Vec2,
     //colour: Vec4,
     uv: Vec2,
 }
@@ -44,7 +44,7 @@ struct Vertex {
 impl Vertex {
     fn attr_info() -> citro3d::attrib::Info {
         let mut info = citro3d::attrib::Info::new();
-        info.add_loader(Register::new(0).unwrap(), citro3d::attrib::Format::Float, 3)
+        info.add_loader(Register::new(0).unwrap(), citro3d::attrib::Format::Float, 2)
             .unwrap();
         info.add_loader(Register::new(1).unwrap(), citro3d::attrib::Format::Float, 2)
             .unwrap();
@@ -56,6 +56,7 @@ struct SpriteInstance {
     transform: Mat4,
     verts: LinearBuffer<Vertex>,
     indexes: LinearBuffer<u32>,
+    mat: Material,
 }
 
 /// A batch of sprites which all share the same image
@@ -77,28 +78,79 @@ pub(super) fn prepare_sprites(
     mut batches: ResMut<SpriteBatches>,
 ) {
     batches.batches.clear();
+    let mut batch_image_id = AssetId::invalid();
+    let mut batch_image_dims = Vec2::ZERO;
     for (id, sprite) in &sprites.sprites {
-        let transform = sprite.transform.compute_matrix();
+        if sprite.image_handle_id != batch_image_id {
+            let Some(img) = images.get(sprite.image_handle_id) else {
+                continue;
+            };
+            batch_image_id = sprite.image_handle_id;
+            batch_image_dims = Vec2::new(img.width(), img.height());
+        }
 
-        let verts = LinearBuffer::new(&[
-            Vertex {
-                pos: Vec3::new(-0.5, 0.5, 0.0),
-                uv: Vec2::new(0., 0.),
-            },
-            Vertex {
-                pos: Vec3::new(-0.5, -0.5, 0.0),
-                uv: Vec2::new(0., 0.),
-            },
-            Vertex {
-                pos: Vec3::new(0.5, -0.5, 0.0),
-                uv: Vec2::new(0., 0.),
-            },
-            /*Vertex {
-                pos: Vec3::new(0.5, 0.5, 0.0),
-                colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
-                uv: Vec2::new(0., 0.),
-            },*/
-        ]);
+        let transform = sprite.transform.compute_matrix();
+        let uv_offset = sprite
+            .rect
+            .map(|r| r.min / batch_image_dims)
+            .unwrap_or(Vec2::ZERO);
+        let mut uv_scale = Vec2::ONE;
+        if sprite.flip_x {
+            uv_scale.x = -1.0;
+        }
+        if sprite.flip_y {
+            uv_scale.y = -1.0;
+        }
+
+        let mut uvs = [
+            Vec2::new(0., 0.),
+            Vec2::new(0., 1.),
+            Vec2::new(1., 1.),
+            Vec2::new(1.0, 0.0),
+        ];
+
+        let mut bounds = batch_image_dims;
+
+        if let Some(uv_r) = sprite.rect {
+            let tl = uv_r.min / batch_image_dims;
+            let br = uv_r.max / batch_image_dims;
+            let tr = Vec2::new(br.x, tl.y);
+            let bl = Vec2::new(tl.x, br.y);
+            uvs[0] = tl;
+            uvs[2] = br;
+
+            uvs[1] = bl;
+            uvs[3] = tr;
+
+            bounds = uv_r.size();
+        }
+        if sprite.flip_x {
+            uvs.swap(0, 3);
+            uvs.swap(1, 2);
+        }
+        if sprite.flip_y {
+            uvs.swap(0, 1);
+            uvs.swap(3, 2);
+        }
+        if let Some(sz) = sprite.custom_size {
+            bounds = sz;
+        }
+
+        let verts = [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(0.0, bounds.y),
+            bounds,
+            Vec2::new(bounds.x, 0.0),
+        ];
+        /*for uv in &mut uvs {
+
+        }*/
+
+        let verts: [Vertex; 4] = std::array::from_fn(|i| Vertex {
+            pos: verts[i],
+            uv: uvs[i],
+        });
+        let verts = LinearBuffer::new(&verts);
         //let colour = sprite.color.as_rgba_f32().into();
         let uv = sprite.anchor;
         /*verts.push(Vertex {
@@ -128,6 +180,7 @@ pub(super) fn prepare_sprites(
                 verts,
                 indexes,
                 transform,
+                mat: Material::new(Some(sprite.color), None),
             }],
         };
         batches.batches.push(batch);
@@ -142,33 +195,13 @@ lazy_static! {
 
 #[derive(Debug, Default)]
 pub struct Material {
-    texture: Option<AssetId<Image>>,
     colour: Option<Color>,
     ambient: Option<Color>,
-    vertex_colours: bool,
 }
 
 impl Material {
-    pub fn new(
-        texture: Option<AssetId<Image>>,
-        colour: Option<Color>,
-        ambient: Option<Color>,
-        vertex_colours: bool,
-    ) -> Self {
-        Self {
-            texture,
-            colour,
-            ambient,
-            vertex_colours,
-        }
-    }
-
-    pub fn use_vertex_colours(&self) -> bool {
-        self.vertex_colours
-    }
-
-    pub fn get_texture<'a>(&self, images: &'a RenderAssets<Image>) -> Option<&'a GpuImage> {
-        self.texture.and_then(|id| images.get(id))
+    pub fn new(colour: Option<Color>, ambient: Option<Color>) -> Self {
+        Self { colour, ambient }
     }
 
     pub fn set_uniforms(&self, _gpu: &mut RenderPass, uniforms: &Uniforms) {
@@ -234,20 +267,6 @@ pub struct Shape<T> {
 fn draw_triangle(p: &mut RenderPass, verts: &LinearBuffer<Vertex>, uniforms: &Uniforms) {
     log::debug!("draw triangle");
 
-    p.configure_texenv(Stage::new(0).unwrap(), |s0| {
-        s0.reset();
-        s0.src(
-            citro3d::texenv::Mode::BOTH,
-            citro3d::texenv::Source::PrimaryColor,
-            None,
-            None,
-        )
-        .func(
-            citro3d::texenv::Mode::BOTH,
-            citro3d::texenv::CombineFunc::Replace,
-        );
-    });
-
     let mut buf = citro3d::buffer::Info::new();
     let vbo = buf
         .add(&verts, &Vertex::attr_info())
@@ -258,7 +277,7 @@ fn draw_triangle(p: &mut RenderPass, verts: &LinearBuffer<Vertex>, uniforms: &Un
 
     p.bind_vertex_uniform(uniforms.model_matrix, &transform);
     p.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
-    p.draw(buffer::Primitive::Triangles, vbo);
+    p.draw(buffer::Primitive::TriangleFan, vbo);
 
     log::debug!("draw triangle fin");
 }
@@ -309,10 +328,10 @@ fn build_uniforms() -> Uniforms {
 pub struct DrawSprites;
 
 impl RenderCommand for DrawSprites {
-    type Param = SRes<SpriteBatches>;
+    type Param = (SRes<SpriteBatches>, SRes<RenderAssets<Image>>);
 
     fn render<'w, 'f, 'g>(
-        entity: Res<'w, SpriteBatches>,
+        (entity, images): (Res<'w, SpriteBatches>, Res<'w, RenderAssets<Image>>),
         pass: &'f mut RenderPass<'g>,
     ) -> Result<(), crate::render::pass::RenderError> {
         let mut camera_matrix = Matrix4::identity();
@@ -324,11 +343,39 @@ impl RenderCommand for DrawSprites {
         pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
         let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
         pass.bind_vertex_uniform(view_uniform, &calculate_projections());
-        let mat = Material::new(None, Some(Color::rgba(0.5, 0.5, 0.5, 1.0)), None, false);
-        mat.set_uniforms(pass, &uniforms);
 
         for sprite in &entity.batches {
+            pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
+                if let Some(t) = images.get(sprite.image) {
+                    pass.bind_texture(0, t);
+
+                    s0.src(
+                        citro3d::texenv::Mode::BOTH,
+                        citro3d::texenv::Source::Texture0,
+                        None,
+                        None,
+                    )
+                    .func(
+                        citro3d::texenv::Mode::BOTH,
+                        citro3d::texenv::CombineFunc::Replace,
+                    );
+                } else {
+                    s0.reset();
+                    s0.src(
+                        citro3d::texenv::Mode::BOTH,
+                        citro3d::texenv::Source::PrimaryColor,
+                        None,
+                        None,
+                    )
+                    .func(
+                        citro3d::texenv::Mode::BOTH,
+                        citro3d::texenv::CombineFunc::Replace,
+                    );
+                }
+            });
+
             for s in &sprite.sprites {
+                s.mat.set_uniforms(pass, &uniforms);
                 draw_triangle(pass, &s.verts, &uniforms);
             }
         }
