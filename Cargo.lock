@@ -1170,7 +1170,7 @@ dependencies = [
 [[package]]
 name = "citro3d"
 version = "0.1.0"
-source = "git+https://github.com/Team-Yarg/citro3d-rs#d2f2067ad81faeeedf385a5494b286eb5e46eedc"
+source = "git+https://github.com/Team-Yarg/citro3d-rs#14894579ca1144edd817ac72eb79d303ec0e5159"
 dependencies = [
  "bitflags 1.3.2",
  "bytemuck",
@@ -1180,13 +1180,14 @@ dependencies = [
  "ctru-sys",
  "document-features",
  "libc",
+ "static_assertions",
  "thiserror",
 ]
 
 [[package]]
 name = "citro3d-macros"
 version = "0.1.0"
-source = "git+https://github.com/Team-Yarg/citro3d-rs#d2f2067ad81faeeedf385a5494b286eb5e46eedc"
+source = "git+https://github.com/Team-Yarg/citro3d-rs#14894579ca1144edd817ac72eb79d303ec0e5159"
 dependencies = [
  "litrs",
  "quote",
@@ -1195,7 +1196,7 @@ dependencies = [
 [[package]]
 name = "citro3d-sys"
 version = "0.1.0"
-source = "git+https://github.com/rust3ds/citro3d-rs#b02384fc33e2203ce9bcb79f7ecee700cd28f8c1"
+source = "git+https://github.com/Team-Yarg/citro3d-rs#14894579ca1144edd817ac72eb79d303ec0e5159"
 dependencies = [
  "bindgen 0.68.1",
  "cc",
@@ -1384,7 +1385,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e16e44ab292b1dddfdaf7be62cfd8877df52f2f3fde5858d95bab606be259f20"
 dependencies = [
  "bitflags 2.4.1",
- "libloading 0.8.1",
+ "libloading 0.7.4",
  "winapi",
 ]
 
@@ -3193,7 +3194,7 @@ dependencies = [
  "js-sys",
  "khronos-egl",
  "libc",
- "libloading 0.8.1",
+ "libloading 0.7.4",
  "log",
  "metal",
  "naga",

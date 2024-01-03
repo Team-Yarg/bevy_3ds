@@ -9,7 +9,7 @@ use bevy::{
             Commands, Query, Res, ResMut, Resource,
         },
     },
-    math::{Mat4, Vec2, Vec3, Vec4},
+    math::Mat4,
     render::{render_resource::VertexAttribute, texture::Image, view},
     sprite::{ExtractedSprite, ExtractedSprites},
 };
@@ -33,18 +33,63 @@ use crate::{
 
 #[repr(C)]
 #[derive(Clone, Copy)]
+struct Vec3 {
+    x: f32,
+    y: f32,
+    z: f32,
+}
+
+impl Vec3 {
+    fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vec2 {
+    x: f32,
+    y: f32,
+}
+
+impl Vec2 {
+    fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vec4 {
+    x: f32,
+    y: f32,
+    z: f32,
+    w: f32,
+}
+
+impl Vec4 {
+    fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
+        Self { x, y, z, w }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
 struct Vertex {
     pos: Vec3,
-    uv: Vec2,
     colour: Vec4,
+    uv: Vec2,
 }
 
 impl Vertex {
     fn attr_info() -> citro3d::attrib::Info {
         let mut info = citro3d::attrib::Info::new();
-        info.add_loader(Register::new(0).unwrap(), citro3d::attrib::Format::Float, 2);
-        info.add_loader(Register::new(1).unwrap(), citro3d::attrib::Format::Float, 2);
-        info.add_loader(Register::new(2).unwrap(), citro3d::attrib::Format::Float, 4);
+        info.add_loader(Register::new(0).unwrap(), citro3d::attrib::Format::Float, 3)
+            .unwrap();
+        info.add_loader(Register::new(1).unwrap(), citro3d::attrib::Format::Float, 4)
+            .unwrap();
+        info.add_loader(Register::new(2).unwrap(), citro3d::attrib::Format::Float, 2)
+            .unwrap();
         info
     }
 }
@@ -76,7 +121,29 @@ pub(super) fn prepare_sprites(
     batches.batches.clear();
     for (id, sprite) in &sprites.sprites {
         let transform = sprite.transform.compute_matrix();
-        let mut verts: LinearBuffer<Vertex> = LinearBuffer::new(&[]);
+
+        let verts = LinearBuffer::new(&[
+            Vertex {
+                pos: Vec3::new(-0.5, 0.5, 0.0),
+                colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
+                uv: Vec2::new(0., 0.),
+            },
+            Vertex {
+                pos: Vec3::new(-0.5, -0.5, 0.0),
+                colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
+                uv: Vec2::new(0., 0.),
+            },
+            Vertex {
+                pos: Vec3::new(0.5, -0.5, 0.0),
+                colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
+                uv: Vec2::new(0., 0.),
+            },
+            /*Vertex {
+                pos: Vec3::new(0.5, 0.5, 0.0),
+                colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
+                uv: Vec2::new(0., 0.),
+            },*/
+        ]);
         //let colour = sprite.color.as_rgba_f32().into();
         let uv = sprite.anchor;
         /*verts.push(Vertex {
@@ -118,32 +185,10 @@ lazy_static! {
         PicaShader::load_from_bytes(SHADER_BYTES).expect("failed to load sprite shader");
 }
 
-fn draw_triangle(p: &mut RenderPass) {
-    println!("draw triangle");
+fn draw_triangle(p: &mut RenderPass, verts: &LinearBuffer<Vertex>) {
+    log::info!("draw triangle");
     let model_uniform = SPRITE_SHADER.get_uniform("modelMtx").unwrap();
     let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
-    let verts = LinearBuffer::new(&[
-        Vertex {
-            pos: Vec3::new(-0.5, 0.5, 0.0),
-            colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
-            uv: Vec2::new(0., 0.),
-        },
-        Vertex {
-            pos: Vec3::new(-0.5, -0.5, 0.0),
-            colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
-            uv: Vec2::new(0., 0.),
-        },
-        Vertex {
-            pos: Vec3::new(0.5, -0.5, 0.0),
-            colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
-            uv: Vec2::new(0., 0.),
-        },
-        Vertex {
-            pos: Vec3::new(0.5, 0.5, 0.0),
-            colour: Vec4::new(1.0, 0.0, 0.0, 1.0),
-            uv: Vec2::new(0., 0.),
-        },
-    ]);
     p.set_pipeline(RenderPipelineDescriptor {
         label: Some("triangle"),
         vertex: VertexState {
@@ -156,9 +201,12 @@ fn draw_triangle(p: &mut RenderPass) {
     let vbo = p
         .add_vertex_buffer(&verts)
         .expect("failed to set vertex buffer");
+    log::debug!("vbo: {vbo:#?}, verts: {:#?}", verts.as_ptr());
     p.bind_vertex_uniform(model_uniform, &Matrix4::identity());
     p.bind_vertex_uniform(view_uniform, &calculate_projections());
-    p.draw(&vbo, buffer::Primitive::TriangleFan);
+    p.draw(&vbo, buffer::Primitive::Triangles);
+
+    log::info!("draw triangle fin");
 }
 
 fn calculate_projections() -> Matrix4 {
@@ -189,7 +237,9 @@ impl RenderCommand for DrawSprites {
         pass: &'f mut RenderPass<'g>,
     ) -> Result<(), crate::render::pass::RenderError> {
         for sprite in &entity.batches {
-            draw_triangle(pass);
+            for s in &sprite.sprites {
+                draw_triangle(pass, &s.verts);
+            }
         }
         Ok(())
     }

@@ -1,4 +1,9 @@
-use std::{mem::MaybeUninit, ops::Range, sync::Mutex};
+use std::{
+    mem::MaybeUninit,
+    ops::Range,
+    pin::Pin,
+    sync::{Arc, Mutex},
+};
 
 use bevy::ecs::{schedule::SystemSet, system::Resource};
 
@@ -72,6 +77,7 @@ impl Default for BufferState {
 }
 
 pub struct VboBufIndex {}
+#[derive(Debug)]
 pub struct VboSlice {
     index: usize,
     range: Range<usize>,
@@ -108,7 +114,7 @@ impl GpuDevice {
     ///
     /// # Safety
     /// If the shader is drop'd before the frame ends then it will result in a use-after-free
-    pub unsafe fn set_shader(&self, shader: &citro3d::shader::Program) {
+    pub unsafe fn set_shader(&self, shader: Pin<Arc<citro3d::shader::Program>>) {
         self.instance.lock().unwrap().bind_program(shader);
     }
 
@@ -128,7 +134,7 @@ impl GpuDevice {
         self.buf_info.lock().unwrap().add(verts, &self.instance.lock().unwrap().attr_info().expect("call to add_vertex_buffer without setting attribute info, did you forget to set the pipeline?"))
     }
     pub unsafe fn draw(&self, prim: Primitive, verts: &VboSlice) {
-        let _l = self.instance.lock().unwrap();
+        let mut _gpu = self.instance.lock().unwrap();
         unsafe {
             citro3d_sys::C3D_DrawArrays(
                 prim as ctru_sys::GPU_Primitive_t,

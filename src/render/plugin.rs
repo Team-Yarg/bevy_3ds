@@ -33,6 +33,8 @@ use ctru::{
     services::{apt::Apt, gfx::Gfx},
 };
 
+use crate::sprites;
+
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
 use super::prep_asset::RenderAssets;
@@ -74,6 +76,7 @@ impl Plugin for Render3dsPlugin {
             GlobalsPlugin,
             MorphPlugin,
             shader::PicaShaderPlugin,
+            sprites::SpritesRenderPlugin,
         ));
     }
 }
@@ -196,11 +199,11 @@ fn render_meshes(meshes: Res<RenderAssets<Mesh>>) {
     }
 }
 fn render_sprites(sprites: Res<ExtractedSprites>) {
-    println!("sprites: {}", sprites.sprites.len());
+    log::debug!("sprites: {}", sprites.sprites.len());
 }
 
 fn render_system(world: &World) {
-    //println!("render");
+    log::debug!("render");
     let gpu = world.resource::<GpuDevice>();
     let gfx = world.non_send_resource::<GfxInstance>();
     let commands = world.resource::<DrawCommands>();
@@ -213,6 +216,8 @@ fn render_system(world: &World) {
 
     let mut pass = RenderPass::new(gpu, &target).expect("failed to create render pass");
     commands.run(world, &mut pass).expect("failed to run draws");
+    drop(pass);
+    log::debug!("render fin");
 }
 
 fn apply_extract_commands(render_world: &mut World) {

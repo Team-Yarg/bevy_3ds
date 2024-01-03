@@ -1,4 +1,4 @@
-use std::{error::Error, marker::PhantomData};
+use std::{error::Error, marker::PhantomData, sync::Arc};
 
 use bevy::{
     asset::Handle,
@@ -35,14 +35,14 @@ impl<'g> RenderPass<'g> {
         shader: &'f PicaShader,
         entry_point: usize,
     ) -> Result<()> {
-        let prog = Program::new(
+        let prog = Arc::pin(Program::new(
             shader
                 .entry_point(entry_point)
                 .ok_or(RenderError::InvalidEntryPoint { index: entry_point })?,
-        )?;
-        // Safety: The lifetime bounds on this method prevent it going out of frame
+        )?);
+        // Safety: we put the program in our store after this
         unsafe {
-            self.gpu.set_shader(&prog);
+            self.gpu.set_shader(prog);
         };
         Ok(())
     }

@@ -5,7 +5,7 @@ use std::{
 
 use ctru::linear::LinearAllocator;
 
-pub struct LinearBuffer<T>(Box<[T], LinearAllocator>);
+pub struct LinearBuffer<T>(Vec<T, LinearAllocator>);
 
 impl<T> std::ops::Deref for LinearBuffer<T> {
     type Target = [T];
@@ -28,6 +28,8 @@ impl<T: Copy> LinearBuffer<T> {
     where
         T: Sized,
     {
-        Self(box_from_copy_slice(items, LinearAllocator))
+        Self(
+            /*box_from_copy_slice(items, LinearAllocator)*/ items.to_vec_in(LinearAllocator),
+        )
     }
 }
