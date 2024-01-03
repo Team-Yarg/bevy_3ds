@@ -212,7 +212,7 @@ fn render_system(world: &World) {
 
     let mut target = citro3d::render::Target::new(width, height, screen, None)
         .expect("failed to create left render target");
-    target.clear(ClearFlags::ALL, 0, 0);
+    target.clear(ClearFlags::ALL, 0xFFFFFF, 0);
 
     let mut pass = RenderPass::new(gpu, &target).expect("failed to create render pass");
     commands.prepare(world);

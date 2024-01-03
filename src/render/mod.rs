@@ -24,6 +24,7 @@ use citro3d::{
 };
 pub use plugin::Render3dsPlugin;
 pub use prep_asset::RenderAssets;
+pub use texture::GpuImage;
 
 use crate::gpu_buffer::LinearBuffer;
 

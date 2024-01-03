@@ -5,6 +5,7 @@ use std::{
 
 use ctru::linear::LinearAllocator;
 
+#[derive(Debug, Clone)]
 pub struct LinearBuffer<T>(Vec<T, LinearAllocator>);
 
 impl<T> std::ops::Deref for LinearBuffer<T> {
