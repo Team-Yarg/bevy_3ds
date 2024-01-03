@@ -7,7 +7,7 @@ use bevy::{
         system::{SystemParam, SystemParamItem},
     },
 };
-use citro3d::{buffer::Primitive, shader::Program, uniform::Index};
+use citro3d::{buffer::Primitive, render::Target, shader::Program, uniform::Index};
 
 use crate::gpu_buffer::LinearBuffer;
 
@@ -22,11 +22,12 @@ pub struct RenderPass<'g> {
     gpu: &'g GpuDevice,
 }
 impl<'g> RenderPass<'g> {
-    pub fn new(gpu: &'g GpuDevice) -> Self {
+    pub fn new(gpu: &'g GpuDevice, target: &Target) -> citro3d::Result<Self> {
         unsafe {
             citro3d_sys::C3D_FrameBegin(citro3d_sys::C3D_FRAME_SYNCDRAW.try_into().unwrap());
         }
-        Self { gpu }
+        gpu.instance.lock().unwrap().select_render_target(target)?;
+        Ok(Self { gpu })
     }
 
     fn set_vertex_shader<'f>(

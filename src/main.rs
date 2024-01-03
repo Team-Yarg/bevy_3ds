@@ -69,8 +69,8 @@ fn ds_main() {
 
     use crate::render::Render3dsPlugin;
 
-    let gfx = Gfx::new().unwrap();
-    let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());
+    /*let gfx = Gfx::new().unwrap();
+    let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());*/
 
     std::env::set_var("BEVY_ASSET_ROOT", "romfs://");
 

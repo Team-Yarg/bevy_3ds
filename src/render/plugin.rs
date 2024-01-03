@@ -26,6 +26,8 @@ use bevy::{
     },
     DefaultPlugins,
 };
+use citro3d::render::ClearFlags;
+use ctru::services::gfx::{RawFrameBuffer, Screen, TopScreen, TopScreen3D};
 use ctru::{
     console::Console,
     services::{apt::Apt, gfx::Gfx},
@@ -34,7 +36,7 @@ use ctru::{
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
 use super::prep_asset::RenderAssets;
-use super::{mesh, shader, texture, GpuDevice, RenderSet3ds};
+use super::{mesh, shader, texture, GfxInstance, GpuDevice, RenderSet3ds};
 
 struct AptRes(Apt);
 
@@ -125,6 +127,7 @@ fn init_render_app(parent: &mut App) {
         .init_resource::<bevy::render::render_graph::RenderGraph>()
         .init_resource::<GpuDevice>()
         .init_resource::<DrawCommands>()
+        .init_non_send_resource::<GfxInstance>()
         .insert_resource(parent.world.resource::<bevy::asset::AssetServer>().clone())
         .add_systems(Render, render_system)
         .add_systems(
@@ -199,9 +202,17 @@ fn render_sprites(sprites: Res<ExtractedSprites>) {
 fn render_system(world: &World) {
     //println!("render");
     let gpu = world.resource::<GpuDevice>();
+    let gfx = world.non_send_resource::<GfxInstance>();
     let commands = world.resource::<DrawCommands>();
-    let mut pass = RenderPass::new(&gpu);
-    commands.run(world, &mut pass);
+    let mut screen = gfx.0.top_screen.borrow_mut();
+    let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
+
+    let mut target = citro3d::render::Target::new(width, height, screen, None)
+        .expect("failed to create left render target");
+    target.clear(ClearFlags::ALL, 0, 0);
+
+    let mut pass = RenderPass::new(gpu, &target).expect("failed to create render pass");
+    commands.run(world, &mut pass).expect("failed to run draws");
 }
 
 fn apply_extract_commands(render_world: &mut World) {

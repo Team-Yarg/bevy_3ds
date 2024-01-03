@@ -119,6 +119,7 @@ lazy_static! {
 }
 
 fn draw_triangle(p: &mut RenderPass) {
+    println!("draw triangle");
     let model_uniform = SPRITE_SHADER.get_uniform("modelMtx").unwrap();
     let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
     let verts = LinearBuffer::new(&[

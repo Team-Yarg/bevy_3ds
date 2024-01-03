@@ -77,6 +77,13 @@ pub struct VboSlice {
     range: Range<usize>,
 }
 
+pub struct GfxInstance(ctru::services::gfx::Gfx);
+impl Default for GfxInstance {
+    fn default() -> Self {
+        Self(ctru::services::gfx::Gfx::new().expect("failed to init gpu"))
+    }
+}
+
 #[derive(Resource)]
 pub struct GpuDevice {
     instance: Mutex<citro3d::Instance>,
