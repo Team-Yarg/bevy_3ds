@@ -61,7 +61,6 @@ impl Plugin for Render3dsPlugin {
         });
         app.init_asset::<Shader>()
             .init_asset_loader::<ShaderLoader>();
-        app.init_resource::<GpuDevice>();
         init_render_app(app);
         app.add_plugins((
             ValidParentCheckPlugin::<view::InheritedVisibility>::default(),
@@ -69,7 +68,6 @@ impl Plugin for Render3dsPlugin {
             ViewPlugin,
             MeshPlugin,
             mesh::MeshPlugin,
-            ImagePlugin::default(),
             texture::TexturePlugin,
             GlobalsPlugin,
             MorphPlugin,
@@ -125,6 +123,8 @@ fn init_render_app(parent: &mut App) {
     app.add_schedule(extract_schedule)
         .add_schedule(base_shed)
         .init_resource::<bevy::render::render_graph::RenderGraph>()
+        .init_resource::<GpuDevice>()
+        .init_resource::<DrawCommands>()
         .insert_resource(parent.world.resource::<bevy::asset::AssetServer>().clone())
         .add_systems(Render, render_system)
         .add_systems(
