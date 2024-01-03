@@ -26,10 +26,6 @@ use crate::{
     },
 };
 
-/// Holds all the rendering information for every sprite in this pass
-#[derive(Resource)]
-struct SpriteRenderInfo {}
-
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct Vertex {
@@ -61,16 +57,15 @@ struct SpriteBatch {
     sprites: Vec<SpriteInstance>,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct SpriteBatches {
     batches: Vec<SpriteBatch>,
 }
 
-fn prepare_sprites(
+pub(super) fn prepare_sprites(
     mut cmds: Commands,
     images: Res<RenderAssets<Image>>,
     sprites: Res<ExtractedSprites>,
-    render_info: ResMut<SpriteRenderInfo>,
     mut batches: ResMut<SpriteBatches>,
 ) {
     batches.batches.clear();
@@ -159,12 +154,10 @@ fn draw_triangle(p: &mut RenderPass) {
 pub struct DrawSprites;
 
 impl RenderCommand for DrawSprites {
-    type Param<'w, 's> = ();
-    type ItemData<'w, 's> = Res<'w, SpriteBatches>;
+    type Param = SRes<SpriteBatches>;
 
     fn render<'w, 'f, 'g>(
-        entity: bevy::ecs::system::SystemParamItem<'w, 'f, Self::ItemData<'w, 'f>>,
-        param: &bevy::ecs::system::SystemParamItem<'w, 'f, Self::Param<'w, 'f>>,
+        entity: Res<'w, SpriteBatches>,
         pass: &'f mut RenderPass<'g>,
     ) -> Result<(), crate::render::pass::RenderError> {
         for sprite in &entity.batches {

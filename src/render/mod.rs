@@ -2,6 +2,7 @@ use std::{mem::MaybeUninit, ops::Range};
 
 use bevy::ecs::{schedule::SystemSet, system::Resource};
 
+pub mod draw;
 mod extract;
 mod mesh;
 pub mod pass;
@@ -133,4 +134,6 @@ impl GpuDevice {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, SystemSet)]
 pub enum RenderSet3ds {
     PrepareAssets,
+    Prepare,
+    PrepareBindGroups,
 }

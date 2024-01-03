@@ -3,7 +3,7 @@ use std::{error::Error, marker::PhantomData};
 use bevy::{
     asset::Handle,
     ecs::{
-        query::{ROQueryItem, ReadOnlyWorldQuery},
+        query::{QueryItem, ROQueryItem, ReadOnlyWorldQuery, WorldQuery},
         system::{SystemParam, SystemParamItem},
     },
 };
@@ -23,6 +23,9 @@ pub struct RenderPass<'g> {
 }
 impl<'g> RenderPass<'g> {
     pub fn new(gpu: &'g mut GpuDevice) -> Self {
+        unsafe {
+            citro3d_sys::C3D_FrameBegin(citro3d_sys::C3D_FRAME_SYNCDRAW.try_into().unwrap());
+        }
         Self { gpu }
     }
 
@@ -67,6 +70,13 @@ impl<'g> RenderPass<'g> {
         }
     }
 }
+impl<'g> Drop for RenderPass<'g> {
+    fn drop(&mut self) {
+        unsafe {
+            citro3d_sys::C3D_FrameEnd(0);
+        }
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum RenderError {
@@ -86,12 +96,10 @@ pub enum RenderError {
 }
 
 pub trait RenderCommand {
-    type Param<'w, 's>: SystemParam;
-    type ItemData<'w, 's>: SystemParam;
+    type Param: SystemParam + 'static;
 
     fn render<'w, 'f, 'g>(
-        entity: SystemParamItem<'w, 'f, Self::ItemData<'w, 'f>>,
-        param: &SystemParamItem<'w, 'f, Self::Param<'w, 'f>>,
+        param: SystemParamItem<'w, 'f, Self::Param>,
         pass: &'f mut RenderPass<'g>,
     ) -> Result<(), RenderError>;
 }

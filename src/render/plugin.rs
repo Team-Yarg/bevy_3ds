@@ -31,6 +31,7 @@ use ctru::{
     services::{apt::Apt, gfx::Gfx},
 };
 
+use super::draw::DrawCommands;
 use super::pass::RenderPass;
 use super::prep_asset::RenderAssets;
 use super::{mesh, shader, texture, GpuDevice, RenderSet3ds};
@@ -111,12 +112,21 @@ fn init_render_app(parent: &mut App) {
         )
             .run_if(|| false),
     );
-    base_shed.configure_sets((RenderSet::ExtractCommands, RenderSet3ds::PrepareAssets).chain());
+    base_shed.configure_sets(
+        (
+            RenderSet::ExtractCommands,
+            RenderSet3ds::PrepareAssets,
+            RenderSet3ds::Prepare,
+            RenderSet3ds::PrepareBindGroups,
+        )
+            .chain(),
+    );
 
     app.add_schedule(extract_schedule)
         .add_schedule(base_shed)
         .init_resource::<bevy::render::render_graph::RenderGraph>()
         .insert_resource(parent.world.resource::<bevy::asset::AssetServer>().clone())
+        .add_systems(Render, render_system)
         .add_systems(
             Render,
             (
@@ -186,8 +196,14 @@ fn render_sprites(sprites: Res<ExtractedSprites>) {
     println!("sprites: {}", sprites.sprites.len());
 }
 
-fn render_system(world: &mut World) {
+fn render_system(
+    world: &mut World,
+) {
     //println!("render");
+    let gpu = world.resource_mut::<GpuDevice>();
+    let commands = world.resource_mut::<DrawCommands>();
+    let mut pass = RenderPass::new(&mut gpu);
+    commands.run(world, &mut pass);
 }
 
 fn apply_extract_commands(render_world: &mut World) {
