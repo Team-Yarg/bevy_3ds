@@ -30,9 +30,9 @@ impl<'g> RenderPass<'g> {
         Ok(Self { gpu })
     }
 
-    fn set_vertex_shader<'f>(
+    pub fn set_vertex_shader<'f>(
         &'f mut self,
-        shader: &'f PicaShader,
+        shader: &'g PicaShader,
         entry_point: usize,
     ) -> Result<()> {
         let prog = Arc::pin(Program::new(
@@ -46,25 +46,20 @@ impl<'g> RenderPass<'g> {
         };
         Ok(())
     }
+    pub fn set_attr_info(&self, info: &VertexAttrs) {
+        self.gpu.set_attr_info(info);
+    }
+    /// Configure a texenv stage
+    pub fn configure_texenv<R>(
+        &self,
+        stage: citro3d::texenv::Stage,
+        f: impl FnOnce(&mut citro3d::texenv::TexEnv) -> R,
+    ) -> R {
+        let mut gpu = self.gpu.inst();
+        let env = gpu.texenv(stage);
+        f(env)
+    }
 
-    pub fn set_pipeline<'frame>(
-        &'frame mut self,
-        pl: RenderPipelineDescriptor<'frame>,
-    ) -> Result<()> {
-        let mut act = move || {
-            self.set_vertex_shader(pl.vertex.shader, pl.vertex.entry_point)?;
-            self.gpu.set_attr_info(&pl.vertex.attrs);
-            Ok(())
-        };
-        act().map_err(|e| RenderError::PipelineError {
-            label: pl.label,
-            error: e,
-        })
-    }
-    pub fn add_vertex_buffer<'f, T>(&'f mut self, verts: &'f LinearBuffer<T>) -> Result<VboSlice> {
-        let slice = unsafe { self.gpu.add_vertex_buffer(verts)? };
-        Ok(slice)
-    }
     pub fn bind_vertex_uniform(&mut self, index: Index, uni: impl citro3d::uniform::Uniform) {
         self.gpu
             .instance
@@ -72,7 +67,8 @@ impl<'g> RenderPass<'g> {
             .unwrap()
             .bind_vertex_uniform(index, uni);
     }
-    pub fn draw<'f>(&mut self, verts: &VboSlice, prim: Primitive) {
+
+    pub fn draw<'f>(&mut self, prim: Primitive, verts: citro3d::buffer::Slice) {
         unsafe {
             self.gpu.draw(prim, verts);
         }

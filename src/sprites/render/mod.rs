@@ -18,6 +18,7 @@ use citro3d::{
     buffer,
     macros::include_shader,
     math::{AspectRatio, ClipPlanes, Matrix4, Projection},
+    texenv::Stage,
 };
 use lazy_static::lazy_static;
 
@@ -186,27 +187,18 @@ lazy_static! {
 }
 
 fn draw_triangle(p: &mut RenderPass, verts: &LinearBuffer<Vertex>) {
-    log::info!("draw triangle");
+    log::debug!("draw triangle");
     let model_uniform = SPRITE_SHADER.get_uniform("modelMtx").unwrap();
-    let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
-    p.set_pipeline(RenderPipelineDescriptor {
-        label: Some("triangle"),
-        vertex: VertexState {
-            shader: &SPRITE_SHADER,
-            entry_point: 0,
-            attrs: VertexAttrs::from_citro3d(Vertex::attr_info()),
-        },
-    })
-    .expect("failed to set triangle pipeline");
-    let vbo = p
-        .add_vertex_buffer(&verts)
-        .expect("failed to set vertex buffer");
-    log::debug!("vbo: {vbo:#?}, verts: {:#?}", verts.as_ptr());
-    p.bind_vertex_uniform(model_uniform, &Matrix4::identity());
-    p.bind_vertex_uniform(view_uniform, &calculate_projections());
-    p.draw(&vbo, buffer::Primitive::Triangles);
+    let mut buf = citro3d::buffer::Info::new();
+    let vbo = buf
+        .add(&verts, &Vertex::attr_info())
+        .expect("failed to add vbo data");
+    let mut transform = Matrix4::identity();
+    transform.scale(3., 3., 3.);
+    p.bind_vertex_uniform(model_uniform, &transform);
+    p.draw(buffer::Primitive::Triangles, vbo);
 
-    log::info!("draw triangle fin");
+    log::debug!("draw triangle fin");
 }
 
 fn calculate_projections() -> Matrix4 {
@@ -236,6 +228,25 @@ impl RenderCommand for DrawSprites {
         entity: Res<'w, SpriteBatches>,
         pass: &'f mut RenderPass<'g>,
     ) -> Result<(), crate::render::pass::RenderError> {
+        pass.set_vertex_shader(&SPRITE_SHADER, 0)
+            .expect("failed to set sprite shader");
+        pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
+        let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
+        pass.bind_vertex_uniform(view_uniform, &calculate_projections());
+        pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
+            s0.reset();
+            s0.src(
+                citro3d::texenv::Mode::BOTH,
+                citro3d::texenv::Source::PrimaryColor,
+                None,
+                None,
+            )
+            .func(
+                citro3d::texenv::Mode::BOTH,
+                citro3d::texenv::CombineFunc::Replace,
+            );
+        });
+
         for sprite in &entity.batches {
             for s in &sprite.sprites {
                 draw_triangle(pass, &s.verts);
