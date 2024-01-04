@@ -44,6 +44,7 @@ fn make_asset_reader<'a>(
                 if e.kind() == std::io::ErrorKind::NotFound {
                     AssetReaderError::NotFound(p)
                 } else {
+                    log::error!("failed to read from: {:#?}: {e}", p);
                     AssetReaderError::Io(e)
                 }
             })

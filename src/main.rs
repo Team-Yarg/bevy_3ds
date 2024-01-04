@@ -93,6 +93,7 @@ fn ds_main() {
     use indexmap::IndexMap;
 
     use crate::render::Render3dsPlugin;
+    let _romfs = ctru::services::romfs::RomFS::new().unwrap();
 
     /*let gfx = Gfx::new().unwrap();
     let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());*/
