@@ -34,7 +34,7 @@ use crate::{
 };
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct Vertex {
     pos: Vec2,
     //colour: Vec4,
@@ -82,11 +82,13 @@ pub(super) fn prepare_sprites(
     let mut batch_image_dims = Vec2::ZERO;
     for (id, sprite) in &sprites.sprites {
         if sprite.image_handle_id != batch_image_id {
-            let Some(img) = images.get(sprite.image_handle_id) else {
+            if let Some(img) = images.get(sprite.image_handle_id) {
+                batch_image_id = sprite.image_handle_id;
+                batch_image_dims = Vec2::new(img.width(), img.height());
+            } else {
+                log::warn!("sprite has invalid image handle, skipping this sprite");
                 continue;
             };
-            batch_image_id = sprite.image_handle_id;
-            batch_image_dims = Vec2::new(img.width(), img.height());
         }
 
         let transform = sprite.transform.compute_matrix();
@@ -267,18 +269,6 @@ pub struct Shape<T> {
 fn draw_triangle(p: &mut RenderPass, verts: &LinearBuffer<Vertex>, uniforms: &Uniforms) {
     log::debug!("draw triangle");
 
-    let mut buf = citro3d::buffer::Info::new();
-    let vbo = buf
-        .add(&verts, &Vertex::attr_info())
-        .expect("failed to add vbo data");
-
-    let mut transform = Matrix4::identity();
-    transform.scale(3., 3., 3.);
-
-    p.bind_vertex_uniform(uniforms.model_matrix, &transform);
-    p.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
-    p.draw(buffer::Primitive::TriangleFan, vbo);
-
     log::debug!("draw triangle fin");
 }
 
@@ -343,6 +333,7 @@ impl RenderCommand for DrawSprites {
         pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
         let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
         pass.bind_vertex_uniform(view_uniform, &calculate_projections());
+        log::debug!("draw sprites, {} batches", entity.batches.len());
 
         for sprite in &entity.batches {
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
@@ -376,7 +367,17 @@ impl RenderCommand for DrawSprites {
 
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);
-                draw_triangle(pass, &s.verts, &uniforms);
+
+                pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
+                log::debug!("verts: {:#?}", s.verts);
+
+                let mut buf = citro3d::buffer::Info::new();
+                let vbo = buf
+                    .add(&s.verts, &Vertex::attr_info())
+                    .expect("failed to add vbo data");
+
+                pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
+                pass.draw(buffer::Primitive::TriangleFan, vbo);
             }
         }
         Ok(())

@@ -34,6 +34,9 @@ use ctru::services::{
 };
 
 #[cfg(target_os = "horizon")]
+mod romfs_assets;
+
+#[cfg(target_os = "horizon")]
 mod ui;
 
 #[cfg(target_os = "horizon")]
@@ -99,12 +102,8 @@ fn ds_main() {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins)
         .add_plugins((TransformPlugin, HierarchyPlugin, bevy::input::InputPlugin))
-        .add_plugins(bevy::asset::AssetPlugin {
-            file_path: "romfs:/".to_owned(),
-            processed_file_path: "res://".to_owned(),
-            watch_for_changes_override: None,
-            mode: bevy::asset::AssetMode::Unprocessed,
-        })
+        .add_plugins(romfs_assets::RomfsAssetPlugin)
+        .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(Render3dsPlugin)
         .add_plugins(ImagePlugin::default())
         .add_plugins(CorePipelinePlugin)

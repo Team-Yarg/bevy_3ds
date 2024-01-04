@@ -210,9 +210,14 @@ fn render_system(world: &World) {
     let mut screen = gfx.0.top_screen.borrow_mut();
     let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
 
-    let mut target = citro3d::render::Target::new(width, height, screen, None)
-        .expect("failed to create left render target");
-    target.clear(ClearFlags::ALL, 0xFFFFFF, 0);
+    let mut target = citro3d::render::Target::new(
+        width,
+        height,
+        screen,
+        Some(citro3d::render::DepthFormat::Depth16),
+    )
+    .expect("failed to create left render target");
+    target.clear(ClearFlags::ALL, 0, 0);
 
     let mut pass = RenderPass::new(gpu, &target).expect("failed to create render pass");
     commands.prepare(world);

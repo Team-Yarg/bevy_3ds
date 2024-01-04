@@ -11,6 +11,7 @@ chrono = { version = "0.4.31", default-features = false, features = ["std", "clo
 citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 citro3d-sys = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 fern = "0.6.2"
+futures = "0.3.30"
 image = "0.24.7"
 #bevy = { version = "0.12.1", default-features = false }
 indexmap = "2.1.0"

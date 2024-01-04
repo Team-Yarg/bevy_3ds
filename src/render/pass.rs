@@ -7,7 +7,12 @@ use bevy::{
         system::{SystemParam, SystemParamItem},
     },
 };
-use citro3d::{buffer::Primitive, render::Target, shader::Program, uniform::Index};
+use citro3d::{
+    buffer::Primitive,
+    render::Target,
+    shader::{self, Program},
+    uniform::Index,
+};
 
 use crate::gpu_buffer::LinearBuffer;
 
@@ -69,6 +74,17 @@ impl<'g> RenderPass<'g> {
             .lock()
             .unwrap()
             .bind_vertex_uniform(index, uni);
+    }
+    pub fn bind_vertex_uniform_bevy(&mut self, index: Index, mat: &bevy::math::Mat4) {
+        let _gpu = self.gpu.inst();
+        let mut c3d_mat = citro3d_sys::C3D_Mtx {
+            m: mat.transpose().to_cols_array(),
+        };
+
+        // Safety: It actually does a deep copy of the matrix so we arn't leaving a pointer dangling
+        unsafe {
+            citro3d_sys::C3D_FVUnifMtx4x4(shader::Type::Vertex.into(), index.into(), &mut c3d_mat);
+        }
     }
 
     pub fn draw<'f>(&mut self, prim: Primitive, verts: citro3d::buffer::Slice) {
