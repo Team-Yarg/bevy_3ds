@@ -5,11 +5,14 @@ use std::io::Write;
 use std::time::SystemTime;
 use std::{fs::File, panic::PanicInfo};
 
-use bevy::asset::{AssetServer, Assets};
+use bevy::asset::{AssetEvent, AssetServer, Assets};
+use bevy::ecs::event::EventReader;
 use bevy::ecs::schedule::{Schedule, ScheduleGraph};
 use bevy::ecs::system::{Res, ResMut};
+use bevy::math::Vec2;
+use bevy::render::color::Color;
 use bevy::render::mesh::Mesh;
-use bevy::sprite::SpriteBundle;
+use bevy::sprite::{Sprite, SpriteBundle};
 use bevy::utils::hashbrown::{HashMap, HashSet};
 use bevy::{
     app::{App, Startup},
@@ -62,8 +65,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
             ))
         })
         .level(log::LevelFilter::Debug)
-        .chain(std::io::stdout())
-        .chain(fern::log_file("output.log")?)
+        .chain(std::fs::File::create("output.log")?)
         .apply()?;
     Ok(())
 }
@@ -76,6 +78,7 @@ fn ds_main() {
         asset::AssetPlugin,
         core_pipeline::CorePipelinePlugin,
         hierarchy::HierarchyPlugin,
+        log::LogPlugin,
         render::{render_resource::RenderPipeline, texture::ImagePlugin},
         sprite::SpritePlugin,
         text::TextPlugin,
@@ -91,13 +94,13 @@ fn ds_main() {
     /*let gfx = Gfx::new().unwrap();
     let tty = ctru::console::Console::new(gfx.bottom_screen.borrow_mut());*/
 
-    std::env::set_var("BEVY_ASSET_ROOT", "romfs://");
+    std::env::set_var("BEVY_ASSET_ROOT", "romfs:/");
 
     let mut app = App::new();
     app.add_plugins(MinimalPlugins)
         .add_plugins((TransformPlugin, HierarchyPlugin, bevy::input::InputPlugin))
         .add_plugins(bevy::asset::AssetPlugin {
-            file_path: "romfs://".to_owned(),
+            file_path: "romfs:/".to_owned(),
             processed_file_path: "res://".to_owned(),
             watch_for_changes_override: None,
             mode: bevy::asset::AssetMode::Unprocessed,
@@ -175,6 +178,10 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
             0, 3, 1, 1, 3, 2,
         ])));
     cmds.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: Color::rgba(1.0, 0.5, 0.5, 1.0),
+            ..Default::default()
+        },
         texture: assets.load("assets/peach.png"),
         ..Default::default()
     });

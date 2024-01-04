@@ -19,6 +19,7 @@ log = "0.4.20"
 petgraph = "0.6.4"
 swizzle_3ds = { git = "https://github.com/Team-Yarg/swizzle-3ds", version = "0.1.0" }
 thiserror = "1.0.56"
+tracing = { version = "0.1.40", features = ["log-always"] }
 
 [target.'cfg(target_os = "horizon")'.dependencies]
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
