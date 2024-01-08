@@ -77,13 +77,16 @@ impl<'g> RenderPass<'g> {
     }
     pub fn bind_vertex_uniform_bevy(&mut self, index: Index, mat: &bevy::math::Mat4) {
         let _gpu = self.gpu.inst();
-        let mut c3d_mat = citro3d_sys::C3D_Mtx {
-            m: mat.transpose().to_cols_array(),
-        };
+        let mut cells = mat.transpose().to_cols_array();
+        cells[0..4].reverse();
+        cells[4..8].reverse();
+        cells[8..12].reverse();
+        cells[12..16].reverse();
+        let c3d_mat = citro3d_sys::C3D_Mtx { m: cells };
 
         // Safety: It actually does a deep copy of the matrix so we arn't leaving a pointer dangling
         unsafe {
-            citro3d_sys::C3D_FVUnifMtx4x4(shader::Type::Vertex.into(), index.into(), &mut c3d_mat);
+            citro3d_sys::C3D_FVUnifMtxNx4(shader::Type::Vertex.into(), index.into(), &c3d_mat, 4);
         }
     }
 

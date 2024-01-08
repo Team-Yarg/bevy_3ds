@@ -9,7 +9,7 @@ use bevy::{
             Commands, Query, Res, ResMut, Resource,
         },
     },
-    math::{Affine2, Mat3, Mat4, Vec2, Vec3, Vec4},
+    math::{Affine2, Affine3A, Mat3, Mat4, Quat, Vec2, Vec3, Vec4},
     render::{color::Color, render_resource::VertexAttribute, texture::Image, view},
     sprite::{ExtractedSprite, ExtractedSprites},
 };
@@ -100,7 +100,6 @@ pub(super) fn prepare_sprites(
             };
         }
 
-        let transform = sprite.transform.compute_matrix();
         let uv_offset = sprite
             .rect
             .map(|r| r.min / batch_image_dims)
@@ -147,6 +146,12 @@ pub(super) fn prepare_sprites(
             bounds = sz;
         }
 
+        let transform = sprite.transform.compute_matrix();
+        /** Mat4::from_scale_rotation_translation(
+            bounds.extend(1.),
+            Quat::IDENTITY,
+            (bounds * (-sprite.anchor - Vec2::splat(0.5))).extend(0.),
+        );*/
         // order is: bl, tl, tr, br
         let verts = [
             Vec2::new(0.0, bounds.y),
@@ -375,12 +380,9 @@ impl RenderCommand for DrawSprites {
 
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);
-                let mut trans = Matrix4::identity();
-                //trans.scale(3., 3., 3.);
-                pass.bind_vertex_uniform(uniforms.model_matrix, &trans);
-
-                //pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
-                log::debug!("verts: {:#?}", s.verts);
+                //pass.bind_vertex_uniform(uniforms.model_matrix, &Matrix4::identity());
+                pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
+                log::debug!("transform: {:#?}", s.transform);
 
                 let mut buf = citro3d::buffer::Info::new();
                 let vbo = buf
