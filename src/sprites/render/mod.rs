@@ -147,28 +147,13 @@ pub(super) fn prepare_sprites(
             bounds = sz;
         }
 
-        /*let verts = [
-            Vec2::new(0.0, 0.0),
-            Vec2::new(0.0, bounds.y),
-            bounds,
-            Vec2::new(bounds.x, 0.0),
-        ];*/
-
-        /*let verts = [
-            Vec2::new(0.5, 0.5),
-            Vec2::new(0.5, -0.5),
-            Vec2::new(-0.5, -0.5),
-            //Vec2::new(-0.5, 0.5),
-        ];*/
+        // order is: bl, tl, tr, br
         let verts = [
-            Vec2::new(0., 1.),
-            Vec2::new(0., 0.),
-            Vec2::new(1., 0.),
-            Vec2::new(1., 1.),
+            Vec2::new(0.0, bounds.y),
+            Vec2::new(0.0, 0.0),
+            Vec2::new(bounds.x, 0.0),
+            bounds,
         ];
-        /*for uv in &mut uvs {
-
-        }*/
 
         let verts: [Vertex; 4] = std::array::from_fn(|i| Vertex {
             pos: verts[i],
@@ -347,7 +332,7 @@ impl RenderCommand for DrawSprites {
         pass: &'f mut RenderPass<'g>,
     ) -> Result<(), crate::render::pass::RenderError> {
         let mut camera_matrix = Matrix4::identity();
-        camera_matrix.translate(0., 0., -1.0);
+        camera_matrix.translate(0., 0., -10.0);
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
         let uniforms = build_uniforms();
@@ -360,8 +345,9 @@ impl RenderCommand for DrawSprites {
         for sprite in &entity.batches {
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
                 if let Some(t) = images.get(sprite.image) {
+                    debug!("bind texture for batch");
                     pass.bind_texture(0, t);
-
+                    s0.reset();
                     s0.src(
                         citro3d::texenv::Mode::BOTH,
                         citro3d::texenv::Source::Texture0,
@@ -385,24 +371,12 @@ impl RenderCommand for DrawSprites {
                         citro3d::texenv::CombineFunc::Replace,
                     );
                 }
-
-                s0.reset();
-                s0.src(
-                    citro3d::texenv::Mode::BOTH,
-                    citro3d::texenv::Source::PrimaryColor,
-                    None,
-                    None,
-                )
-                .func(
-                    citro3d::texenv::Mode::BOTH,
-                    citro3d::texenv::CombineFunc::Replace,
-                );
             });
 
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);
                 let mut trans = Matrix4::identity();
-                trans.scale(3., 3., 3.);
+                //trans.scale(3., 3., 3.);
                 pass.bind_vertex_uniform(uniforms.model_matrix, &trans);
 
                 //pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
