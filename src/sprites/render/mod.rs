@@ -146,12 +146,12 @@ pub(super) fn prepare_sprites(
             bounds = sz;
         }
 
-        let transform = sprite.transform.compute_matrix();
-        /** Mat4::from_scale_rotation_translation(
-            bounds.extend(1.),
-            Quat::IDENTITY,
-            (bounds * (-sprite.anchor - Vec2::splat(0.5))).extend(0.),
-        );*/
+        let transform = sprite.transform.compute_matrix()
+            * Mat4::from_scale_rotation_translation(
+                bounds.extend(1.),
+                Quat::IDENTITY,
+                (bounds * (-sprite.anchor - Vec2::splat(0.5))).extend(0.),
+            );
         // order is: bl, tl, tr, br
         let verts = [
             Vec2::new(0.0, bounds.y),
