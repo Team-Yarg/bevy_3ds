@@ -4,6 +4,7 @@ use bevy::{
 };
 use citro3d::texture::{Tex, TexParams};
 use image::EncodableLayout;
+use log::{trace, warn};
 
 use super::prep_asset::{PrepareAsset, PrepareAssetsPlugin};
 
@@ -76,9 +77,16 @@ impl PrepareAsset for Image {
             <Self as bevy::render::render_asset::RenderAsset>::ExtractedAsset,
         >,
     > {
+        trace!(
+            "prepare image for 3ds gpu {:#?}",
+            extracted.texture_descriptor.label
+        );
         match GpuImage::from_bevy(extracted.clone()) {
             Some(i) => Ok(i),
-            None => Err(PrepareAssetError::RetryNextUpdate(extracted)),
+            None => {
+                warn!("failed to load image");
+                Err(PrepareAssetError::RetryNextUpdate(extracted))
+            }
         }
     }
 }

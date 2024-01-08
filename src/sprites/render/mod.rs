@@ -22,6 +22,7 @@ use citro3d::{
     uniform::Index,
 };
 use lazy_static::lazy_static;
+use tracing::debug;
 
 use crate::{
     gpu_buffer::LinearBuffer,
@@ -76,6 +77,7 @@ pub(super) fn prepare_sprites(
     images: Res<RenderAssets<Image>>,
     sprites: Res<ExtractedSprites>,
     mut batches: ResMut<SpriteBatches>,
+    assets: Res<AssetServer>,
 ) {
     batches.batches.clear();
     let mut batch_image_id = AssetId::invalid();
@@ -86,7 +88,14 @@ pub(super) fn prepare_sprites(
                 batch_image_id = sprite.image_handle_id;
                 batch_image_dims = Vec2::new(img.width(), img.height());
             } else {
-                log::warn!("sprite has invalid image handle, skipping this sprite");
+                if sprite.image_handle_id != AssetId::invalid() {
+                    let st = assets.load_state(sprite.image_handle_id);
+                    debug!("load state of sprite image: {st:#?}");
+                }
+                log::warn!(
+                    "sprite has invalid image handle '{}', skipping this sprite",
+                    sprite.image_handle_id
+                );
                 continue;
             };
         }
@@ -105,10 +114,10 @@ pub(super) fn prepare_sprites(
         }
 
         let mut uvs = [
-            Vec2::new(0., 0.),
             Vec2::new(0., 1.),
-            Vec2::new(1., 1.),
+            Vec2::new(0., 0.),
             Vec2::new(1.0, 0.0),
+            Vec2::new(1., 1.),
         ];
 
         let mut bounds = batch_image_dims;
@@ -138,11 +147,24 @@ pub(super) fn prepare_sprites(
             bounds = sz;
         }
 
-        let verts = [
+        /*let verts = [
             Vec2::new(0.0, 0.0),
             Vec2::new(0.0, bounds.y),
             bounds,
             Vec2::new(bounds.x, 0.0),
+        ];*/
+
+        /*let verts = [
+            Vec2::new(0.5, 0.5),
+            Vec2::new(0.5, -0.5),
+            Vec2::new(-0.5, -0.5),
+            //Vec2::new(-0.5, 0.5),
+        ];*/
+        let verts = [
+            Vec2::new(0., 1.),
+            Vec2::new(0., 0.),
+            Vec2::new(1., 0.),
+            Vec2::new(1., 1.),
         ];
         /*for uv in &mut uvs {
 
@@ -363,12 +385,27 @@ impl RenderCommand for DrawSprites {
                         citro3d::texenv::CombineFunc::Replace,
                     );
                 }
+
+                s0.reset();
+                s0.src(
+                    citro3d::texenv::Mode::BOTH,
+                    citro3d::texenv::Source::PrimaryColor,
+                    None,
+                    None,
+                )
+                .func(
+                    citro3d::texenv::Mode::BOTH,
+                    citro3d::texenv::CombineFunc::Replace,
+                );
             });
 
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);
+                let mut trans = Matrix4::identity();
+                trans.scale(3., 3., 3.);
+                pass.bind_vertex_uniform(uniforms.model_matrix, &trans);
 
-                pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
+                //pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
                 log::debug!("verts: {:#?}", s.verts);
 
                 let mut buf = citro3d::buffer::Info::new();

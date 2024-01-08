@@ -2,6 +2,16 @@ use std::sync::{Arc, Mutex};
 
 use std::ops::Deref;
 
+use bevy::asset::AssetLoader;
+use bevy::core_pipeline::clear_color::ClearColorConfig;
+use bevy::core_pipeline::core_2d::Core2dPlugin;
+use bevy::core_pipeline::core_3d::Core3dPlugin;
+use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
+use bevy::render::extract_resource::ExtractResourcePlugin;
+use bevy::render::render_resource::ShaderLoaderError;
+use bevy::render::view::{
+    ColorGrading, NoFrustumCulling, RenderLayers, VisibilityPlugin, VisibleEntities,
+};
 use bevy::sprite::ExtractedSprites;
 use bevy::{
     app::{App, Plugin, SubApp},
@@ -52,11 +62,71 @@ impl Default for AptRes {
 
 pub struct Render3dsPlugin;
 
+#[derive(Default, Debug)]
+struct WgpuShaderLoaderDummy;
+
+#[derive(thiserror::Error, Debug)]
+#[error("wgsl shaders are disabled (you're on 3ds)")]
+struct WgpuShaderLoadDummyError;
+
+impl AssetLoader for WgpuShaderLoaderDummy {
+    type Asset = Shader;
+    type Settings = ();
+    type Error = WgpuShaderLoadDummyError;
+
+    fn load<'a>(
+        &'a self,
+        _reader: &'a mut bevy::asset::io::Reader,
+        _settings: &'a Self::Settings,
+        load_context: &'a mut bevy::asset::LoadContext,
+    ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
+        log::debug!("intercepted shader load for {}", load_context.asset_path());
+        Box::pin(async move { Err(WgpuShaderLoadDummyError) })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &["spv", "wgsl", "vert", "frag", "comp"]
+    }
+}
+
+struct ViewPlugin3ds;
+
+impl Plugin for ViewPlugin3ds {
+    fn build(&self, app: &mut App) {
+        app.register_type::<InheritedVisibility>()
+            .register_type::<ViewVisibility>()
+            .register_type::<Msaa>()
+            .register_type::<NoFrustumCulling>()
+            .register_type::<RenderLayers>()
+            .register_type::<Visibility>()
+            .register_type::<VisibleEntities>()
+            .register_type::<ColorGrading>()
+            .init_resource::<Msaa>()
+            // NOTE: windows.is_changed() handles cases where a window was resized
+            .add_plugins((ExtractResourcePlugin::<Msaa>::default(), VisibilityPlugin));
+    }
+}
+
+pub struct CorePipeline3ds;
+impl Plugin for CorePipeline3ds {
+    fn build(&self, app: &mut App) {
+        app.register_type::<ClearColor>()
+            .register_type::<ClearColorConfig>()
+            .register_type::<DepthPrepass>()
+            .register_type::<NormalPrepass>()
+            .init_resource::<ClearColor>()
+            .add_plugins((
+                ExtractResourcePlugin::<ClearColor>::default(),
+                Core2dPlugin,
+                Core3dPlugin,
+            ));
+    }
+}
+
 impl Plugin for Render3dsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.set_runner(move |mut app| {
             let apt = Apt::new().unwrap();
-            println!("run");
             //let gfx = Gfx::new().unwrap();
             while apt.main_loop() {
                 //gfx.wait_for_vblank();
@@ -64,16 +134,15 @@ impl Plugin for Render3dsPlugin {
             }
         });
         app.init_asset::<Shader>()
-            .init_asset_loader::<ShaderLoader>();
+            .init_asset_loader::<WgpuShaderLoaderDummy>();
         init_render_app(app);
         app.add_plugins((
             ValidParentCheckPlugin::<view::InheritedVisibility>::default(),
             CameraPlugin,
-            ViewPlugin,
+            ViewPlugin3ds,
             MeshPlugin,
             mesh::MeshPlugin,
             texture::TexturePlugin,
-            GlobalsPlugin,
             MorphPlugin,
             shader::PicaShaderPlugin,
             sprites::SpritesRenderPlugin,
@@ -217,7 +286,7 @@ fn render_system(world: &World) {
         Some(citro3d::render::DepthFormat::Depth16),
     )
     .expect("failed to create left render target");
-    target.clear(ClearFlags::ALL, 0, 0);
+    target.clear(ClearFlags::ALL, 0xFFFFFF, 0);
 
     let mut pass = RenderPass::new(gpu, &target).expect("failed to create render pass");
     commands.prepare(world);

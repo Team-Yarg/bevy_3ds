@@ -12,6 +12,7 @@ use bevy::ecs::system::{Res, ResMut};
 use bevy::math::Vec2;
 use bevy::render::color::Color;
 use bevy::render::mesh::Mesh;
+use bevy::render::texture::{CompressedImageFormats, Image, ImageLoader};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy::utils::hashbrown::{HashMap, HashSet};
 use bevy::{
@@ -32,6 +33,7 @@ use ctru::services::{
     gfx::Gfx,
     hid::{Hid, KeyPad},
 };
+use tracing::{debug, error};
 
 #[cfg(target_os = "horizon")]
 mod romfs_assets;
@@ -67,7 +69,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
                 message
             ))
         })
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Trace)
         .chain(std::fs::File::create("output.log")?)
         .apply()?;
     Ok(())
@@ -78,6 +80,7 @@ fn ds_main() {
     use std::{cell::Cell, hash::RandomState};
 
     use bevy::{
+        app::PostUpdate,
         asset::AssetPlugin,
         core_pipeline::CorePipelinePlugin,
         hierarchy::HierarchyPlugin,
@@ -103,11 +106,11 @@ fn ds_main() {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins)
         .add_plugins((TransformPlugin, HierarchyPlugin, bevy::input::InputPlugin))
-        .add_plugins(romfs_assets::RomfsAssetPlugin)
+        //.add_plugins(romfs_assets::RomfsAssetPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(Render3dsPlugin)
         .add_plugins(ImagePlugin::default())
-        .add_plugins(CorePipelinePlugin)
+        .add_plugins(render::plugin::CorePipeline3ds)
         .add_plugins((
             SpritePlugin,
             TextPlugin,
@@ -122,7 +125,7 @@ fn ds_main() {
         ));
     app.add_plugins(UiPlugin);
     app.add_systems(Startup, setup);
-    println!("hello");
+    app.add_systems(PostUpdate, pupdate);
 
     app.run();
 }
@@ -138,10 +141,13 @@ fn ds_main() {
 }
 
 fn main() {
-    std::panic::set_hook(Box::new(|info| {
-        let mut f = File::create("panics.log").unwrap();
-        write!(f, "{}", info).ok();
-    }));
+    {
+        let prev = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            error!("{}", info);
+            prev(info);
+        }));
+    }
     setup_logger().expect("failed to init logger");
 
     /*app.set_runner(move |mut app| {
@@ -162,8 +168,22 @@ fn main() {
 }
 
 fn noop(mut cmds: Commands) {}
+fn pupdate() {
+    debug!("post update");
+}
 
 fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
+    let img_bytes = include_bytes!("../romfs/assets/peach.png");
+    let img = Image::from_buffer(
+        img_bytes,
+        bevy::render::texture::ImageType::Extension("png"),
+        CompressedImageFormats::NONE,
+        true,
+        bevy::render::texture::ImageSampler::Default,
+    )
+    .unwrap();
+    let peach = assets.add(img);
+
     let tri = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList)
         .with_inserted_attribute(
             Mesh::ATTRIBUTE_POSITION,
@@ -182,7 +202,7 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
             color: Color::rgba(1.0, 0.5, 0.5, 1.0),
             ..Default::default()
         },
-        texture: assets.load("assets/peach.png"),
+        texture: peach,
         ..Default::default()
     });
     cmds.spawn(Camera2dBundle::default());

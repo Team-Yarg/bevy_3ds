@@ -12,7 +12,7 @@ mod extract;
 mod mesh;
 pub mod pass;
 pub mod pipeline;
-mod plugin;
+pub mod plugin;
 mod prep_asset;
 pub mod shader;
 mod texture;

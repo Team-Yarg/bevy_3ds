@@ -7,6 +7,7 @@ use std::{
 
 use bevy::asset::io::{file::FileAssetReader, AssetReader, AssetReaderError};
 use futures::AsyncRead;
+use log::debug;
 
 /// Reads assets from the embedded romfs
 pub struct RomfsAssetReader;
@@ -42,6 +43,7 @@ fn make_asset_reader<'a>(
             .map(|f| Box::new(FileReader(f)) as _)
             .map_err(|e| {
                 if e.kind() == std::io::ErrorKind::NotFound {
+                    log::error!("romfs path not found: {:#?}", p);
                     AssetReaderError::NotFound(p)
                 } else {
                     log::error!("failed to read from: {:#?}: {e}", p);
@@ -59,6 +61,7 @@ impl AssetReader for RomfsAssetReader {
         'a,
         Result<Box<bevy::asset::io::Reader<'a>>, bevy::asset::io::AssetReaderError>,
     > {
+        debug!("romfs read: {path:#?}");
         make_asset_reader(path)
     }
 

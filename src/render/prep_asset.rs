@@ -132,20 +132,21 @@ fn extract_render_asset<A: PrepareAsset>(
     mut events: Extract<EventReader<AssetEvent<A>>>,
     assets: Extract<Res<Assets<A>>>,
 ) {
-    println!("extract render assets");
+    trace!("extract render assets");
     let mut changed_assets = HashSet::<AssetId<A>>::new();
     let mut removed = Vec::new();
     for event in events.read() {
         match event {
             AssetEvent::Added { id } | AssetEvent::Modified { id } => {
+                debug!("added asset '{id}'");
                 changed_assets.insert(*id);
             }
             AssetEvent::Removed { id } => {
-                changed_assets.remove(&id);
+                debug!("removed asset '{id}'");
+                changed_assets.remove(id);
                 removed.push(*id);
             }
             AssetEvent::LoadedWithDependencies { .. } => {
-                todo!();
                 // TODO: handle this
             }
         }
@@ -174,6 +175,7 @@ fn prepare_assets<R: PrepareAsset>(
     for (id, extracted_asset) in queued_assets {
         match R::prepare_asset_3ds(extracted_asset, &mut param) {
             Ok(prepared_asset) => {
+                debug!("add asset after retrying: {}", id);
                 render_assets.insert(id, prepared_asset);
             }
             Err(PrepareAssetError::RetryNextUpdate(extracted_asset)) => {
@@ -189,9 +191,11 @@ fn prepare_assets<R: PrepareAsset>(
     for (id, extracted_asset) in std::mem::take(&mut extracted_assets.extracted) {
         match R::prepare_asset_3ds(extracted_asset, &mut param) {
             Ok(prepared_asset) => {
+                debug!("add asset from extract: {}", id);
                 render_assets.insert(id, prepared_asset);
             }
             Err(PrepareAssetError::RetryNextUpdate(extracted_asset)) => {
+                debug!("failed to load asset {}, trying again next frame", id);
                 prepare_next_frame.assets.push((id, extracted_asset));
             }
         }
