@@ -11,7 +11,7 @@ use bevy::{
 };
 
 use super::Core3dsPlugin;
-use crate::render;
+use crate::{render, sprite};
 
 pub struct DefaultPlugins;
 
@@ -45,7 +45,10 @@ impl PluginGroup for DefaultPlugins {
                 .add(ImagePlugin::default());
         }
         group = group.add(render::plugin::CorePipeline3ds);
-        group = group.add(SpritePlugin).add(TextPlugin);
+        group = group
+            .add(SpritePlugin)
+            .add(TextPlugin)
+            .add(sprite::SpritesRenderPlugin);
         group = group.add(UiPlugin);
         group
     }

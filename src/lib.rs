@@ -15,6 +15,10 @@ pub mod render {
     pub use bevy_3ds_render::*;
 }
 
+pub mod sprite {
+    pub use bevy_3ds_sprite::*;
+}
+
 mod default_plugins;
 
 pub use default_plugins::DefaultPlugins;
