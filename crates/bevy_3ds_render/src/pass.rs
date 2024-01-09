@@ -20,7 +20,7 @@ use crate::gpu_buffer::LinearBuffer;
 use super::{
     pipeline::{RenderPipelineDescriptor, ShaderLib, VertexAttrs},
     shader::PicaShader,
-    GpuDevice, GpuImage, VboSlice,
+    GpuDevice, GpuImage,
 };
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
