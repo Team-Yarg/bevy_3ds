@@ -118,10 +118,10 @@ pub(super) fn prepare_sprites(
         }
 
         let mut uvs = [
-            Vec2::new(0., 1.),
             Vec2::new(0., 0.),
-            Vec2::new(1.0, 0.0),
+            Vec2::new(0., 1.),
             Vec2::new(1., 1.),
+            Vec2::new(1.0, 0.0),
         ];
 
         let mut bounds = batch_image_dims;
