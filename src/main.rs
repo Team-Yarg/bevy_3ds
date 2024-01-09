@@ -91,7 +91,7 @@ fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
     for (_, mut pos) in &mut sprites {
         pos.translation.x += 1.0;
         if pos.translation.x > 32. {
-            pos.translation.x = 0.;
+            pos.translation.x = -32.;
         }
     }
 }

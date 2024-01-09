@@ -405,10 +405,6 @@ impl RenderCommand for DrawSprites {
                     );
                 }
             });
-            debug!(
-                "view proj: {view_proj:#?} vs {:#?}",
-                calculate_projections()
-            );
 
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);

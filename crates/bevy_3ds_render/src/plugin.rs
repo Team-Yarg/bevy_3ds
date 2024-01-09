@@ -305,6 +305,8 @@ fn render_system(world: &mut World) {
             .run(world, &mut pass, id)
             .expect("failed to run draws");
     }
+    // you have to clear it _after_ for some reason
+    target.clear(ClearFlags::ALL, 0, 0);
 
     drop(pass);
     log::debug!("render fin");
