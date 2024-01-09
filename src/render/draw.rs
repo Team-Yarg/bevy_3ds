@@ -3,6 +3,7 @@ use std::sync::RwLock;
 use bevy::{
     app::App,
     ecs::{
+        entity::Entity,
         query::QueryState,
         system::{ReadOnlySystemParam, Resource, SystemState},
         world::World,
@@ -30,9 +31,10 @@ where
         &mut self,
         world: &'w World,
         pass: &'f mut RenderPass,
+        view: Entity,
     ) -> Result<(), RenderError> {
         let param = self.state.get_manual(world);
-        C::render(param, pass)
+        C::render(param, pass, view)
     }
 
     fn prepare(&mut self, world: &'_ World) {
@@ -43,10 +45,14 @@ where
 /// See bevy render Draw for details, this is more or less a copy with our needed tweaks
 pub trait Draw {
     fn prepare(&mut self, world: &'_ World) {}
+    ///
+    ///
+    /// View is the entity to view from, it might have an ExtractedView for example
     fn draw<'w, 'f>(
         &mut self,
         world: &'w World,
         pass: &'f mut RenderPass,
+        view: Entity,
     ) -> Result<(), RenderError>;
 }
 
@@ -66,10 +72,15 @@ impl DrawCommands {
             act.prepare(world);
         }
     }
-    pub fn run(&self, world: &World, pass: &mut RenderPass) -> Result<(), RenderError> {
+    pub fn run(
+        &self,
+        world: &World,
+        pass: &mut RenderPass,
+        view: Entity,
+    ) -> Result<(), RenderError> {
         let mut cmds = self.inner.write().unwrap();
         for act in cmds.commands.iter_mut() {
-            act.draw(world, pass)?;
+            act.draw(world, pass, view)?;
         }
         Ok(())
     }

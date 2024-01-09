@@ -4,13 +4,19 @@ use bevy::{
     asset::{AssetId, AssetServer},
     ecs::{
         component::Component,
+        entity::Entity,
         system::{
             lifetimeless::{Read, SRes},
             Commands, Query, Res, ResMut, Resource,
         },
     },
     math::{Affine2, Affine3A, Mat3, Mat4, Quat, Vec2, Vec3, Vec4},
-    render::{color::Color, render_resource::VertexAttribute, texture::Image, view},
+    render::{
+        color::Color,
+        render_resource::VertexAttribute,
+        texture::Image,
+        view::{self, ExtractedView},
+    },
     sprite::{ExtractedSprite, ExtractedSprites},
 };
 use citro3d::{
@@ -330,11 +336,20 @@ fn build_uniforms() -> Uniforms {
 pub struct DrawSprites;
 
 impl RenderCommand for DrawSprites {
-    type Param = (SRes<SpriteBatches>, SRes<RenderAssets<Image>>);
+    type Param = (
+        SRes<SpriteBatches>,
+        SRes<RenderAssets<Image>>,
+        Query<'static, 'static, &'static ExtractedView>,
+    );
 
     fn render<'w, 'f, 'g>(
-        (entity, images): (Res<'w, SpriteBatches>, Res<'w, RenderAssets<Image>>),
+        (entity, images, views): (
+            Res<'w, SpriteBatches>,
+            Res<'w, RenderAssets<Image>>,
+            Query<&ExtractedView>,
+        ),
         pass: &'f mut RenderPass<'g>,
+        view_id: Entity,
     ) -> Result<(), crate::render::pass::RenderError> {
         let mut camera_matrix = Matrix4::identity();
         camera_matrix.translate(0., 0., -10.0);

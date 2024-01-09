@@ -3,6 +3,7 @@ use std::{error::Error, marker::PhantomData, sync::Arc};
 use bevy::{
     asset::Handle,
     ecs::{
+        entity::Entity,
         query::{QueryItem, ROQueryItem, ReadOnlyWorldQuery, WorldQuery},
         system::{SystemParam, SystemParamItem},
     },
@@ -132,5 +133,6 @@ pub trait RenderCommand {
     fn render<'w, 'f, 'g>(
         param: SystemParamItem<'w, 'f, Self::Param>,
         pass: &'f mut RenderPass<'g>,
+        view: Entity,
     ) -> Result<(), RenderError>;
 }

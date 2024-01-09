@@ -301,7 +301,9 @@ fn render_system(world: &mut World) {
     commands.prepare(world);
 
     for (id, _) in &cameras {
-        commands.run(world, &mut pass).expect("failed to run draws");
+        commands
+            .run(world, &mut pass, id)
+            .expect("failed to run draws");
     }
 
     drop(pass);
