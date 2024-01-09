@@ -31,14 +31,12 @@ use citro3d::{
 use lazy_static::lazy_static;
 use tracing::debug;
 
-use crate::{
+use bevy_3ds_render::{
     gpu_buffer::LinearBuffer,
-    render::{
-        pass::{RenderCommand, RenderPass},
-        pipeline::{RenderPipelineDescriptor, VertexAttrs, VertexState},
-        shader::PicaShader,
-        GpuDevice, GpuImage, RenderAssets,
-    },
+    pass::{RenderCommand, RenderPass},
+    pipeline::{RenderPipelineDescriptor, VertexAttrs, VertexState},
+    shader::PicaShader,
+    GpuDevice, GpuImage, RenderAssets,
 };
 
 #[repr(C)]
@@ -294,8 +292,6 @@ fn draw_triangle(p: &mut RenderPass, verts: &LinearBuffer<Vertex>, uniforms: &Un
 fn calculate_projections() -> Matrix4 {
     // TODO: it would be cool to allow playing around with these parameters on
     // the fly with D-pad, etc.
-    let slider_val = ctru::os::current_3d_slider_state();
-    let interocular_distance = slider_val / 2.0;
 
     let vertical_fov = 40.0_f32.to_radians();
     let screen_depth = 2.0;
@@ -359,7 +355,7 @@ impl RenderCommand for DrawSprites {
         ),
         pass: &'f mut RenderPass<'g>,
         view_id: Entity,
-    ) -> Result<(), crate::render::pass::RenderError> {
+    ) -> Result<(), bevy_3ds_render::pass::RenderError> {
         let view = views.get(view_id).expect("failed to find view for draw");
         let mut camera_matrix = Matrix4::identity();
         camera_matrix.translate(0., 0., -1.);

@@ -332,24 +332,67 @@ name = "bevy_3ds"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_3ds_render",
+ "bevy_3ds_sprite",
+ "bevy_3ds_ui",
  "chrono",
+ "ctru-rs",
+ "ctru-sys",
+ "fern",
+ "image",
+ "libc",
+ "log",
+ "pthread-3ds",
+ "shim-3ds",
+ "tracing",
+]
+
+[[package]]
+name = "bevy_3ds_core"
+version = "0.1.0"
+
+[[package]]
+name = "bevy_3ds_render"
+version = "0.1.0"
+dependencies = [
+ "bevy",
  "citro3d",
  "citro3d-sys",
  "ctru-rs",
  "ctru-sys",
- "fern",
- "futures",
  "image",
- "indexmap 2.1.0",
- "lazy_static",
- "libc",
  "log",
- "petgraph",
- "pthread-3ds",
- "shim-3ds",
  "swizzle_3ds",
  "thiserror",
+]
+
+[[package]]
+name = "bevy_3ds_romfs"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "futures",
  "tracing",
+]
+
+[[package]]
+name = "bevy_3ds_sprite"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_3ds_render",
+ "citro3d",
+ "citro3d-sys",
+ "lazy_static",
+ "log",
+ "tracing",
+]
+
+[[package]]
+name = "bevy_3ds_ui"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

@@ -4,7 +4,7 @@ use bevy::{
     render::{Render, RenderApp},
 };
 
-use crate::render::{draw::AppDrawCommandsExtra, RenderSet3ds};
+use bevy_3ds_render::{draw::AppDrawCommandsExtra, RenderSet3ds};
 
 use self::render::SpriteBatches;
 

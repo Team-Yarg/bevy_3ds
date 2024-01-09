@@ -2,6 +2,19 @@ use std::sync::{Arc, Mutex};
 
 use std::ops::Deref;
 
+use bevy::asset::AssetLoader;
+use bevy::core_pipeline::clear_color::ClearColorConfig;
+use bevy::core_pipeline::core_2d::Core2dPlugin;
+use bevy::core_pipeline::core_3d::Core3dPlugin;
+use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
+use bevy::ecs::system::SystemState;
+use bevy::render::camera::ExtractedCamera;
+use bevy::render::extract_resource::ExtractResourcePlugin;
+use bevy::render::render_resource::ShaderLoaderError;
+use bevy::render::view::{
+    ColorGrading, NoFrustumCulling, RenderLayers, VisibilityPlugin, VisibleEntities,
+};
+use bevy::sprite::ExtractedSprites;
 use bevy::{
     app::{App, Plugin, SubApp},
     ecs::{
@@ -25,10 +38,17 @@ use bevy::{
     },
     DefaultPlugins,
 };
+use citro3d::render::ClearFlags;
+use ctru::services::gfx::{RawFrameBuffer, Screen, TopScreen, TopScreen3D};
 use ctru::{
     console::Console,
     services::{apt::Apt, gfx::Gfx},
 };
+
+use super::draw::DrawCommands;
+use super::pass::RenderPass;
+use super::prep_asset::RenderAssets;
+use super::{mesh, shader, texture, GfxInstance, GpuDevice, RenderSet3ds};
 
 struct AptRes(Apt);
 
@@ -42,11 +62,71 @@ impl Default for AptRes {
 
 pub struct Render3dsPlugin;
 
+#[derive(Default, Debug)]
+struct WgpuShaderLoaderDummy;
+
+#[derive(thiserror::Error, Debug)]
+#[error("wgsl shaders are disabled (you're on 3ds)")]
+struct WgpuShaderLoadDummyError;
+
+impl AssetLoader for WgpuShaderLoaderDummy {
+    type Asset = Shader;
+    type Settings = ();
+    type Error = WgpuShaderLoadDummyError;
+
+    fn load<'a>(
+        &'a self,
+        _reader: &'a mut bevy::asset::io::Reader,
+        _settings: &'a Self::Settings,
+        load_context: &'a mut bevy::asset::LoadContext,
+    ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
+        log::debug!("intercepted shader load for {}", load_context.asset_path());
+        Box::pin(async move { Err(WgpuShaderLoadDummyError) })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &["spv", "wgsl", "vert", "frag", "comp"]
+    }
+}
+
+struct ViewPlugin3ds;
+
+impl Plugin for ViewPlugin3ds {
+    fn build(&self, app: &mut App) {
+        app.register_type::<InheritedVisibility>()
+            .register_type::<ViewVisibility>()
+            .register_type::<Msaa>()
+            .register_type::<NoFrustumCulling>()
+            .register_type::<RenderLayers>()
+            .register_type::<Visibility>()
+            .register_type::<VisibleEntities>()
+            .register_type::<ColorGrading>()
+            .init_resource::<Msaa>()
+            // NOTE: windows.is_changed() handles cases where a window was resized
+            .add_plugins((ExtractResourcePlugin::<Msaa>::default(), VisibilityPlugin));
+    }
+}
+
+pub struct CorePipeline3ds;
+impl Plugin for CorePipeline3ds {
+    fn build(&self, app: &mut App) {
+        app.register_type::<ClearColor>()
+            .register_type::<ClearColorConfig>()
+            .register_type::<DepthPrepass>()
+            .register_type::<NormalPrepass>()
+            .init_resource::<ClearColor>()
+            .add_plugins((
+                ExtractResourcePlugin::<ClearColor>::default(),
+                Core2dPlugin,
+                Core3dPlugin,
+            ));
+    }
+}
+
 impl Plugin for Render3dsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.set_runner(move |mut app| {
             let apt = Apt::new().unwrap();
-            println!("run");
             //let gfx = Gfx::new().unwrap();
             while apt.main_loop() {
                 //gfx.wait_for_vblank();
@@ -54,15 +134,18 @@ impl Plugin for Render3dsPlugin {
             }
         });
         app.init_asset::<Shader>()
-            .init_asset_loader::<ShaderLoader>();
+            .init_asset_loader::<WgpuShaderLoaderDummy>();
         init_render_app(app);
         app.add_plugins((
             ValidParentCheckPlugin::<view::InheritedVisibility>::default(),
+            // todo: window plugin
             CameraPlugin,
-            ViewPlugin,
+            ViewPlugin3ds, // view plugin
             MeshPlugin,
-            GlobalsPlugin,
+            mesh::MeshPlugin,
+            texture::TexturePlugin,
             MorphPlugin,
+            shader::PicaShaderPlugin,
         ));
     }
 }
@@ -101,15 +184,29 @@ fn init_render_app(parent: &mut App) {
         )
             .run_if(|| false),
     );
+    base_shed.configure_sets(
+        (
+            RenderSet::ExtractCommands,
+            RenderSet3ds::PrepareAssets,
+            RenderSet3ds::Prepare,
+            RenderSet3ds::PrepareBindGroups,
+        )
+            .chain(),
+    );
+
     app.add_schedule(extract_schedule)
         .add_schedule(base_shed)
         .init_resource::<bevy::render::render_graph::RenderGraph>()
+        .init_resource::<GpuDevice>()
+        .init_resource::<DrawCommands>()
+        .init_non_send_resource::<GfxInstance>()
         .insert_resource(parent.world.resource::<bevy::asset::AssetServer>().clone())
+        .add_systems(Render, render_system)
         .add_systems(
             Render,
             (
                 apply_extract_commands.in_set(RenderSet::ExtractCommands),
-                (render_system, render_ui).in_set(RenderSet::Render),
+                (render_system, render_ui, render_meshes, render_sprites).in_set(RenderSet::Render),
                 World::clear_entities.in_set(RenderSet::Cleanup),
             ),
         );
@@ -159,15 +256,56 @@ fn extract(main_world: &mut World, render_app: &mut App) {
     main_world.insert_resource(ScratchMainWorld(inserted_world));
 }
 fn render_ui(nodes: Res<ExtractedUiNodes>) {
-    println!("render ui");
+    //println!("render ui");
     for (ent, node) in &nodes.uinodes {
         println!("node: {ent:#?}");
     }
 }
+fn render_meshes(meshes: Res<RenderAssets<Mesh>>) {
+    println!("render meshes: {}", meshes.iter().count());
+    for (id, mesh) in meshes.iter() {
+        println!("render mesh: {id:#?}");
+    }
+}
+fn render_sprites(sprites: Res<ExtractedSprites>) {
+    log::debug!("sprites: {}", sprites.sprites.len());
+}
 
 fn render_system(world: &mut World) {
-    println!("render");
-    draw_triangle();
+    log::debug!("render");
+    #[allow(clippy::type_complexity)]
+    let mut st: SystemState<(
+        Res<GpuDevice>,
+        NonSend<GfxInstance>,
+        Res<DrawCommands>,
+        Query<(Entity, &ExtractedCamera)>,
+    )> = SystemState::new(world);
+    let (gpu, gfx, commands, cameras) = st.get(world);
+    let gpu = gpu.into_inner();
+    let mut screen = gfx.0.top_screen.borrow_mut();
+    let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
+
+    let mut target = citro3d::render::Target::new(
+        width,
+        height,
+        screen,
+        Some(citro3d::render::DepthFormat::Depth16),
+    )
+    .expect("failed to create left render target");
+    target.clear(ClearFlags::ALL, 0xFFFFFF, 0);
+
+    let mut pass = RenderPass::new(gpu).expect("failed to create render pass");
+    pass.select_render_target(&target);
+    commands.prepare(world);
+
+    for (id, _) in &cameras {
+        commands
+            .run(world, &mut pass, id)
+            .expect("failed to run draws");
+    }
+
+    drop(pass);
+    log::debug!("render fin");
 }
 
 fn apply_extract_commands(render_world: &mut World) {
@@ -178,5 +316,3 @@ fn apply_extract_commands(render_world: &mut World) {
             .apply_deferred(render_world);
     });
 }
-
-fn draw_triangle() {}

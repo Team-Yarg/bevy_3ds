@@ -7,7 +7,7 @@ use std::{
 
 use bevy::asset::io::{file::FileAssetReader, AssetReader, AssetReaderError};
 use futures::AsyncRead;
-use log::debug;
+use tracing::debug;
 
 /// Reads assets from the embedded romfs
 pub struct RomfsAssetReader;

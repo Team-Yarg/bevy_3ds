@@ -3,7 +3,7 @@ use bevy::{
     render::{mesh::Mesh, texture::Image},
 };
 
-use crate::render::prep_asset::PrepareAssetsPlugin;
+use crate::prep_asset::PrepareAssetsPlugin;
 
 pub struct MeshPlugin;
 

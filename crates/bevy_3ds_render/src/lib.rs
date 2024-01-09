@@ -1,3 +1,5 @@
+#![feature(allocator_api)]
+
 use std::{
     mem::MaybeUninit,
     ops::Range,
@@ -9,6 +11,7 @@ use bevy::ecs::{schedule::SystemSet, system::Resource};
 
 pub mod draw;
 mod extract;
+pub mod gpu_buffer;
 mod mesh;
 pub mod pass;
 pub mod pipeline;
