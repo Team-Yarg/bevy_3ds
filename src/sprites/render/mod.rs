@@ -154,10 +154,10 @@ pub(super) fn prepare_sprites(
             );
         // order is: bl, tl, tr, br
         let verts = [
-            Vec2::new(0.0, bounds.y),
+            Vec2::new(0.0, 1.),
             Vec2::new(0.0, 0.0),
-            Vec2::new(bounds.x, 0.0),
-            bounds,
+            Vec2::new(1., 0.0),
+            Vec2::splat(1.),
         ];
 
         let verts: [Vertex; 4] = std::array::from_fn(|i| Vertex {
