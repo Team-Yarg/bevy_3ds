@@ -36,7 +36,13 @@ use self::pipeline::{ShaderLib, VertexAttrs};
 pub struct GfxInstance(ctru::services::gfx::Gfx);
 impl Default for GfxInstance {
     fn default() -> Self {
-        Self(ctru::services::gfx::Gfx::new().expect("failed to init gpu"))
+        Self(
+            ctru::services::gfx::Gfx::with_formats_shared(
+                ctru::services::gspgpu::FramebufferFormat::Rgba8,
+                ctru::services::gspgpu::FramebufferFormat::Rgba8,
+            )
+            .expect("failed to init gpu"),
+        )
     }
 }
 
