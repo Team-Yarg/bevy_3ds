@@ -299,7 +299,11 @@ fn render_system(world: &mut World) {
     let mut pass = RenderPass::new(gpu).expect("failed to create render pass");
     pass.select_render_target(&target);
     commands.prepare(world);
-    commands.run(world, &mut pass).expect("failed to run draws");
+
+    for (id, _) in &cameras {
+        commands.run(world, &mut pass).expect("failed to run draws");
+    }
+
     drop(pass);
     log::debug!("render fin");
 }
