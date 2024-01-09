@@ -350,6 +350,9 @@ dependencies = [
 [[package]]
 name = "bevy_3ds_core"
 version = "0.1.0"
+dependencies = [
+ "bevy",
+]
 
 [[package]]
 name = "bevy_3ds_render"
@@ -393,6 +396,7 @@ name = "bevy_3ds_ui"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_3ds_core",
 ]
 
 [[package]]

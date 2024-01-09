@@ -1,14 +1,14 @@
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
     hierarchy::HierarchyPlugin,
-    render::texture::ImagePlugin,
     sprite::SpritePlugin,
     text::TextPlugin,
     transform::TransformPlugin,
-    ui::UiPlugin,
     window::{Window, WindowPlugin, WindowResolution},
     MinimalPlugins,
 };
+use bevy_3ds_render::texture::ImagePlugin;
+use bevy_3ds_ui::UiPlugin;
 
 use super::Core3dsPlugin;
 use crate::{render, sprite};
@@ -45,11 +45,8 @@ impl PluginGroup for DefaultPlugins {
                 .add(ImagePlugin::default());
         }
         group = group.add(render::plugin::CorePipeline3ds);
-        group = group
-            .add(SpritePlugin)
-            .add(TextPlugin)
-            .add(sprite::SpritesRenderPlugin);
-        group = group.add(UiPlugin);
+        group = group.add(sprite::SpritesPlugin).add(TextPlugin);
+        group = group.add(UiPlugin::default());
         group
     }
 }

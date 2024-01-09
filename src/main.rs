@@ -9,13 +9,14 @@ use bevy::asset::{AssetEvent, AssetServer, Assets};
 use bevy::core_pipeline::core_3d::Camera3dBundle;
 use bevy::ecs::event::EventReader;
 use bevy::ecs::schedule::{Schedule, ScheduleGraph};
-use bevy::ecs::system::{Res, ResMut};
+use bevy::ecs::system::{Query, Res, ResMut};
 use bevy::math::Vec2;
 use bevy::render::camera::OrthographicProjection;
 use bevy::render::color::Color;
 use bevy::render::mesh::Mesh;
 use bevy::render::texture::{CompressedImageFormats, Image, ImageLoader};
 use bevy::sprite::{Sprite, SpriteBundle};
+use bevy::transform::components::Transform;
 use bevy::utils::hashbrown::{HashMap, HashSet};
 use bevy::{
     app::{App, Startup},
@@ -86,8 +87,13 @@ fn main() {
 }
 
 fn noop(mut cmds: Commands) {}
-fn pupdate() {
-    debug!("post update");
+fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
+    for (_, mut pos) in &mut sprites {
+        pos.translation.x += 1.0;
+        if pos.translation.x > 32. {
+            pos.translation.x = 0.;
+        }
+    }
 }
 
 fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
@@ -100,7 +106,8 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
         bevy::render::texture::ImageSampler::Default,
     )
     .unwrap();
-    let peach = assets.add(img);
+    //let peach = assets.add(img);
+    let peach = assets.load("peach.png");
 
     let tri = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList)
         .with_inserted_attribute(
