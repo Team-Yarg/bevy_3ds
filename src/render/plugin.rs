@@ -7,6 +7,8 @@ use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::core_2d::Core2dPlugin;
 use bevy::core_pipeline::core_3d::Core3dPlugin;
 use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
+use bevy::ecs::system::SystemState;
+use bevy::render::camera::ExtractedCamera;
 use bevy::render::extract_resource::ExtractResourcePlugin;
 use bevy::render::render_resource::ShaderLoaderError;
 use bevy::render::view::{
@@ -271,11 +273,17 @@ fn render_sprites(sprites: Res<ExtractedSprites>) {
     log::debug!("sprites: {}", sprites.sprites.len());
 }
 
-fn render_system(world: &World) {
+fn render_system(world: &mut World) {
     log::debug!("render");
-    let gpu = world.resource::<GpuDevice>();
-    let gfx = world.non_send_resource::<GfxInstance>();
-    let commands = world.resource::<DrawCommands>();
+    #[allow(clippy::type_complexity)]
+    let mut st: SystemState<(
+        Res<GpuDevice>,
+        NonSend<GfxInstance>,
+        Res<DrawCommands>,
+        Query<(Entity, &ExtractedCamera)>,
+    )> = SystemState::new(world);
+    let (gpu, gfx, commands, cameras) = st.get(world);
+    let gpu = gpu.into_inner();
     let mut screen = gfx.0.top_screen.borrow_mut();
     let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
 
