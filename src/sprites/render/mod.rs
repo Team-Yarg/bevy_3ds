@@ -336,6 +336,14 @@ fn build_uniforms() -> Uniforms {
 
 pub struct DrawSprites;
 
+#[rustfmt::skip]
+const WGPU_TO_OPENGL_DEPTH: Mat4 = Mat4::from_cols_array(&[
+    1.0, 0.0,  0.0, 0.0,
+    0.0, 1.0,  0.0, 0.0,
+    0.0, 0.0, -1.0, 0.0,
+    0.0, 0.0,  0.0, 1.0,
+]);
+
 impl RenderCommand for DrawSprites {
     type Param = (
         SRes<SpriteBatches>,
@@ -358,7 +366,9 @@ impl RenderCommand for DrawSprites {
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
         //let mut view_proj = view.projection;
-        let mut view_proj = Mat4::orthographic_rh_gl(-1000.0, 1000.0, -1000., 1000., 0.01, 1000.);
+        //let mut view_proj = OPENGL_TO_WGPU.inverse() * view.projection; // * Mat4::orthographic_rh(-1000.0, 1000.0, -1000., 1000., -1000.0, 1000.);
+        let mut view_proj = WGPU_TO_OPENGL_DEPTH * view.projection; // * Mat4::orthographic_rh(-1000.0, 1000.0, -1000., 1000., -1000.0, 1000.);
+                                                                    //let mut view_proj = Mat4::orthographic_rh_gl(-1000.0, 1000.0, -1000., 1000., 0., 1000.);
 
         view_proj *= Mat4::from_axis_angle(Vec3::new(0., 0., 1.), PI / 2.);
         let uniforms = build_uniforms();
