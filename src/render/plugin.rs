@@ -288,7 +288,8 @@ fn render_system(world: &World) {
     .expect("failed to create left render target");
     target.clear(ClearFlags::ALL, 0xFFFFFF, 0);
 
-    let mut pass = RenderPass::new(gpu, &target).expect("failed to create render pass");
+    let mut pass = RenderPass::new(gpu).expect("failed to create render pass");
+    pass.select_render_target(&target);
     commands.prepare(world);
     commands.run(world, &mut pass).expect("failed to run draws");
     drop(pass);

@@ -27,12 +27,17 @@ pub struct RenderPass<'g> {
     gpu: &'g GpuDevice,
 }
 impl<'g> RenderPass<'g> {
-    pub fn new(gpu: &'g GpuDevice, target: &Target) -> citro3d::Result<Self> {
+    pub fn new(gpu: &'g GpuDevice) -> citro3d::Result<Self> {
         unsafe {
             citro3d_sys::C3D_FrameBegin(citro3d_sys::C3D_FRAME_SYNCDRAW.try_into().unwrap());
         }
-        gpu.instance.lock().unwrap().select_render_target(target)?;
         Ok(Self { gpu })
+    }
+    pub fn select_render_target(&mut self, target: &Target) {
+        self.gpu
+            .inst()
+            .select_render_target(target)
+            .expect("failed to set render target even though we are in a frame, thats unexpected");
     }
 
     pub fn set_vertex_shader<'f>(
