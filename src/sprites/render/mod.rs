@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::{f32::consts::PI, ops::Add};
 
 use bevy::{
     asset::{AssetId, AssetServer},
@@ -18,6 +18,7 @@ use bevy::{
         view::{self, ExtractedView},
     },
     sprite::{ExtractedSprite, ExtractedSprites},
+    transform::TransformPoint,
 };
 use citro3d::{
     attrib::{self, Register},
@@ -304,7 +305,7 @@ fn calculate_projections() -> Matrix4 {
         far: 100.0,
     };
 
-    let proj = Projection::perspective(vertical_fov, AspectRatio::TopScreen, clip_planes).into();
+    let proj = Projection::orthographic(-1000.0..1000.0, -1000.0..1000.0, clip_planes).into();
     proj
 }
 
@@ -351,15 +352,21 @@ impl RenderCommand for DrawSprites {
         pass: &'f mut RenderPass<'g>,
         view_id: Entity,
     ) -> Result<(), crate::render::pass::RenderError> {
+        let view = views.get(view_id).expect("failed to find view for draw");
         let mut camera_matrix = Matrix4::identity();
-        camera_matrix.translate(0., 0., -10.0);
+        camera_matrix.translate(0., 0., -1.);
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
+        //let mut view_proj = view.projection;
+        let mut view_proj = Mat4::orthographic_rh_gl(-1000.0, 1000.0, -1000., 1000., 0.01, 1000.);
+
+        view_proj *= Mat4::from_axis_angle(Vec3::new(0., 0., 1.), PI / 2.);
         let uniforms = build_uniforms();
         pass.bind_vertex_uniform(uniforms.camera_matrix, &camera_matrix);
         pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
         let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
-        pass.bind_vertex_uniform(view_uniform, &calculate_projections());
+        pass.bind_vertex_uniform_bevy(view_uniform, &view_proj);
+        //pass.bind_vertex_uniform(view_uniform, &calculate_projections());
         log::debug!("draw sprites, {} batches", entity.batches.len());
 
         for sprite in &entity.batches {
@@ -392,10 +399,26 @@ impl RenderCommand for DrawSprites {
                     );
                 }
             });
+            debug!(
+                "view proj: {view_proj:#?} vs {:#?}",
+                calculate_projections()
+            );
 
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);
+                let mod_m = s.transform;
                 //pass.bind_vertex_uniform(uniforms.model_matrix, &Matrix4::identity());
+                let verts = s
+                    .verts
+                    .iter()
+                    .map(|v| {
+                        let v = v.pos.extend(0.);
+                        let vm = mod_m.transform_point(v);
+                        let proj_vm = view_proj.transform_point(vm);
+                        proj_vm
+                    })
+                    .collect::<Vec<_>>();
+                debug!("mapped verts: {verts:#?}");
                 pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
                 log::debug!("transform: {:#?}", s.transform);
 

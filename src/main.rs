@@ -6,10 +6,12 @@ use std::time::SystemTime;
 use std::{fs::File, panic::PanicInfo};
 
 use bevy::asset::{AssetEvent, AssetServer, Assets};
+use bevy::core_pipeline::core_3d::Camera3dBundle;
 use bevy::ecs::event::EventReader;
 use bevy::ecs::schedule::{Schedule, ScheduleGraph};
 use bevy::ecs::system::{Res, ResMut};
 use bevy::math::Vec2;
+use bevy::render::camera::OrthographicProjection;
 use bevy::render::color::Color;
 use bevy::render::mesh::Mesh;
 use bevy::render::texture::{CompressedImageFormats, Image, ImageLoader};
@@ -116,7 +118,7 @@ fn ds_main() {
             TextPlugin,
             WindowPlugin {
                 primary_window: Some(Window {
-                    resolution: WindowResolution::new(480., 240.),
+                    resolution: WindowResolution::new(400., 240.),
                     resizable: false,
                     ..Default::default()
                 }),
