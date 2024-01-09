@@ -90,7 +90,12 @@ impl GpuImage {
             .format(citro3d::texture::TexFormat::Rgba8),
         )
         .ok()?;
-        tex.upload(img.to_rgba8().as_bytes());
+        let img = img.to_rgba8();
+        let mut bytes = img.as_bytes().to_owned();
+        for px in bytes.chunks_mut(4) {
+            px.reverse();
+        }
+        tex.upload(&bytes);
         Some(Self(tex))
     }
 

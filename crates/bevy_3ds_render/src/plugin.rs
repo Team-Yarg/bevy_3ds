@@ -274,7 +274,7 @@ fn render_sprites(sprites: Res<ExtractedSprites>) {
 }
 
 fn render_system(world: &mut World) {
-    log::debug!("render");
+    log::debug!("render on thread {:?}", std::thread::current().id());
     #[allow(clippy::type_complexity)]
     let mut st: SystemState<(
         Res<GpuDevice>,
@@ -294,7 +294,7 @@ fn render_system(world: &mut World) {
         Some(citro3d::render::DepthFormat::Depth16),
     )
     .expect("failed to create left render target");
-    target.clear(ClearFlags::ALL, 0xFFFFFF, 0);
+    target.clear(ClearFlags::ALL, 0, 0);
 
     let mut pass = RenderPass::new(gpu).expect("failed to create render pass");
     pass.select_render_target(&target);
