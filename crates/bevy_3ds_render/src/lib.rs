@@ -18,7 +18,7 @@ pub mod pipeline;
 pub mod plugin;
 mod prep_asset;
 pub mod shader;
-mod texture;
+pub mod texture;
 
 use citro3d::{
     attrib,

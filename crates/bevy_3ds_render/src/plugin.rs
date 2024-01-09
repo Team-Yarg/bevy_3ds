@@ -5,10 +5,10 @@ use std::ops::Deref;
 use bevy::asset::AssetLoader;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::core_2d::Core2dPlugin;
-use bevy::core_pipeline::core_3d::Core3dPlugin;
 use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
 use bevy::ecs::system::SystemState;
 use bevy::render::camera::ExtractedCamera;
+use bevy::render::extract_component::ExtractComponentPlugin;
 use bevy::render::extract_resource::ExtractResourcePlugin;
 use bevy::render::render_resource::ShaderLoaderError;
 use bevy::render::view::{
@@ -107,6 +107,17 @@ impl Plugin for ViewPlugin3ds {
     }
 }
 
+struct Core3dPlugin;
+
+impl Plugin for Core3dPlugin {
+    fn build(&self, app: &mut App) {
+        use bevy::core_pipeline::core_3d::Camera3dDepthLoadOp;
+        app.register_type::<Camera3d>()
+            .register_type::<Camera3dDepthLoadOp>()
+            .add_plugins(ExtractComponentPlugin::<Camera3d>::default());
+    }
+}
+
 pub struct CorePipeline3ds;
 impl Plugin for CorePipeline3ds {
     fn build(&self, app: &mut App) {
@@ -125,14 +136,6 @@ impl Plugin for CorePipeline3ds {
 
 impl Plugin for Render3dsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.set_runner(move |mut app| {
-            let apt = Apt::new().unwrap();
-            //let gfx = Gfx::new().unwrap();
-            while apt.main_loop() {
-                //gfx.wait_for_vblank();
-                app.update();
-            }
-        });
         app.init_asset::<Shader>()
             .init_asset_loader::<WgpuShaderLoaderDummy>();
         init_render_app(app);
@@ -143,7 +146,6 @@ impl Plugin for Render3dsPlugin {
             ViewPlugin3ds, // view plugin
             MeshPlugin,
             mesh::MeshPlugin,
-            texture::TexturePlugin,
             MorphPlugin,
             shader::PicaShaderPlugin,
         ));
