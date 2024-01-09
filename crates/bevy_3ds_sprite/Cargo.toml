@@ -11,7 +11,7 @@ bevy_3ds_render = { version = "0.1.0", path = "../bevy_3ds_render" }
 citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 citro3d-sys = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 
-bevy = { version = "0.12.1", default-features = false, features = ["bevy_sprite"] }
+bevy = { version = "0.12.1", default-features = false, features = ["bevy_sprite", "bevy_asset"] }
 tracing = { version = "0.1.40" }
 lazy_static = "1.4.0"
 log = "0.4.20"
