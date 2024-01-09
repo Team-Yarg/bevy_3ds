@@ -66,7 +66,6 @@ fn ds_main() {
 
     let mut app = App::new();
     app.add_plugins(bevy_3ds::DefaultPlugins);
-    app.add_plugins(bevy_3ds::Core3dsPlugin);
     app.add_systems(Startup, setup);
     app.add_systems(PostUpdate, pupdate);
 
