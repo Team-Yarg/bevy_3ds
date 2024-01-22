@@ -1,15 +1,7 @@
 #![feature(allocator_api)]
 use bevy::{
     app::{App, Plugin, PluginsState},
-    hierarchy::HierarchyPlugin,
-    render::texture::ImagePlugin,
-    sprite::SpritePlugin,
     tasks::tick_global_task_pools_on_main_thread,
-    text::TextPlugin,
-    transform::TransformPlugin,
-    ui::UiPlugin,
-    window::{Window, WindowPlugin, WindowResolution},
-    MinimalPlugins,
 };
 
 pub mod render {

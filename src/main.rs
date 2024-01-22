@@ -1,23 +1,12 @@
 #![feature(allocator_api)]
 
-use std::alloc::Layout;
-use std::io::Write;
-use std::time::SystemTime;
-use std::{fs::File, panic::PanicInfo};
-
-use bevy::asset::{AssetEvent, AssetServer, Assets};
-use bevy::core_pipeline::core_3d::Camera3dBundle;
-use bevy::ecs::event::EventReader;
-use bevy::ecs::schedule::{LogLevel, Schedule, ScheduleGraph};
-use bevy::ecs::system::{Query, Res, ResMut};
-use bevy::math::Vec2;
-use bevy::render::camera::OrthographicProjection;
+use bevy::asset::AssetServer;
+use bevy::ecs::system::{Query, Res};
 use bevy::render::color::Color;
 use bevy::render::mesh::Mesh;
-use bevy::render::texture::{CompressedImageFormats, Image, ImageLoader};
+use bevy::render::texture::{CompressedImageFormats, Image};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy::transform::components::Transform;
-use bevy::utils::hashbrown::{HashMap, HashSet};
 use bevy::{
     app::{App, Startup},
     core_pipeline::core_2d::Camera2dBundle,
@@ -27,16 +16,9 @@ use bevy::{
         node_bundles::{NodeBundle, TextBundle},
         Style, Val,
     },
-    DefaultPlugins,
 };
-#[cfg(target_os = "horizon")]
-use ctru::services::{
-    self,
-    apt::Apt,
-    gfx::Gfx,
-    hid::{Hid, KeyPad},
-};
-use tracing::{debug, error};
+
+use tracing::error;
 
 mod shims;
 
@@ -91,7 +73,7 @@ fn main() {
     ds_main();
 }
 
-fn noop(mut cmds: Commands) {}
+fn noop(_cmds: Commands) {}
 fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
     for (_, mut pos) in &mut sprites {
         pos.translation.x += 1.0;
@@ -103,7 +85,7 @@ fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
 
 fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
     let img_bytes = include_bytes!("../romfs/assets/peach.png");
-    let img = Image::from_buffer(
+    let _img = Image::from_buffer(
         img_bytes,
         bevy::render::texture::ImageType::Extension("png"),
         CompressedImageFormats::NONE,
@@ -114,7 +96,7 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
     //let peach = assets.add(img);
     let peach = assets.load("peach.png");
 
-    let tri = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList)
+    let _tri = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList)
         .with_inserted_attribute(
             Mesh::ATTRIBUTE_POSITION,
             vec![

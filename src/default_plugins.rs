@@ -1,11 +1,9 @@
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
     hierarchy::HierarchyPlugin,
-    sprite::SpritePlugin,
     text::TextPlugin,
     transform::TransformPlugin,
     window::{Window, WindowPlugin, WindowResolution},
-    MinimalPlugins,
 };
 use bevy_3ds_render::texture::ImagePlugin;
 use bevy_3ds_ui::UiPlugin;
