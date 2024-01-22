@@ -284,6 +284,7 @@ fn render_system(world: &mut World) {
     )> = SystemState::new(world);
     let (gpu, gfx, commands, cameras) = st.get(world);
     let gpu = gpu.into_inner();
+    gfx.0.wait_for_vblank();
     let mut screen = gfx.0.top_screen.borrow_mut();
     let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
 
