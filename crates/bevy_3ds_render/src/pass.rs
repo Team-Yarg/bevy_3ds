@@ -1,12 +1,7 @@
-use std::{error::Error, marker::PhantomData, sync::Arc};
-
-use bevy::{
-    asset::Handle,
-    ecs::{
-        entity::Entity,
-        query::{QueryItem, ROQueryItem, ReadOnlyWorldQuery, WorldQuery},
-        system::{SystemParam, SystemParamItem},
-    },
+use super::{pipeline::VertexAttrs, shader::PicaShader, GpuDevice, GpuImage};
+use bevy::ecs::{
+    entity::Entity,
+    system::{SystemParam, SystemParamItem},
 };
 use citro3d::{
     buffer::Primitive,
@@ -14,14 +9,7 @@ use citro3d::{
     shader::{self, Program},
     uniform::Index,
 };
-
-use crate::gpu_buffer::LinearBuffer;
-
-use super::{
-    pipeline::{RenderPipelineDescriptor, ShaderLib, VertexAttrs},
-    shader::PicaShader,
-    GpuDevice, GpuImage,
-};
+use std::sync::Arc;
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
 pub struct RenderPass<'g> {
@@ -96,7 +84,7 @@ impl<'g> RenderPass<'g> {
         }
     }
 
-    pub fn draw<'f>(&mut self, prim: Primitive, verts: citro3d::buffer::Slice) {
+    pub fn draw(&mut self, prim: Primitive, verts: citro3d::buffer::Slice) {
         unsafe {
             self.gpu.draw(prim, verts);
         }
@@ -130,9 +118,9 @@ pub enum RenderError {
 pub trait RenderCommand {
     type Param: SystemParam + 'static;
 
-    fn render<'w, 'f, 'g>(
-        param: SystemParamItem<'w, 'f, Self::Param>,
-        pass: &'f mut RenderPass<'g>,
+    fn render<'f>(
+        param: SystemParamItem<'_, 'f, Self::Param>,
+        pass: &'f mut RenderPass<'_>,
         view: Entity,
     ) -> Result<(), RenderError>;
 }

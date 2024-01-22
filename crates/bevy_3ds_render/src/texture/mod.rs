@@ -1,9 +1,6 @@
 use bevy::{
     app::Plugin,
-    render::{
-        render_asset::PrepareAssetError, render_resource::TextureDimension, texture::Image,
-        RenderApp,
-    },
+    render::{render_asset::PrepareAssetError, texture::Image, RenderApp},
 };
 use citro3d::texture::{Tex, TexParams};
 use image::EncodableLayout;
@@ -61,7 +58,6 @@ const MAX_TEX_SIZE: u32 = 1024;
 
 impl GpuImage {
     fn from_bevy(img: Image) -> Option<Self> {
-        let desc = &img.texture_descriptor;
         assert!(
             img.width() <= MAX_TEX_SIZE,
             "image is too wide, max is {}",
@@ -82,7 +78,7 @@ impl GpuImage {
         }
         let img = swizzle_3ds::swizzle_image(&img);
 
-        let mut tex = Tex::new(
+        let tex = Tex::new(
             TexParams::new_2d(
                 img.width().try_into().expect("image too wide"),
                 img.height().try_into().expect("image too tall"),
@@ -113,7 +109,7 @@ impl PrepareAsset for Image {
 
     fn prepare_asset_3ds(
         extracted: <Self as bevy::render::render_asset::RenderAsset>::ExtractedAsset,
-        param: &mut bevy::ecs::system::SystemParamItem<<Self as PrepareAsset>::Param>,
+        _: &mut bevy::ecs::system::SystemParamItem<<Self as PrepareAsset>::Param>,
     ) -> Result<
         <Self as PrepareAsset>::PreparedAsset,
         bevy::render::render_asset::PrepareAssetError<

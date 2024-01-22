@@ -1,5 +1,3 @@
-use bevy::asset::Handle;
-
 use super::shader::PicaShader;
 
 pub struct VertexAttribute {

@@ -5,7 +5,7 @@ use std::{
 
 use bevy::{
     app::Plugin,
-    asset::{Asset, AssetEvent, AssetId, Assets},
+    asset::{AssetEvent, AssetId, Assets},
     ecs::{
         event::EventReader,
         system::{
@@ -14,10 +14,7 @@ use bevy::{
     },
     prelude::*,
     render::{
-        render_asset::{
-            PrepareAssetError, PrepareNextFrameAssets, RenderAsset, RenderAssetDependency,
-            RenderAssetPlugin,
-        },
+        render_asset::{PrepareAssetError, RenderAsset, RenderAssetDependency},
         Extract, ExtractSchedule, RenderApp,
     },
 };

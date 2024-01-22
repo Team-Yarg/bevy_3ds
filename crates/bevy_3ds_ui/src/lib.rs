@@ -11,8 +11,6 @@ use bevy::{
 };
 use bevy_3ds_core::util;
 
-mod render;
-
 #[derive(Default)]
 pub struct UiPlugin {
     inner: bevy::ui::UiPlugin,

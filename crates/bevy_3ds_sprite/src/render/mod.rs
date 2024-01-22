@@ -1,30 +1,21 @@
-use std::{f32::consts::PI, ops::Add};
+use std::f32::consts::PI;
 
 use bevy::{
     asset::{AssetId, AssetServer},
     ecs::{
         component::Component,
         entity::Entity,
-        system::{
-            lifetimeless::{Read, SRes},
-            Commands, Query, Res, ResMut, Resource,
-        },
+        system::{lifetimeless::SRes, Query, Res, ResMut, Resource},
     },
-    math::{Affine2, Affine3A, Mat3, Mat4, Quat, Vec2, Vec3, Vec4},
-    render::{
-        color::Color,
-        render_resource::VertexAttribute,
-        texture::Image,
-        view::{self, ExtractedView},
-    },
-    sprite::{ExtractedSprite, ExtractedSprites},
-    transform::TransformPoint,
+    math::{Mat4, Quat, Vec2, Vec3, Vec4},
+    render::{color::Color, texture::Image, view::ExtractedView},
+    sprite::ExtractedSprites,
 };
 use citro3d::{
-    attrib::{self, Register},
-    buffer::{self, Primitive},
+    attrib::Register,
+    buffer::{self},
     macros::include_shader,
-    math::{AspectRatio, ClipPlanes, Matrix4, Projection},
+    math::Matrix4,
     texenv::Stage,
     uniform::Index,
 };
@@ -34,9 +25,9 @@ use tracing::debug;
 use bevy_3ds_render::{
     gpu_buffer::LinearBuffer,
     pass::{RenderCommand, RenderPass},
-    pipeline::{RenderPipelineDescriptor, VertexAttrs, VertexState},
+    pipeline::VertexAttrs,
     shader::PicaShader,
-    GpuDevice, GpuImage, RenderAssets,
+    RenderAssets,
 };
 
 #[repr(C)]
@@ -61,6 +52,7 @@ impl Vertex {
 struct SpriteInstance {
     transform: Mat4,
     verts: LinearBuffer<Vertex>,
+    #[allow(unused)]
     indexes: LinearBuffer<u32>,
     mat: Material,
 }
@@ -78,7 +70,6 @@ pub struct SpriteBatches {
 }
 
 pub(super) fn prepare_sprites(
-    mut cmds: Commands,
     images: Res<RenderAssets<Image>>,
     sprites: Res<ExtractedSprites>,
     mut batches: ResMut<SpriteBatches>,
@@ -87,7 +78,7 @@ pub(super) fn prepare_sprites(
     batches.batches.clear();
     let mut batch_image_id = AssetId::invalid();
     let mut batch_image_dims = Vec2::ZERO;
-    for (id, sprite) in &sprites.sprites {
+    for (_id, sprite) in &sprites.sprites {
         if sprite.image_handle_id != batch_image_id {
             if let Some(img) = images.get(sprite.image_handle_id) {
                 batch_image_id = sprite.image_handle_id;
@@ -105,10 +96,6 @@ pub(super) fn prepare_sprites(
             };
         }
 
-        let uv_offset = sprite
-            .rect
-            .map(|r| r.min / batch_image_dims)
-            .unwrap_or(Vec2::ZERO);
         let mut uv_scale = Vec2::ONE;
         if sprite.flip_x {
             uv_scale.x = -1.0;
@@ -171,28 +158,7 @@ pub(super) fn prepare_sprites(
         });
         let verts = LinearBuffer::new(&verts);
         //let colour = sprite.color.as_rgba_f32().into();
-        let uv = sprite.anchor;
-        /*verts.push(Vertex {
-            pos: Vec3::new(0, 0),
-            uv,
-            colour,
-        });
-        verts.push(Vertex {
-            pos: Vec3::new(0, 1),
-            uv,
-            colour,
-        });
-        verts.push(Vertex {
-            pos: Vec3::new(1, 1),
-            uv,
-            colour,
-        });
-        verts.push(Vertex {
-            pos: Vec3::new(1, 0),
-            uv,
-            colour,
-        });*/
-        let mut indexes = LinearBuffer::new(&[0, 1, 2, 0, 2, 1]);
+        let indexes = LinearBuffer::new(&[0, 1, 2, 0, 2, 1]);
         let batch = SpriteBatch {
             image: sprite.image_handle_id,
             sprites: vec![SpriteInstance {
@@ -268,43 +234,6 @@ pub struct Uniforms {
     pub material_specular: Index,
 }
 
-#[derive(Debug)]
-pub struct Model<T> {
-    pub pos: Vec3,
-    pub rot: Vec3,
-    shapes: Vec<Shape<T>>,
-}
-
-#[derive(Debug)]
-pub struct Shape<T> {
-    mat: Material,
-    prim_type: Primitive,
-    verts: LinearBuffer<T>,
-    attr_info: attrib::Info,
-}
-
-fn draw_triangle(p: &mut RenderPass, verts: &LinearBuffer<Vertex>, uniforms: &Uniforms) {
-    log::debug!("draw triangle");
-
-    log::debug!("draw triangle fin");
-}
-
-fn calculate_projections() -> Matrix4 {
-    // TODO: it would be cool to allow playing around with these parameters on
-    // the fly with D-pad, etc.
-
-    let vertical_fov = 40.0_f32.to_radians();
-    let screen_depth = 2.0;
-
-    let clip_planes = ClipPlanes {
-        near: 0.01,
-        far: 100.0,
-    };
-
-    let proj = Projection::orthographic(-1000.0..1000.0, -1000.0..1000.0, clip_planes).into();
-    proj
-}
-
 fn build_uniforms() -> Uniforms {
     let vert_prog = &SPRITE_SHADER;
     let model_uniform = vert_prog.get_uniform("modelMtx").unwrap();
@@ -347,13 +276,13 @@ impl RenderCommand for DrawSprites {
         Query<'static, 'static, &'static ExtractedView>,
     );
 
-    fn render<'w, 'f, 'g>(
+    fn render<'w>(
         (entity, images, views): (
             Res<'w, SpriteBatches>,
             Res<'w, RenderAssets<Image>>,
             Query<&ExtractedView>,
         ),
-        pass: &'f mut RenderPass<'g>,
+        pass: &'_ mut RenderPass<'_>,
         view_id: Entity,
     ) -> Result<(), bevy_3ds_render::pass::RenderError> {
         let view = views.get(view_id).expect("failed to find view for draw");
@@ -408,19 +337,7 @@ impl RenderCommand for DrawSprites {
 
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);
-                let mod_m = s.transform;
                 //pass.bind_vertex_uniform(uniforms.model_matrix, &Matrix4::identity());
-                let verts = s
-                    .verts
-                    .iter()
-                    .map(|v| {
-                        let v = v.pos.extend(0.);
-                        let vm = mod_m.transform_point(v);
-                        let proj_vm = view_proj.transform_point(vm);
-                        proj_vm
-                    })
-                    .collect::<Vec<_>>();
-                debug!("mapped verts: {verts:#?}");
                 pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
                 log::debug!("transform: {:#?}", s.transform);
 

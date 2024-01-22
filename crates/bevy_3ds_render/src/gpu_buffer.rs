@@ -16,6 +16,7 @@ impl<T> std::ops::Deref for LinearBuffer<T> {
     }
 }
 
+#[allow(unused)]
 fn box_from_copy_slice<T: Copy, A: Allocator>(items: &[T], alloc: A) -> Box<[T], A> {
     unsafe {
         let mem: NonNull<[u8]> = alloc.allocate(Layout::for_value(items)).unwrap();

@@ -73,7 +73,6 @@ fn main() {
     ds_main();
 }
 
-fn noop(_cmds: Commands) {}
 fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
     for (_, mut pos) in &mut sprites {
         pos.translation.x += 1.0;

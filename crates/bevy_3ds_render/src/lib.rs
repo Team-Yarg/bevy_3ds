@@ -1,14 +1,16 @@
 #![feature(allocator_api)]
 
+use self::pipeline::VertexAttrs;
+use bevy::ecs::{schedule::SystemSet, system::Resource};
+use citro3d::{buffer::Primitive, Instance};
+pub use plugin::Render3dsPlugin;
+pub use prep_asset::RenderAssets;
 use std::{
-    mem::MaybeUninit,
-    ops::Range,
     pin::Pin,
-    sync::{Arc, LockResult, Mutex, MutexGuard},
+    sync::{Arc, Mutex, MutexGuard},
 };
 
-use bevy::ecs::{schedule::SystemSet, system::Resource};
-
+pub use texture::GpuImage;
 pub mod draw;
 mod extract;
 pub mod gpu_buffer;
@@ -19,19 +21,6 @@ pub mod plugin;
 mod prep_asset;
 pub mod shader;
 pub mod texture;
-
-use citro3d::{
-    attrib,
-    buffer::{self, Primitive},
-    Instance,
-};
-pub use plugin::Render3dsPlugin;
-pub use prep_asset::RenderAssets;
-pub use texture::GpuImage;
-
-use crate::gpu_buffer::LinearBuffer;
-
-use self::pipeline::{ShaderLib, VertexAttrs};
 
 pub struct GfxInstance(ctru::services::gfx::Gfx);
 impl Default for GfxInstance {

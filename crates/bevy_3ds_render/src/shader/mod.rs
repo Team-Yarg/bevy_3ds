@@ -1,12 +1,11 @@
 use bevy::{
     app::Plugin,
     asset::{Asset, AssetApp, AssetLoader, AsyncReadExt},
-    ecs::system::Resource,
     reflect::TypePath,
 };
-use citro3d::{shader::Entrypoint, uniform::Uniform};
+use citro3d::shader::Entrypoint;
 
-use super::{pipeline::ShaderLib, prep_asset::PrepareAsset};
+use super::pipeline::ShaderLib;
 
 pub struct PicaShaderPlugin;
 
@@ -22,7 +21,7 @@ pub struct PicaShader(ShaderLib);
 
 impl PicaShader {
     pub fn load_from_bytes(bytes: &[u8]) -> Result<Self, PicaShaderLoadError> {
-        let shader = citro3d::shader::Library::from_bytes(&bytes)
+        let shader = citro3d::shader::Library::from_bytes(bytes)
             .map_err(|e| PicaShaderLoadError::ShaderParse(e.to_string()))?;
         Ok(Self(shader))
     }
@@ -55,8 +54,8 @@ impl AssetLoader for PicaShaderLoader {
     fn load<'a>(
         &'a self,
         reader: &'a mut bevy::asset::io::Reader,
-        settings: &'a Self::Settings,
-        load_context: &'a mut bevy::asset::LoadContext,
+        _: &'a Self::Settings,
+        _: &'a mut bevy::asset::LoadContext,
     ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut buf = Vec::new();

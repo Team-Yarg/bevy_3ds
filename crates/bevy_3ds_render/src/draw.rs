@@ -4,7 +4,6 @@ use bevy::{
     app::App,
     ecs::{
         entity::Entity,
-        query::QueryState,
         system::{ReadOnlySystemParam, Resource, SystemState},
         world::World,
     },
@@ -27,10 +26,10 @@ impl<C: RenderCommand> Draw for RenderCommandState<C>
 where
     C::Param: ReadOnlySystemParam,
 {
-    fn draw<'w, 'f>(
+    fn draw(
         &mut self,
-        world: &'w World,
-        pass: &'f mut RenderPass,
+        world: &World,
+        pass: &mut RenderPass,
         view: Entity,
     ) -> Result<(), RenderError> {
         let param = self.state.get_manual(world);
@@ -44,14 +43,14 @@ where
 
 /// See bevy render Draw for details, this is more or less a copy with our needed tweaks
 pub trait Draw {
-    fn prepare(&mut self, world: &'_ World) {}
+    fn prepare(&mut self, _world: &'_ World) {}
     ///
     ///
     /// View is the entity to view from, it might have an ExtractedView for example
-    fn draw<'w, 'f>(
+    fn draw(
         &mut self,
-        world: &'w World,
-        pass: &'f mut RenderPass,
+        world: &World,
+        pass: &mut RenderPass,
         view: Entity,
     ) -> Result<(), RenderError>;
 }

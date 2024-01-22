@@ -1,7 +1,3 @@
-use std::sync::{Arc, Mutex};
-
-use std::ops::Deref;
-
 use bevy::asset::AssetLoader;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::core_2d::Core2dPlugin;
@@ -10,11 +6,9 @@ use bevy::ecs::system::SystemState;
 use bevy::render::camera::ExtractedCamera;
 use bevy::render::extract_component::ExtractComponentPlugin;
 use bevy::render::extract_resource::ExtractResourcePlugin;
-use bevy::render::render_resource::ShaderLoaderError;
 use bevy::render::view::{
     ColorGrading, NoFrustumCulling, RenderLayers, VisibilityPlugin, VisibleEntities,
 };
-use bevy::sprite::ExtractedSprites;
 use bevy::{
     app::{App, Plugin, SubApp},
     ecs::{
@@ -25,30 +19,18 @@ use bevy::{
     prelude::*,
     render::{
         camera::CameraPlugin,
-        globals::GlobalsPlugin,
         mesh::{morph::MorphPlugin, MeshPlugin},
-        render_resource::ShaderLoader,
-        view::{self, ViewPlugin},
+        view::{self},
         ExtractSchedule, MainWorld, Render, RenderApp, RenderSet,
     },
-    transform::components::GlobalTransform,
-    ui::{
-        node_bundles::NodeBundle, BackgroundColor, ExtractedUiNode, ExtractedUiNodes,
-        RenderUiSystem,
-    },
-    DefaultPlugins,
 };
 use citro3d::render::ClearFlags;
-use ctru::services::gfx::{RawFrameBuffer, Screen, TopScreen, TopScreen3D};
-use ctru::{
-    console::Console,
-    services::{apt::Apt, gfx::Gfx},
-};
+use ctru::services::apt::Apt;
+use ctru::services::gfx::{RawFrameBuffer, Screen};
 
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
-use super::prep_asset::RenderAssets;
-use super::{mesh, shader, texture, GfxInstance, GpuDevice, RenderSet3ds};
+use super::{mesh, shader, GfxInstance, GpuDevice, RenderSet3ds};
 
 struct AptRes(Apt);
 
@@ -155,13 +137,6 @@ impl Plugin for Render3dsPlugin {
 #[derive(Default, Resource)]
 struct ScratchMainWorld(MainWorld);
 
-impl ScratchMainWorld {
-    fn take(self) -> World {
-        let w: &World = self.0.deref();
-        unsafe { std::ptr::read(w as *const World) }
-    }
-}
-
 fn init_render_app(parent: &mut App) {
     parent.init_resource::<ScratchMainWorld>();
 
@@ -208,7 +183,7 @@ fn init_render_app(parent: &mut App) {
             Render,
             (
                 apply_extract_commands.in_set(RenderSet::ExtractCommands),
-                (render_system, render_ui, render_meshes, render_sprites).in_set(RenderSet::Render),
+                (render_system).in_set(RenderSet::Render),
                 World::clear_entities.in_set(RenderSet::Cleanup),
             ),
         );
@@ -256,21 +231,6 @@ fn extract(main_world: &mut World, render_app: &mut App) {
     let mut inserted_world = render_app.world.remove_resource::<MainWorld>().unwrap();
     std::mem::swap(main_world, &mut inserted_world);
     main_world.insert_resource(ScratchMainWorld(inserted_world));
-}
-fn render_ui(nodes: Res<ExtractedUiNodes>) {
-    //println!("render ui");
-    for (ent, node) in &nodes.uinodes {
-        println!("node: {ent:#?}");
-    }
-}
-fn render_meshes(meshes: Res<RenderAssets<Mesh>>) {
-    println!("render meshes: {}", meshes.iter().count());
-    for (id, mesh) in meshes.iter() {
-        println!("render mesh: {id:#?}");
-    }
-}
-fn render_sprites(sprites: Res<ExtractedSprites>) {
-    log::debug!("sprites: {}", sprites.sprites.len());
 }
 
 fn render_system(world: &mut World) {

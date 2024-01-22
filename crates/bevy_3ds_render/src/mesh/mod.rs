@@ -1,8 +1,4 @@
-use bevy::{
-    asset::Asset,
-    render::{mesh::Mesh, render_asset::RenderAsset, render_resource::IndexFormat},
-};
-use ctru::linear::LinearAllocator;
+use bevy::render::{mesh::Mesh, render_resource::IndexFormat};
 
 use crate::gpu_buffer::LinearBuffer;
 
@@ -22,7 +18,7 @@ impl PrepareAsset for Mesh {
 
     fn prepare_asset_3ds(
         mesh: Self::ExtractedAsset,
-        param: &mut bevy::ecs::system::SystemParamItem<<Self as PrepareAsset>::Param>,
+        _: &mut bevy::ecs::system::SystemParamItem<<Self as PrepareAsset>::Param>,
     ) -> Result<
         <Self as PrepareAsset>::PreparedAsset,
         bevy::render::render_asset::PrepareAssetError<Self::ExtractedAsset>,
@@ -38,7 +34,7 @@ impl PrepareAsset for Mesh {
                     "can't use non-u32 index format"
                 );
                 BufKind::Elements {
-                    index_buf: LinearBuffer::new(&idx),
+                    index_buf: LinearBuffer::new(idx),
                     nb: mesh.indices().unwrap().len() as u32,
                 }
             })

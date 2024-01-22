@@ -1,12 +1,5 @@
-use bevy::render::render_resource::PrimitiveTopology;
-use citro3d::math::{FVec3, FVec4};
-
 use crate::gpu_buffer::LinearBuffer;
-
-pub struct Vertex {
-    pos: FVec4,
-    tex: FVec3,
-}
+use bevy::render::render_resource::PrimitiveTopology;
 
 pub enum BufKind {
     Array,
