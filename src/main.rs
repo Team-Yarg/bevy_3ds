@@ -8,7 +8,7 @@ use std::{fs::File, panic::PanicInfo};
 use bevy::asset::{AssetEvent, AssetServer, Assets};
 use bevy::core_pipeline::core_3d::Camera3dBundle;
 use bevy::ecs::event::EventReader;
-use bevy::ecs::schedule::{Schedule, ScheduleGraph};
+use bevy::ecs::schedule::{LogLevel, Schedule, ScheduleGraph};
 use bevy::ecs::system::{Query, Res, ResMut};
 use bevy::math::Vec2;
 use bevy::render::camera::OrthographicProjection;
@@ -42,8 +42,10 @@ mod shims;
 
 //use libc::c_void;
 
+#[cfg(debug)]
 fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()
+        .level(log::LevelFilter::Trace)
         .format(|out, message, record| {
             out.finish(format_args!(
                 "[{} {} {}] {}",
@@ -53,7 +55,6 @@ fn setup_logger() -> Result<(), fern::InitError> {
                 message
             ))
         })
-        .level(log::LevelFilter::Trace)
         .chain(std::fs::File::create("output.log")?)
         .apply()?;
     Ok(())
@@ -81,7 +82,11 @@ fn main() {
             prev(info);
         }));
     }
-    setup_logger().expect("failed to init logger");
+    #[cfg(debug)]
+    {
+        setup_logger().expect("failed to init logger");
+        log::set_max_level(log::LevelFilter::Debug); // this prevents evaluating log statements below, which fern doesn't do
+    }
 
     ds_main();
 }
