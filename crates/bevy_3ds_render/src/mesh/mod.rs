@@ -8,7 +8,6 @@ use super::prep_asset::PrepareAsset;
 
 pub mod gpu;
 mod plugin;
-pub mod systems;
 
 pub use plugin::MeshPlugin;
 
