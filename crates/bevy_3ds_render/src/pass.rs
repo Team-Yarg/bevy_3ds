@@ -1,3 +1,5 @@
+use crate::{frame::Citro3dFrame, gpu_buffer::LinearBuffer};
+
 use super::{pipeline::VertexAttrs, shader::PicaShader, GpuDevice, GpuImage};
 use bevy::ecs::{
     entity::Entity,
@@ -9,18 +11,50 @@ use citro3d::{
     shader::{self, Program},
     uniform::Index,
 };
-use std::sync::Arc;
+use std::{marker::PhantomData, sync::Arc};
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
-pub struct RenderPass<'g> {
-    gpu: &'g GpuDevice,
+pub struct VboSlice<'vbo, 'buf> {
+    _buf: PhantomData<&'buf VboBuffer>,
+    slice: citro3d::buffer::Slice<'vbo>,
 }
-impl<'g> RenderPass<'g> {
-    pub fn new(gpu: &'g GpuDevice) -> citro3d::Result<Self> {
-        unsafe {
-            citro3d_sys::C3D_FrameBegin(citro3d_sys::C3D_FRAME_SYNCDRAW.try_into().unwrap());
+/// Wrapper for [`citro3d::buffer::Info`] that allows better lifetime management
+pub struct VboBuffer {
+    buf: citro3d::buffer::Info,
+}
+impl VboBuffer {
+    pub fn new() -> Self {
+        Self {
+            buf: citro3d::buffer::Info::new(),
         }
-        Ok(Self { gpu })
+    }
+    pub fn add<'vbo, 'me, T>(
+        &'me mut self,
+        vbo: &'vbo LinearBuffer<T>,
+        attrib_info: &citro3d::attrib::Info,
+    ) -> citro3d::Result<VboSlice<'vbo, 'me>> {
+        let slice = self.buf.add(vbo, attrib_info)?;
+        let slice = unsafe { std::mem::transmute::<_, citro3d::buffer::Slice<'vbo>>(slice) };
+        Ok(VboSlice {
+            slice,
+            _buf: PhantomData,
+        })
+    }
+}
+
+impl Default for VboBuffer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct RenderPass<'g, 'f> {
+    gpu: &'g GpuDevice,
+    _frame: &'f Citro3dFrame<'g>,
+}
+impl<'g, 'f> RenderPass<'g, 'f> {
+    pub fn new(gpu: &'g GpuDevice, _frame: &'f Citro3dFrame<'g>) -> Self {
+        Self { gpu, _frame }
     }
     pub fn select_render_target(&mut self, target: &Target) {
         self.gpu
@@ -29,11 +63,7 @@ impl<'g> RenderPass<'g> {
             .expect("failed to set render target even though we are in a frame, thats unexpected");
     }
 
-    pub fn set_vertex_shader<'f>(
-        &'f mut self,
-        shader: &'g PicaShader,
-        entry_point: usize,
-    ) -> Result<()> {
+    pub fn set_vertex_shader(&mut self, shader: &'f PicaShader, entry_point: usize) -> Result<()> {
         let prog = Arc::pin(Program::new(
             shader
                 .entry_point(entry_point)
@@ -58,7 +88,7 @@ impl<'g> RenderPass<'g> {
         let env = gpu.texenv(stage);
         f(env)
     }
-    pub fn bind_texture(&self, index: i32, tex: &'g GpuImage) {
+    pub fn bind_texture(&mut self, index: i32, tex: &'f GpuImage) {
         tex.0.bind(index);
     }
 
@@ -84,16 +114,9 @@ impl<'g> RenderPass<'g> {
         }
     }
 
-    pub fn draw(&mut self, prim: Primitive, verts: citro3d::buffer::Slice) {
+    pub fn draw(&mut self, prim: Primitive, verts: VboSlice<'f, '_>) {
         unsafe {
-            self.gpu.draw(prim, verts);
-        }
-    }
-}
-impl<'g> Drop for RenderPass<'g> {
-    fn drop(&mut self) {
-        unsafe {
-            citro3d_sys::C3D_FrameEnd(0);
+            self.gpu.draw(prim, verts.slice);
         }
     }
 }
@@ -118,9 +141,9 @@ pub enum RenderError {
 pub trait RenderCommand {
     type Param: SystemParam + 'static;
 
-    fn render<'f>(
-        param: SystemParamItem<'_, 'f, Self::Param>,
-        pass: &'f mut RenderPass<'_>,
+    fn render<'w: 'f, 'f>(
+        param: SystemParamItem<'w, '_, Self::Param>,
+        pass: &mut RenderPass<'w, 'f>,
         view: Entity,
     ) -> Result<(), RenderError>;
 }

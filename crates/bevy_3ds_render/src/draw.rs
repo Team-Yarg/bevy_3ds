@@ -26,10 +26,10 @@ impl<C: RenderCommand> Draw for RenderCommandState<C>
 where
     C::Param: ReadOnlySystemParam,
 {
-    fn draw(
+    fn draw<'g: 'f, 'f>(
         &mut self,
-        world: &World,
-        pass: &mut RenderPass,
+        world: &'g World,
+        pass: &mut RenderPass<'g, 'f>,
         view: Entity,
     ) -> Result<(), RenderError> {
         let param = self.state.get_manual(world);
@@ -47,10 +47,10 @@ pub trait Draw {
     ///
     ///
     /// View is the entity to view from, it might have an ExtractedView for example
-    fn draw(
+    fn draw<'g: 'f, 'f>(
         &mut self,
-        world: &World,
-        pass: &mut RenderPass,
+        world: &'g World,
+        pass: &mut RenderPass<'g, 'f>,
         view: Entity,
     ) -> Result<(), RenderError>;
 }
@@ -71,10 +71,10 @@ impl DrawCommands {
             act.prepare(world);
         }
     }
-    pub fn run(
-        &self,
-        world: &World,
-        pass: &mut RenderPass,
+    pub fn run<'g: 'f, 'f>(
+        &'f self,
+        world: &'g World,
+        pass: &mut RenderPass<'g, 'f>,
         view: Entity,
     ) -> Result<(), RenderError> {
         let mut cmds = self.inner.write().unwrap();

@@ -257,7 +257,8 @@ fn render_system(world: &mut World) {
     .expect("failed to create left render target");
     target.clear(ClearFlags::ALL, 0, 0);
 
-    let mut pass = RenderPass::new(gpu).expect("failed to create render pass");
+    let frame = gpu.start_new_frame();
+    let mut pass = RenderPass::new(gpu, &frame);
     pass.select_render_target(&target);
     commands.prepare(world);
 
@@ -269,7 +270,7 @@ fn render_system(world: &mut World) {
     // you have to clear it _after_ for some reason
     target.clear(ClearFlags::ALL, 0, 0);
 
-    drop(pass);
+    drop(frame);
     log::debug!("render fin");
 }
 

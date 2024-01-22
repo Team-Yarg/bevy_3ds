@@ -3,6 +3,7 @@
 use self::pipeline::VertexAttrs;
 use bevy::ecs::{schedule::SystemSet, system::Resource};
 use citro3d::{buffer::Primitive, Instance};
+use frame::Citro3dFrame;
 pub use plugin::Render3dsPlugin;
 pub use prep_asset::RenderAssets;
 use std::{
@@ -13,6 +14,7 @@ use std::{
 pub use texture::GpuImage;
 pub mod draw;
 mod extract;
+mod frame;
 pub mod gpu_buffer;
 mod mesh;
 pub mod pass;
@@ -48,6 +50,9 @@ impl Default for GpuDevice {
 impl GpuDevice {
     fn inst(&self) -> MutexGuard<Instance> {
         self.instance.lock().unwrap()
+    }
+    pub fn start_new_frame<'m>(&'m self) -> Citro3dFrame<'m> {
+        Citro3dFrame::new(self)
     }
 
     /// set the shader program to use for subsequent draw calls

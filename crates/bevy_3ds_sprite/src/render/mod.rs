@@ -24,7 +24,7 @@ use tracing::debug;
 
 use bevy_3ds_render::{
     gpu_buffer::LinearBuffer,
-    pass::{RenderCommand, RenderPass},
+    pass::{RenderCommand, RenderPass, VboBuffer},
     pipeline::VertexAttrs,
     shader::PicaShader,
     RenderAssets,
@@ -276,15 +276,17 @@ impl RenderCommand for DrawSprites {
         Query<'static, 'static, &'static ExtractedView>,
     );
 
-    fn render<'w>(
+    fn render<'w: 'f, 'f>(
         (entity, images, views): (
             Res<'w, SpriteBatches>,
             Res<'w, RenderAssets<Image>>,
             Query<&ExtractedView>,
         ),
-        pass: &'_ mut RenderPass<'_>,
+        pass: &mut RenderPass<'_, 'f>,
         view_id: Entity,
     ) -> Result<(), bevy_3ds_render::pass::RenderError> {
+        let entity = entity.into_inner();
+        let images = images.into_inner();
         let view = views.get(view_id).expect("failed to find view for draw");
         let mut camera_matrix = Matrix4::identity();
         camera_matrix.translate(0., 0., -1.);
@@ -305,10 +307,14 @@ impl RenderCommand for DrawSprites {
         log::debug!("draw sprites, {} batches", entity.batches.len());
 
         for sprite in &entity.batches {
+            let img = images.get(sprite.image);
+            let uses_img = img.is_some();
+            if let Some(t) = img {
+                debug!("bind texture for batch");
+                pass.bind_texture(0, t);
+            }
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
-                if let Some(t) = images.get(sprite.image) {
-                    debug!("bind texture for batch");
-                    pass.bind_texture(0, t);
+                if uses_img {
                     s0.reset();
                     s0.src(
                         citro3d::texenv::Mode::BOTH,
@@ -341,13 +347,24 @@ impl RenderCommand for DrawSprites {
                 pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
                 log::debug!("transform: {:#?}", s.transform);
 
-                let mut buf = citro3d::buffer::Info::new();
+                let mut buf = VboBuffer::new();
                 let vbo = buf
                     .add(&s.verts, &Vertex::attr_info())
                     .expect("failed to add vbo data");
 
                 pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
                 pass.draw(buffer::Primitive::TriangleFan, vbo);
+
+                /*let mut buf = VboBuffer::new();
+                let verts = [Vertex {
+                    pos: Vec2::new(0., 0.),
+                    uv: Vec2::new(0., 0.),
+                }];
+                let verts = LinearBuffer::new(&verts);
+                let vbo = buf
+                    .add(&verts, &Vertex::attr_info())
+                    .expect("failed to add vbo data");
+                pass.draw(buffer::Primitive::TriangleFan, vbo);*/
             }
         }
         Ok(())
