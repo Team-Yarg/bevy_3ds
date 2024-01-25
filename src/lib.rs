@@ -14,7 +14,7 @@ pub mod sprite {
 
 mod default_plugins;
 
-use ctru::services::apt::Apt;
+use ctru::prelude::*;
 pub use default_plugins::DefaultPlugins;
 
 pub struct Core3dsPlugin;
@@ -33,8 +33,16 @@ fn app_runner(mut app: App) {
         app.cleanup();
     }
 
+    let mut hid = Hid::new().unwrap();
+
     let apt = Apt::new().unwrap();
     while apt.main_loop() {
+        hid.scan_input();
+
+        if hid.keys_down().contains(KeyPad::START) {
+            break;
+        }
+
         if app.plugins_state() != PluginsState::Cleaned {
             if app.plugins_state() != PluginsState::Ready {
                 tick_global_task_pools_on_main_thread();
