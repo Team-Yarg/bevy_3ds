@@ -178,7 +178,6 @@ fn init_render_app(parent: &mut App) {
         .init_resource::<DrawCommands>()
         .init_non_send_resource::<GfxInstance>()
         .insert_resource(parent.world.resource::<bevy::asset::AssetServer>().clone())
-        .add_systems(Render, render_system)
         .add_systems(
             Render,
             (
