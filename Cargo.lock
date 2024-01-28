@@ -356,6 +356,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_3ds_input"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "ctru-rs",
+]
+
+[[package]]
 name = "bevy_3ds_macros"
 version = "0.1.0"
 dependencies = [

@@ -1,3 +1,7 @@
+//! # Bevy Game Example
+//!
+//! This module demonstrates a simple Bevy game application, including setup & sprite movement.
+
 #![feature(allocator_api)]
 
 use bevy::asset::AssetServer;
@@ -24,6 +28,7 @@ mod shims;
 
 //use libc::c_void;
 
+/// Uses fern for logging with chrono for timestamp formatting.
 fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()
         .level(log::LevelFilter::Trace)
@@ -41,6 +46,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
     Ok(())
 }
 
+/// Sets up the Bevy application.
 #[cfg(target_os = "horizon")]
 fn ds_main() {
     use bevy::app::PostUpdate;
@@ -55,6 +61,8 @@ fn ds_main() {
     app.run();
 }
 
+/// Main entry point for the application.
+/// Configures panic hook and logger, then calls `ds_main`.
 fn main() {
     {
         let prev = std::panic::take_hook();
@@ -72,6 +80,8 @@ fn main() {
     ds_main();
 }
 
+/// Update function for sprite movement.
+/// Moves each sprite in the `sprites` query to the right each frame.
 fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
     for (_, mut pos) in &mut sprites {
         pos.translation.x += 1.0;
@@ -81,6 +91,8 @@ fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
     }
 }
 
+/// Setup function for initialising game entities.
+/// Loads assets, creates a sprite, and sets up the camera and UI.
 fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
     let img_bytes = include_bytes!("../romfs/assets/peach.png");
     let _img = Image::from_buffer(
