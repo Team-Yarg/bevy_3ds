@@ -36,24 +36,30 @@ impl PrepareAsset for Mesh {
         bevy::render::render_asset::PrepareAssetError<Self::ExtractedAsset>,
     > {
         println!("prep asset 3ds");
-        let vbo = mesh
+
+        let positions = mesh
             .attribute(Mesh::ATTRIBUTE_POSITION)
             .expect("failed to get vertex positions")
             .as_float3()
-            .expect("failed to convert positions")
-            .iter()
-            .zip(
-                mesh.attribute(Mesh::ATTRIBUTE_UV_0)
-                    .expect("failed to get vertex UVs")
-                    .as_float3()
-                    .expect("failed to convert UVs")
-                    .iter(),
-            )
-            .map(|(pos, uv)| MeshVertex {
+            .expect("failed to convert positions");
+        let uvs = mesh
+            .attribute(Mesh::ATTRIBUTE_UV_0)
+            .map(|uv| uv.as_float3().expect("failed to convert UVs"));
+
+        let mut vbo = vec![];
+        for index in 0..positions.len() {
+            let pos = positions[index];
+            let uv = if let Some(t) = uvs {
+                t[index]
+            } else {
+                [0.0; 3]
+            };
+
+            vbo.push(MeshVertex {
                 pos: Vec3::new(pos[0], pos[1], pos[2]),
                 uv: Vec2::new(uv[0], uv[1]),
-            })
-            .collect::<Vec<_>>();
+            });
+        }
 
         let indecies = mesh
             .get_index_buffer_bytes()
