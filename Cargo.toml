@@ -15,8 +15,10 @@ members = ["crates/*"]
 bevy_3ds_render = { path = "crates/bevy_3ds_render" }
 bevy_3ds_sprite = { path = "crates/bevy_3ds_sprite" }
 bevy_3ds_ui = { path = "crates/bevy_3ds_ui" }
+bevy_3ds_pbr = { path = "crates/bevy_3ds_pbr" }
 
-bevy = { version = "0.12.1", default-features = false, features = ["bevy_ui", "bevy_asset", "png"] }
+bevy = { version = "0.12.1", default-features = false, features = ["bevy_ui", "bevy_asset", "png", "bevy_pbr"] }
+
 chrono = { version = "0.4.31", default-features = false, features = ["std", "clock"] }
 fern = "0.6.2"
 image = "0.24.7"

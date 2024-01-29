@@ -332,6 +332,7 @@ name = "bevy_3ds"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_3ds_pbr",
  "bevy_3ds_render",
  "bevy_3ds_sprite",
  "bevy_3ds_ui",
@@ -349,6 +350,13 @@ dependencies = [
 
 [[package]]
 name = "bevy_3ds_core"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
+name = "bevy_3ds_pbr"
 version = "0.1.0"
 dependencies = [
  "bevy",
@@ -589,6 +597,7 @@ dependencies = [
  "bevy_core_pipeline",
  "bevy_ecs",
  "bevy_math",
+ "bevy_pbr",
  "bevy_reflect",
  "bevy_render",
  "bevy_sprite",
@@ -644,6 +653,7 @@ dependencies = [
  "bevy_input",
  "bevy_log",
  "bevy_math",
+ "bevy_pbr",
  "bevy_ptr",
  "bevy_reflect",
  "bevy_render",
@@ -704,6 +714,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ec4962977a746d870170532fc92759e04d3dbcae8b7b82e7ca3bb83b1d75277"
 dependencies = [
  "glam",
+]
+
+[[package]]
+name = "bevy_pbr"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "520bfd2a898c74f84ea52cfb8eb061f37373ad15e623489d5f75d27ebd6138fe"
+dependencies = [
+ "bevy_app",
+ "bevy_asset",
+ "bevy_core_pipeline",
+ "bevy_derive",
+ "bevy_ecs",
+ "bevy_math",
+ "bevy_reflect",
+ "bevy_render",
+ "bevy_transform",
+ "bevy_utils",
+ "bevy_window",
+ "bitflags 2.4.1",
+ "bytemuck",
+ "fixedbitset",
+ "naga_oil",
+ "radsort",
+ "smallvec",
+ "thread_local",
 ]
 
 [[package]]

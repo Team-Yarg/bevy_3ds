@@ -24,7 +24,6 @@ mod shims;
 
 //use libc::c_void;
 
-#[cfg(debug)]
 fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()
         .level(log::LevelFilter::Trace)
@@ -64,11 +63,11 @@ fn main() {
             prev(info);
         }));
     }
-    #[cfg(debug)]
-    {
-        setup_logger().expect("failed to init logger");
-        log::set_max_level(log::LevelFilter::Debug); // this prevents evaluating log statements below, which fern doesn't do
-    }
+    //#[cfg(debug)]
+    //{
+    setup_logger().expect("failed to init logger");
+    log::set_max_level(log::LevelFilter::Debug); // this prevents evaluating log statements below, which fern doesn't do
+                                                 //}
 
     ds_main();
 }
