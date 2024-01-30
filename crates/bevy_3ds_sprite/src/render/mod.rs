@@ -297,14 +297,12 @@ impl RenderCommand for DrawSprites {
         let entity = entity.into_inner();
         let images = images.into_inner();
         let view = views.get(view_id).expect("failed to find view for draw");
-        let mut camera_matrix = Matrix4::identity();
-        camera_matrix.translate(0., 0., -1.);
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
         let view_proj = WGPU_TO_OPENGL_DEPTH * view.projection * CORRECT_TILT;
 
         let uniforms = build_uniforms();
-        pass.bind_vertex_uniform(uniforms.camera_matrix, &camera_matrix);
+        pass.bind_vertex_uniform_bevy(uniforms.camera_matrix, &view.transform.compute_matrix());
         pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
         let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
         pass.bind_vertex_uniform_bevy(view_uniform, &view_proj);
