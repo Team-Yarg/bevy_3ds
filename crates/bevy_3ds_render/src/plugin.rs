@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use bevy::asset::AssetLoader;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::core_2d::Core2dPlugin;
@@ -9,6 +11,7 @@ use bevy::render::extract_resource::ExtractResourcePlugin;
 use bevy::render::view::{
     ColorGrading, NoFrustumCulling, RenderLayers, VisibilityPlugin, VisibleEntities,
 };
+use bevy::time::TimeSender;
 use bevy::{
     app::{App, Plugin, SubApp},
     ecs::{
@@ -268,9 +271,19 @@ fn render_system(world: &mut World) {
     }
     // you have to clear it _after_ for some reason
     target.clear(ClearFlags::ALL, 0, 0);
-
     drop(frame);
+
     log::debug!("render fin");
+
+    let time_send = world.resource::<TimeSender>();
+    if let Err(e) = time_send.0.try_send(Instant::now()) {
+        match e {
+            bevy::time::TrySendError::Full(_) => {
+                panic!("The TimeSender channel should always be empty during render. You might need to add the bevy::core::time_system to your app.",);
+            }
+            bevy::time::TrySendError::Disconnected(_) => {}
+        }
+    }
 }
 
 fn apply_extract_commands(render_world: &mut World) {
