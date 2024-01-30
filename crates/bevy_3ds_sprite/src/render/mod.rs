@@ -105,10 +105,10 @@ pub(super) fn prepare_sprites(
         }
 
         let mut uvs = [
-            Vec2::new(0., 0.),
             Vec2::new(0., 1.),
-            Vec2::new(1., 1.),
+            Vec2::new(0., 0.),
             Vec2::new(1.0, 0.0),
+            Vec2::new(1., 1.),
         ];
 
         let mut bounds = batch_image_dims;
@@ -269,6 +269,15 @@ const WGPU_TO_OPENGL_DEPTH: Mat4 = Mat4::from_cols_array(&[
     0.0, 0.0,  0.0, 1.0,
 ]);
 
+/// 3ds screens are actually tilted 90deg left, this corrects that
+#[rustfmt::skip]
+const CORRECT_TILT: Mat4 = Mat4::from_cols_array(&[
+    0.0, -1.0,  0.0, 0.0,
+    1.0, 0.0,  0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0,  0.0, 1.0,
+]);
+
 impl RenderCommand for DrawSprites {
     type Param = (
         SRes<SpriteBatches>,
@@ -292,12 +301,8 @@ impl RenderCommand for DrawSprites {
         camera_matrix.translate(0., 0., -1.);
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
-        //let mut view_proj = view.projection;
-        //let mut view_proj = OPENGL_TO_WGPU.inverse() * view.projection; // * Mat4::orthographic_rh(-1000.0, 1000.0, -1000., 1000., -1000.0, 1000.);
-        let mut view_proj = WGPU_TO_OPENGL_DEPTH * view.projection; // * Mat4::orthographic_rh(-1000.0, 1000.0, -1000., 1000., -1000.0, 1000.);
-                                                                    //let mut view_proj = Mat4::orthographic_rh_gl(-1000.0, 1000.0, -1000., 1000., 0., 1000.);
+        let view_proj = WGPU_TO_OPENGL_DEPTH * view.projection * CORRECT_TILT;
 
-        view_proj *= Mat4::from_axis_angle(Vec3::new(0., 0., 1.), PI / 2.);
         let uniforms = build_uniforms();
         pass.bind_vertex_uniform(uniforms.camera_matrix, &camera_matrix);
         pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
