@@ -24,6 +24,7 @@ pub mod plugin;
 mod prep_asset;
 pub mod shader;
 pub mod texture;
+pub mod vertattr;
 
 pub struct GfxInstance(ctru::services::gfx::Gfx);
 impl Default for GfxInstance {

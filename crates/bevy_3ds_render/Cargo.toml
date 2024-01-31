@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bevy_3ds_core = { version = "0.1.0", path = "../bevy_3ds_core" }
+bevy_3ds_macros = { version = "0.1.0", path = "../bevy_3ds_macros" }
 
-bevy = { version = "0.12.1", default-features = false }
+bevy = { version = "0.12.1", default-features = false, features = ["bevy_pbr"] }
 
 citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 citro3d-sys = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
@@ -19,4 +21,5 @@ swizzle_3ds = { git = "https://github.com/Team-Yarg/swizzle-3ds", version = "0.1
 image = "0.24.7"
 
 thiserror = "1.0.56"
+lazy_static = "1.4.0"
 log = "0.4.20"
