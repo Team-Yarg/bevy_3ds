@@ -9,20 +9,22 @@ pub fn without_render_app<R>(app: &mut App, f: impl FnOnce(&mut App) -> R) -> R 
     res
 }
 
-pub trait ToOpenGl {
-    fn to_opengl(&self) -> Self;
-}
+pub fn wgpu_projection_to_opengl(projection: Mat4) -> Mat4 {
+    /// 3ds screens are actually tilted 90deg left, this corrects that
+    #[rustfmt::skip]
+    const CORRECT_TILT: Mat4 = Mat4::from_cols_array(&[
+        0.0, -1.0,  0.0, 0.0,
+        1.0, 0.0,  0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0,  0.0, 1.0,
+    ]);
+    #[rustfmt::skip]
+    const WGPU_TO_OPENGL_DEPTH: Mat4 = Mat4::from_cols_array(&[
+        1.0,  0.0,  0.0,  0.0,
+        0.0,  1.0,  0.0,  0.0,
+        0.0,  0.0, -1.0,  0.0,
+        0.0,  0.0,  0.0,  1.0,
+    ]);
 
-#[rustfmt::skip]
-const WGPU_TO_OPENGL_TRANSFORM: Mat4 = Mat4::from_cols_array(&[
-    1.0, 0.0,  0.0, 0.0,
-    0.0, 1.0,  0.0, 0.0,
-    0.0, 0.0, -1.0, 0.0,
-    0.0, 0.0,  0.0, 1.0,
-]);
-
-impl ToOpenGl for Mat4 {
-    fn to_opengl(&self) -> Self {
-        todo!()
-    }
+    WGPU_TO_OPENGL_DEPTH * projection * CORRECT_TILT
 }

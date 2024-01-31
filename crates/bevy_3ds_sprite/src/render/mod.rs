@@ -24,29 +24,22 @@ use tracing::debug;
 
 use bevy_3ds_render::{
     gpu_buffer::LinearBuffer,
+    material::{Material, Uniforms},
     pass::{RenderCommand, RenderPass, VboBuffer},
     pipeline::VertexAttrs,
     shader::PicaShader,
+    vertattr::{VertAttrBuilder, VertAttrs},
     RenderAssets,
 };
 
+use bevy_3ds_core::util::wgpu_projection_to_opengl;
+
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, VertAttrBuilder)]
 struct Vertex {
     pos: Vec2,
     //colour: Vec4,
     uv: Vec2,
-}
-
-impl Vertex {
-    fn attr_info() -> citro3d::attrib::Info {
-        let mut info = citro3d::attrib::Info::new();
-        info.add_loader(Register::new(0).unwrap(), citro3d::attrib::Format::Float, 2)
-            .unwrap();
-        info.add_loader(Register::new(1).unwrap(), citro3d::attrib::Format::Float, 2)
-            .unwrap();
-        info
-    }
 }
 
 struct SpriteInstance {
@@ -178,105 +171,7 @@ lazy_static! {
         PicaShader::load_from_bytes(SHADER_BYTES).expect("failed to load sprite shader");
 }
 
-#[derive(Debug, Default)]
-pub struct Material {
-    colour: Option<Color>,
-    ambient: Option<Color>,
-}
-
-impl Material {
-    pub fn new(colour: Option<Color>, ambient: Option<Color>) -> Self {
-        Self { colour, ambient }
-    }
-
-    pub fn set_uniforms(&self, _gpu: &mut RenderPass, uniforms: &Uniforms) {
-        let amb = if let Some(clr) = &self.ambient {
-            clr.as_rgba_f32().into()
-        } else {
-            Vec4::new(0.0, 0.0, 0.0, 0.0)
-        };
-
-        let emi = if let Some(clr) = &self.colour {
-            clr.as_rgba_f32().into()
-        } else {
-            Vec4::new(0.0, 0.0, 0.0, 0.0)
-        };
-
-        unsafe {
-            citro3d_sys::C3D_FVUnifSet(
-                citro3d::shader::Type::Vertex.into(),
-                uniforms.material_ambient.into(),
-                amb.x,
-                amb.y,
-                amb.z,
-                amb.w,
-            );
-            citro3d_sys::C3D_FVUnifSet(
-                citro3d::shader::Type::Vertex.into(),
-                uniforms.material_emission.into(),
-                emi.x,
-                emi.y,
-                emi.z,
-                emi.w,
-            );
-        }
-    }
-}
-
-pub struct Uniforms {
-    pub model_matrix: Index,
-    pub camera_matrix: Index,
-    pub projection_matrix: Index,
-    pub light_colour: Index,
-    pub material_emission: Index,
-    pub material_ambient: Index,
-    pub material_diffuse: Index,
-    pub material_specular: Index,
-}
-
-fn build_uniforms() -> Uniforms {
-    let vert_prog = &SPRITE_SHADER;
-    let model_uniform = vert_prog.get_uniform("modelMtx").unwrap();
-    let cam_uniform = vert_prog.get_uniform("camMtx").unwrap();
-    let proj_uniform = vert_prog.get_uniform("projMtx").unwrap();
-
-    let light_uniform = vert_prog.get_uniform("lightClr").unwrap();
-
-    let emi_uniform = vert_prog.get_uniform("mat_emi").unwrap();
-    let amb_uniform = vert_prog.get_uniform("mat_amb").unwrap();
-    let dif_uniform = vert_prog.get_uniform("mat_dif").unwrap();
-    let spe_uniform = vert_prog.get_uniform("mat_spe").unwrap();
-
-    Uniforms {
-        model_matrix: model_uniform,
-        camera_matrix: cam_uniform,
-        projection_matrix: proj_uniform,
-        light_colour: light_uniform,
-        material_emission: emi_uniform,
-        material_ambient: amb_uniform,
-        material_diffuse: dif_uniform,
-        material_specular: spe_uniform,
-    }
-}
-
 pub struct DrawSprites;
-
-#[rustfmt::skip]
-const WGPU_TO_OPENGL_DEPTH: Mat4 = Mat4::from_cols_array(&[
-    1.0, 0.0,  0.0, 0.0,
-    0.0, 1.0,  0.0, 0.0,
-    0.0, 0.0, -1.0, 0.0,
-    0.0, 0.0,  0.0, 1.0,
-]);
-
-/// 3ds screens are actually tilted 90deg left, this corrects that
-#[rustfmt::skip]
-const CORRECT_TILT: Mat4 = Mat4::from_cols_array(&[
-    0.0, -1.0,  0.0, 0.0,
-    1.0, 0.0,  0.0, 0.0,
-    0.0, 0.0, 1.0, 0.0,
-    0.0, 0.0,  0.0, 1.0,
-]);
 
 impl RenderCommand for DrawSprites {
     type Param = (
@@ -299,11 +194,11 @@ impl RenderCommand for DrawSprites {
         let view = views.get(view_id).expect("failed to find view for draw");
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
-        let view_proj = WGPU_TO_OPENGL_DEPTH * view.projection * CORRECT_TILT;
+        let view_proj = wgpu_projection_to_opengl(view.projection);
 
-        let uniforms = build_uniforms();
+        let uniforms = Uniforms::build(&SPRITE_SHADER);
+        pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::vert_attrs()));
         pass.bind_vertex_uniform_bevy(uniforms.camera_matrix, &view.transform.compute_matrix());
-        pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
         let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
         pass.bind_vertex_uniform_bevy(view_uniform, &view_proj);
         //pass.bind_vertex_uniform(view_uniform, &calculate_projections());
@@ -352,10 +247,10 @@ impl RenderCommand for DrawSprites {
 
                 let mut buf = VboBuffer::new();
                 let vbo = buf
-                    .add(&s.verts, &Vertex::attr_info())
+                    .add(&s.verts, &Vertex::vert_attrs())
                     .expect("failed to add vbo data");
 
-                pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::attr_info()));
+                pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::vert_attrs()));
                 pass.draw(buffer::Primitive::TriangleFan, vbo);
 
                 /*let mut buf = VboBuffer::new();

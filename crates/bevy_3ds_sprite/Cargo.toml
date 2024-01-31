@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 bevy_3ds_render = { version = "0.1.0", path = "../bevy_3ds_render" }
+bevy_3ds_core = { version = "0.1.0", path = "../bevy_3ds_core" }
 
 citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 citro3d-sys = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
