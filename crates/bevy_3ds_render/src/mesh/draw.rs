@@ -9,20 +9,27 @@ use bevy::{
     transform::components::GlobalTransform,
 };
 use bevy_3ds_core::util::wgpu_projection_to_opengl;
-use citro3d::{buffer, macros::include_shader, math::Matrix4, texenv::Stage};
+use citro3d::{
+    buffer,
+    macros::include_shader,
+    math::{ClipPlanes, Matrix4, Perspective, Projection},
+    texenv::Stage,
+};
 use lazy_static::lazy_static;
 use log::debug;
 
 use crate::{
-    material::Uniforms,
+    material::{Material, Uniforms},
     materials::RenderMaterials,
-    mesh::gpu::MeshVertex,
+    mesh::{gpu::MeshVertex, plugin::ExtractedMesh},
     pass::{RenderCommand, VboBuffer},
     pipeline::VertexAttrs,
     shader::PicaShader,
     vertattr::{VertAttrBuilder, VertAttrs},
     RenderAssets,
 };
+
+use super::plugin::ExtractedMeshes;
 
 const SHADER_BYTES: &[u8] = include_shader!("./mesh.pica");
 
@@ -39,15 +46,7 @@ impl RenderCommand for MeshDraw {
         SRes<RenderAssets<Image>>,
         SRes<RenderMaterials>,
         Query<'static, 'static, &'static ExtractedView>,
-        Query<
-            'static,
-            'static,
-            (
-                &'static Handle<Mesh>,
-                &'static Handle<StandardMaterial>,
-                &'static GlobalTransform,
-            ),
-        >,
+        SRes<ExtractedMeshes>,
     );
 
     fn render<'w: 'f, 'f>(
@@ -56,7 +55,7 @@ impl RenderCommand for MeshDraw {
             Res<'w, RenderAssets<Image>>,
             Res<'w, RenderMaterials>,
             Query<&ExtractedView>,
-            Query<(&Handle<Mesh>, &Handle<StandardMaterial>, &GlobalTransform)>,
+            Res<ExtractedMeshes>,
         ),
         pass: &mut crate::pass::RenderPass<'w, 'f>,
         view_id: bevy::prelude::Entity,
@@ -65,26 +64,34 @@ impl RenderCommand for MeshDraw {
         let images = images.into_inner();
         let view = views.get(view_id).expect("failed to find view for draw");
 
-        let mut camera_matrix = Matrix4::identity();
-
-        camera_matrix.translate(0.0, 0.0, -1.0); // wgpu to opengl translation
         pass.set_vertex_shader(&MESH_SHADER, 0)
             .expect("failed to set mesh shader");
 
-        let mut view_proj = wgpu_projection_to_opengl(view.projection);
-        view_proj *= Mat4::from_axis_angle(Vec3::new(0.0, 0.0, 1.0), TAU / 4.0);
-
         let uniforms = Uniforms::build(&MESH_SHADER);
-        pass.bind_vertex_uniform(uniforms.camera_matrix, &camera_matrix);
+        let view_proj = wgpu_projection_to_opengl(view.projection);
+        let proj = Projection::perspective(
+            40.,
+            citro3d::math::AspectRatio::TopScreen,
+            ClipPlanes {
+                near: 0.01,
+                far: 1000.,
+            },
+        );
+        //pass.bind_vertex_uniform(uniforms.projection_matrix, &proj.into());
+        //pass.bind_vertex_uniform(uniforms.camera_matrix, &Matrix4::identity());
 
-        pass.set_attr_info(&VertexAttrs::from_citro3d(MeshVertex::vert_attrs()));
-
-        let view_uniform = MESH_SHADER.get_uniform("projMtx").unwrap();
-        pass.bind_vertex_uniform_bevy(view_uniform, &view_proj);
+        pass.bind_vertex_uniform_bevy(uniforms.projection_matrix, &view_proj);
+        pass.bind_vertex_uniform_bevy(uniforms.camera_matrix, &view.transform.compute_matrix());
 
         debug!("draw mesh");
 
-        for (mesh_handle, material_handle, transform) in &query {
+        for ExtractedMesh {
+            mesh: mesh_handle,
+            transform,
+            material: material_handle,
+        } in &query.extracted
+        {
+            debug!("draw: {mesh_handle:?}");
             let Some(mesh) = meshes.get(mesh_handle) else {
                 debug!("mesh not loaded yet: {:?}", mesh_handle);
                 continue;
@@ -135,9 +142,22 @@ impl RenderCommand for MeshDraw {
                     );
                 }
             });
+            let mat = Material::new(Some(material.base_color), None);
+            mat.set_uniforms(pass, &uniforms);
 
-            pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &transform.compute_matrix());
-            debug!("transform: {:#?}", transform);
+            pass.bind_vertex_uniform_bevy(uniforms.model_matrix, transform);
+            let verts = mesh
+                .vert_buf
+                .iter()
+                .map(|v| {
+                    view.projection.transform_point3(
+                        view.transform
+                            .compute_matrix()
+                            .transform_point3(transform.transform_point3(v.pos)),
+                    )
+                })
+                .collect::<Vec<_>>();
+            debug!("verts: {verts:#?}");
 
             let mut buf = VboBuffer::new();
             let vbo = buf
