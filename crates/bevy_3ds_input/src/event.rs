@@ -48,6 +48,15 @@ pub struct _3dsButtonChangedEvent {
     pub state: ButtonState,
 }
 
+impl _3dsButtonChangedEvent {
+    /// Creates a [`_3dsButtonChangedEvent`].
+    pub fn new(button_type: _3dsButtonType, state: ButtonState) -> Self {
+        Self {
+            button_type,
+            state,
+        }
+    }
+}
 
 /// A 3ds event.
 ///
@@ -79,7 +88,6 @@ impl From<_3dsAxisChangedEvent> for _3dsEvent {
         Self::Axis(value)
     }
 }
-
 
 
 /// Splits the [`_3dsEvent`] event stream into it's component events.
@@ -120,6 +128,7 @@ pub fn _3ds_button_event_system(
     mut button_input: ResMut<Input<_3dsButton>>,
     mut button_input_events: EventWriter<_3dsButtonChangedEvent>,
 ) {
+    //TODO: remove all button state checking logic, because ctru already does that for us.
     for button_event in button_changed_events.read() {
         let button = _3dsButton::new(button_event.button_type);
         if !button_event.state.is_pressed() {
