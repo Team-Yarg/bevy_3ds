@@ -15,6 +15,7 @@ use log::debug;
 
 use crate::{
     material::Uniforms,
+    materials::RenderMaterials,
     mesh::gpu::MeshVertex,
     pass::{RenderCommand, VboBuffer},
     pipeline::VertexAttrs,
@@ -36,7 +37,7 @@ impl RenderCommand for MeshDraw {
     type Param = (
         SRes<RenderAssets<Mesh>>,
         SRes<RenderAssets<Image>>,
-        SRes<Assets<StandardMaterial>>,
+        SRes<RenderMaterials>,
         Query<'static, 'static, &'static ExtractedView>,
         Query<
             'static,
@@ -53,7 +54,7 @@ impl RenderCommand for MeshDraw {
         (meshes, images, assets, views, query): (
             Res<'w, RenderAssets<Mesh>>,
             Res<'w, RenderAssets<Image>>,
-            Res<'w, Assets<StandardMaterial>>,
+            Res<'w, RenderMaterials>,
             Query<&ExtractedView>,
             Query<(&Handle<Mesh>, &Handle<StandardMaterial>, &GlobalTransform)>,
         ),
