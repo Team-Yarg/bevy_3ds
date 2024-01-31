@@ -6,6 +6,7 @@
 
 use bevy::asset::AssetServer;
 use bevy::ecs::system::{Query, Res};
+use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::render::color::Color;
 use bevy::render::mesh::Mesh;
 use bevy::render::texture::{CompressedImageFormats, Image};
@@ -137,6 +138,16 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
         .with_indices(Some(bevy::render::mesh::Indices::U32(vec![
             0, 3, 1, 1, 3, 2,
         ])));
+
+    cmds.spawn(PbrBundle {
+        mesh: assets.add(_tri),
+        material: assets.add(StandardMaterial {
+            base_color_texture: Some(peach.clone()),
+            ..Default::default()
+        }),
+        ..Default::default()
+    });
+
     cmds.spawn(SpriteBundle {
         sprite: Sprite {
             color: Color::rgba(1.0, 0.5, 0.5, 1.0),

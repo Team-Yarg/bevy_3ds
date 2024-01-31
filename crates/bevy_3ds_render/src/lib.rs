@@ -1,7 +1,10 @@
 #![feature(allocator_api)]
 
 use self::pipeline::VertexAttrs;
-use bevy::ecs::{schedule::SystemSet, system::Resource};
+use bevy::{
+    ecs::{schedule::SystemSet, system::Resource},
+    render::render_resource::PrimitiveTopology,
+};
 use citro3d::{buffer::Primitive, Instance};
 use frame::Citro3dFrame;
 pub use plugin::Render3dsPlugin;
@@ -85,4 +88,12 @@ pub enum RenderSet3ds {
     PrepareAssets,
     Prepare,
     PrepareBindGroups,
+}
+
+pub fn bevy_topology_to_citro(topology: PrimitiveTopology) -> Option<Primitive> {
+    match topology {
+        PrimitiveTopology::TriangleList => Some(Primitive::Triangles),
+        PrimitiveTopology::TriangleStrip => Some(Primitive::TriangleStrip),
+        _ => None,
+    }
 }
