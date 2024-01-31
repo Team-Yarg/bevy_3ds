@@ -1,5 +1,4 @@
 use bevy::reflect::Reflect;
-use bevy::ecs::event::Event;
 
 /// An axis for a stick on the 3ds
 /// ## Usage
@@ -36,33 +35,6 @@ impl _3dsAxis {
     /// ```
     pub fn new(axis_type: _3dsAxisType) -> Self {
         Self { axis_type }
-    }
-}
-
-
-/// 3ds event for when the "value" on the axis changes
-/// by an amount larger than the threshold defined in [`_3dsInputSettings`].
-#[derive(Event, Debug, Clone, PartialEq, Reflect)]
-#[reflect(Debug, PartialEq)]
-#[cfg_attr(
-    feature = "serialize",
-    derive(serde::Serialize, serde::Deserialize),
-    reflect(Serialize, Deserialize)
-)]
-pub struct _3dsAxisChangedEvent {
-    /// The type of the triggered axis.
-    pub axis_type: _3dsAxisType,
-    /// The value of the axis.
-    pub value: f32,
-}
-
-impl _3dsAxisChangedEvent {
-    /// Creates a [`_3dsAxisChangedEvent`].
-    pub fn new(axis_type: _3dsAxisType, value: f32) -> Self {
-        Self {
-            axis_type,
-            value,
-        }
     }
 }
 

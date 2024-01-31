@@ -1,6 +1,4 @@
-use bevy::input::ButtonState;
 use bevy::reflect::Reflect;
-use bevy::ecs::event::Event;
 
 /// A button of a 3ds.
 ///
@@ -41,22 +39,6 @@ impl _3dsButton {
             button_type,
         }
     }
-}
-
-
-/// A 3ds button input event.
-#[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
-#[reflect(Debug, PartialEq)]
-#[cfg_attr(
-    feature = "serialize",
-    derive(serde::Serialize, serde::Deserialize),
-    reflect(Serialize, Deserialize)
-)]
-pub struct _3dsButtonInput {
-    /// The 3ds button assigned to the event.
-    pub button: _3dsButton,
-    /// The pressed state of the button.
-    pub state: ButtonState,
 }
 
 
