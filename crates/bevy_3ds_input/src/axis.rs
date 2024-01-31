@@ -1,6 +1,5 @@
 use bevy::reflect::Reflect;
 use bevy::ecs::event::Event;
-use bevy::ecs::system::Resource;
 
 /// An axis for a stick on the 3ds
 /// ## Usage
@@ -65,4 +64,31 @@ impl _3dsAxisChangedEvent {
             value,
         }
     }
+}
+
+
+/// A type of a [`_3dsAxis`].
+///
+/// ## Usage
+///
+/// This is used to determine which axis has changed its value when receiving a
+/// [`_3dsAxisChangedEvent`]. It is also used in the [`_3dsAxis`]
+/// which in turn is used to create the [`Axis<_3dsAxis>`] `bevy` resource.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
+#[reflect(Debug, Hash, PartialEq)]
+#[cfg_attr(
+    feature = "serialize",
+    derive(serde::Serialize, serde::Deserialize),
+    reflect(Serialize, Deserialize)
+)]
+pub enum _3dsAxisType {
+    /// The horizontal value of the left stick.
+    LeftStickX,
+    /// The vertical value of the left stick.
+    LeftStickY,
+
+    /// The horizontal value of the right stick.
+    RightStickX,
+    /// The vertical value of the right stick.
+    RightStickY,
 }

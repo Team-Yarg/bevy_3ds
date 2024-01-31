@@ -1,7 +1,6 @@
 use bevy::input::ButtonState;
 use bevy::reflect::Reflect;
 use bevy::ecs::event::Event;
-use bevy::ecs::system::Resource;
 
 /// A button of a 3ds.
 ///
@@ -58,4 +57,53 @@ pub struct _3dsButtonInput {
     pub button: _3dsButton,
     /// The pressed state of the button.
     pub state: ButtonState,
+}
+
+
+/// A type of a [`_3dsButton`].
+///
+/// ## Usage
+///
+/// This is used in [`_3dsButton`] which in turn is used to create the [`Input<_3dsButton>`]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
+#[reflect(Debug, Hash, PartialEq)]
+#[cfg_attr(
+    feature = "serialize",
+    derive(serde::Serialize, serde::Deserialize),
+    reflect(Serialize, Deserialize)
+)]
+pub enum _3dsButtonType {
+    /// The bottom action button of the action pad
+    South,
+    /// The right action button of the action pad
+    East,
+    /// The upper action button of the action pad
+    North,
+    /// The left action button of the action pad
+    West,
+
+    /// The up button of the D-Pad.
+    DPadUp,
+    /// The down button of the D-Pad.
+    DPadDown,
+    /// The left button of the D-Pad.
+    DPadLeft,
+    /// The right button of the D-Pad.
+    DPadRight,
+
+    /// The ZL button.
+    ZL,
+    /// The ZR button.
+    ZR,
+
+    /// The L button.
+    L,
+    /// The R button.
+    R,
+
+    /// The start button.
+    Start,
+    /// The select button.
+    Select,
+
 }

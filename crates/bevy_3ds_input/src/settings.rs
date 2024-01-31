@@ -1,5 +1,7 @@
-use bevy::reflect::Reflect;
+use bevy::reflect::{Reflect, std_traits::ReflectDefault};
 use bevy::ecs::system::Resource;
+use bevy::utils::HashMap;
+use crate::axis::_3dsAxis;
 /// Settings for a [`_3dsAxis`].
 ///
 /// It is used inside of the [`_3dsInputSettings`] to define the sensitivity range and
@@ -12,8 +14,9 @@ use bevy::ecs::system::Resource;
 ///
 /// The valid range is `[-1.0, 1.0]`.
 #[derive(Debug, Clone, Reflect, PartialEq)]
+#[derive(Default)] // TODO: review this line: I don't know why this needs to be here, but this fixes a compile error
 #[reflect(Debug, Default)]
-pub struct AxisSettings {
+pub struct _3dsAxisSettings {
     /// Values that are higher than `livezone_upperbound` will be rounded up to 1.0.
     livezone_upperbound: f32,
     /// Positive values that are less than `deadzone_upperbound` will be rounded down to 0.0.
@@ -32,7 +35,7 @@ pub struct AxisSettings {
 /// ## Usage
 ///
 /// It is used to create a `bevy` resource that stores the settings of every
-/// [`_3dsAxis`]. If no user defined [`AxisSettings`]
+/// [`_3dsAxis`]. If no user defined [`_3dsAxisSettings`]
 /// are defined, the default settings of each are used as a fallback accordingly.
 ///
 /// ## Note
@@ -44,16 +47,16 @@ pub struct AxisSettings {
 #[reflect(Debug, Default)]
 pub struct _3dsInputSettings {
     /// The default axis settings.
-    pub default_axis_settings: AxisSettings,
+    pub default_axis_settings: _3dsAxisSettings,
     /// The user defined axis settings.
-    pub axis_settings: HashMap<_3dsAxis, AxisSettings>,
+    pub axis_settings: HashMap<_3dsAxis, _3dsAxisSettings>,
 }
 
 impl _3dsInputSettings {
 
-    /// Returns the [`AxisSettings`] of the `axis`.
+    /// Returns the [`_3dsAxisSettings`] of the `axis`.
     ///
-    /// If no user defined [`AxisSettings`] are specified the default [`AxisSettings`] get returned.
+    /// If no user defined [`_3dsAxisSettings`] are specified the default [`_3dsAxisSettings`] get returned.
     ///
     /// # Examples
     ///
@@ -65,7 +68,7 @@ impl _3dsInputSettings {
     /// let axis = _3dsAxis::new(_3dsAxisType::LeftStickX);
     /// let axis_settings = settings.get_axis_settings(axis);
     /// ```
-    pub fn get_axis_settings(&self, axis: _3dsAxis) -> &AxisSettings {
+    pub fn get_axis_settings(&self, axis: _3dsAxis) -> &_3dsAxisSettings {
         self.axis_settings
             .get(&axis)
             .unwrap_or(&self.default_axis_settings)
