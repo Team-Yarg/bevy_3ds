@@ -38,12 +38,13 @@ impl PluginGroup for DefaultPlugins {
                 ..Default::default()
             });
         group = group.add(bevy::asset::AssetPlugin::default());
-        {
-            group = group.add(ImagePlugin::default());
-        }
         group = group.add(Bevy3dsPbrPlugin);
+        {
+            group = group
+                .add(render::plugin::Render3dsPlugin)
+                .add(ImagePlugin::default());
+        }
         group = group.add(render::plugin::CorePipeline3ds);
-        group = group.add(render::plugin::Render3dsPlugin);
         group = group.add(sprite::SpritesPlugin).add(TextPlugin);
         //group = group.add(UiPlugin::default());
         group
