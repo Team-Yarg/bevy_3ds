@@ -31,6 +31,8 @@ use citro3d::render::ClearFlags;
 use ctru::services::apt::Apt;
 use ctru::services::gfx::{RawFrameBuffer, Screen};
 
+use crate::materials;
+
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
 use super::{mesh, shader, GfxInstance, GpuDevice, RenderSet3ds};
@@ -133,6 +135,7 @@ impl Plugin for Render3dsPlugin {
             mesh::MeshPlugin,
             MorphPlugin,
             shader::PicaShaderPlugin,
+            materials::StandardMaterialPlugin,
         ));
     }
 }
