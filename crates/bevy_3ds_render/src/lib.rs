@@ -16,6 +16,7 @@ pub mod draw;
 mod extract;
 mod frame;
 pub mod gpu_buffer;
+pub mod material;
 pub mod materials;
 pub mod mesh;
 pub mod pass;
