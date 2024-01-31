@@ -114,7 +114,7 @@ pub fn _3ds_axis_event_system(
 }
 
 
-/// Uses [`_3dsButtonChangedEvent`]s to update the relevant [`Input`] and [`Axis`] values.
+/// Uses [`_3dsButtonChangedEvent`]s to update the relevant [`Input`] values.
 pub fn _3ds_button_event_system(
     mut button_changed_events: EventReader<_3dsButtonChangedEvent>,
     mut button_input: ResMut<Input<_3dsButton>>,
@@ -122,7 +122,7 @@ pub fn _3ds_button_event_system(
 ) {
     for button_event in button_changed_events.read() {
         let button = _3dsButton::new(button_event.button_type);
-        if button_event.state == ButtonState::Released {
+        if !button_event.state.is_pressed() {
             // Check if button was previously pressed
             if button_input.pressed(button) {
                 button_input_events.send(_3dsButtonChangedEvent {
@@ -133,7 +133,7 @@ pub fn _3ds_button_event_system(
             // We don't have to check if the button was previously pressed here
             // because that check is performed within Input<T>::release()
             button_input.release(button);
-        } else if button_event.state == ButtonState::Pressed {
+        } else if button_event.state.is_pressed() {
             // Check if button was previously not pressed
             if !button_input.pressed(button) {
                 button_input_events.send(_3dsButtonChangedEvent {
