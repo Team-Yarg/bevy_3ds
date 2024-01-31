@@ -356,6 +356,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_3ds_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.46",
+]
+
+[[package]]
 name = "bevy_3ds_pbr"
 version = "0.1.0"
 dependencies = [
@@ -367,11 +376,14 @@ name = "bevy_3ds_render"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_3ds_core",
+ "bevy_3ds_macros",
  "citro3d",
  "citro3d-sys",
  "ctru-rs",
  "ctru-sys",
  "image",
+ "lazy_static",
  "log",
  "swizzle_3ds",
  "thiserror",
@@ -391,6 +403,7 @@ name = "bevy_3ds_sprite"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_3ds_core",
  "bevy_3ds_render",
  "citro3d",
  "citro3d-sys",
