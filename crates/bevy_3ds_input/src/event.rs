@@ -58,6 +58,33 @@ impl _3dsButtonChangedEvent {
     }
 }
 
+
+/// A 3ds button input event from ctru event system.
+#[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+#[reflect(Debug, PartialEq)]
+#[cfg_attr(
+    feature = "serialize",
+    derive(serde::Serialize, serde::Deserialize),
+    reflect(Serialize, Deserialize)
+)]
+pub struct CtruButtonChangedEvent {
+    /// The 3ds button assigned to the event.
+    pub button_type: _3dsButtonType,
+    /// The pressed state of the button.
+    pub state: ButtonState,
+}
+
+impl CtruButtonChangedEvent {
+    /// Creates a [`CtruButtonChangedEvent`].
+    pub fn new(button_type: _3dsButtonType, state: ButtonState) -> Self {
+        Self {
+            button_type,
+            state,
+        }
+    }
+}
+
+
 /// A 3ds event.
 ///
 /// This event type is used over the
@@ -72,13 +99,13 @@ impl _3dsButtonChangedEvent {
 )]
 pub enum _3dsEvent {
     /// A button of the 3ds has been triggered.
-    Button(_3dsButtonChangedEvent),
+    Button(CtruButtonChangedEvent),
     /// An axis of the 3ds has been triggered.
     Axis(_3dsAxisChangedEvent),
 }
 
-impl From<_3dsButtonChangedEvent> for _3dsEvent {
-    fn from(value: _3dsButtonChangedEvent) -> Self {
+impl From<CtruButtonChangedEvent> for _3dsEvent {
+    fn from(value: CtruButtonChangedEvent) -> Self {
         Self::Button(value)
     }
 }
@@ -93,7 +120,7 @@ impl From<_3dsAxisChangedEvent> for _3dsEvent {
 /// Splits the [`_3dsEvent`] event stream into it's component events.
 pub fn _3ds_event_system(
     mut _3ds_events: EventReader<_3dsEvent>,
-    mut button_events: EventWriter<_3dsButtonChangedEvent>,
+    mut button_events: EventWriter<CtruButtonChangedEvent>,
     mut axis_events: EventWriter<_3dsAxisChangedEvent>,
     mut button_input: ResMut<Input<_3dsButton>>,
 ) {
@@ -124,7 +151,7 @@ pub fn _3ds_axis_event_system(
 
 /// Uses [`_3dsButtonChangedEvent`]s to update the relevant [`Input`] values.
 pub fn _3ds_button_event_system(
-    mut button_changed_events: EventReader<_3dsButtonChangedEvent>,
+    mut button_changed_events: EventReader<CtruButtonChangedEvent>,
     mut button_input: ResMut<Input<_3dsButton>>,
     mut button_input_events: EventWriter<_3dsButtonChangedEvent>,
 ) {

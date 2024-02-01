@@ -1,6 +1,6 @@
 use bevy::app::Plugin;
 use bevy::input::InputSystem;
-use event::{_3ds_axis_event_system, _3ds_button_event_system, _3ds_event_system, _3dsAxisChangedEvent, _3dsButtonChangedEvent, _3dsEvent};
+use event::{_3ds_axis_event_system, _3ds_button_event_system, _3ds_event_system, _3dsAxisChangedEvent, _3dsButtonChangedEvent, CtruButtonChangedEvent, _3dsEvent};
 use settings::{_3dsInputSettings, _3dsAxisSettings};
 use axis::{_3dsAxis, _3dsAxisType};
 use button::{_3dsButton, _3dsButtonType};
@@ -19,6 +19,7 @@ pub struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_event::<_3dsButtonChangedEvent>()
+            .add_event::<CtruButtonChangedEvent>()
             .add_event::<_3dsAxisChangedEvent>()
             .add_event::<_3dsEvent>()
             .init_resource::<_3dsInputSettings>()
@@ -55,14 +56,14 @@ pub fn ctru_event_system(
     for key in hid.keys_down() {
        let button_type: _3dsButtonType = ctru_to_bevy_keypad(key);
         events.send(
-            _3dsButtonChangedEvent::new(button_type, ButtonState::Pressed).into(),
+            CtruButtonChangedEvent::new(button_type, ButtonState::Pressed).into(),
         );
     }
 
     for key in hid.keys_up() {
        let button_type: _3dsButtonType = ctru_to_bevy_keypad(key);
         events.send(
-            _3dsButtonChangedEvent::new(button_type, ButtonState::Released).into(),
+            CtruButtonChangedEvent::new(button_type, ButtonState::Released).into(),
         );
     }
     // TODO: add axis

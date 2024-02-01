@@ -5,10 +5,10 @@ use bevy::{
     transform::TransformPlugin,
     window::{Window, WindowPlugin, WindowResolution},
 };
+use bevy_3ds_input::InputPlugin;
 use bevy_3ds_pbr::Bevy3dsPbrPlugin;
 use bevy_3ds_render::texture::ImagePlugin;
 use bevy_3ds_ui::UiPlugin;
-use bevy_3ds_input::InputPlugin;
 
 use super::Core3dsPlugin;
 use crate::{render, sprite};
