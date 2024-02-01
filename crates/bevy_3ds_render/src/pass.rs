@@ -11,7 +11,7 @@ use citro3d::{
     shader::{self, Program},
     uniform::Index,
 };
-use std::{marker::PhantomData, sync::Arc};
+use std::{marker::PhantomData, ops::Deref, sync::Arc};
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
 pub struct VboSlice<'vbo, 'buf> {
@@ -117,6 +117,18 @@ impl<'g, 'f> RenderPass<'g, 'f> {
     pub fn draw(&mut self, prim: Primitive, verts: VboSlice<'f, '_>) {
         unsafe {
             self.gpu.draw(prim, verts.slice);
+        }
+    }
+    pub fn draw_indexed(
+        &mut self,
+        prim: Primitive,
+        buf: &VboSlice<'f, '_>,
+        indices: &'f LinearBuffer<u16>,
+    ) {
+        unsafe {
+            self.gpu
+                .inst()
+                .draw_elements(prim, buf.slice.info(), indices.deref());
         }
     }
 }
