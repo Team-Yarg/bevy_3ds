@@ -2,7 +2,10 @@ use bevy::{math::Vec4, render::color::Color};
 
 use crate::{pass::RenderPass, shader::PicaShader};
 
-use citro3d::uniform::Index;
+use citro3d::{
+    math::FVec4,
+    uniform::{Index, Uniform},
+};
 
 #[derive(Debug, Default)]
 pub struct Material {
@@ -15,7 +18,7 @@ impl Material {
         Self { colour, ambient }
     }
 
-    pub fn set_uniforms(&self, _gpu: &mut RenderPass, uniforms: &Uniforms) {
+    pub fn set_uniforms(&self, pass: &mut RenderPass, uniforms: &Uniforms) {
         let amb = if let Some(clr) = &self.ambient {
             clr.as_rgba_f32().into()
         } else {
@@ -27,25 +30,15 @@ impl Material {
         } else {
             Vec4::new(0.0, 0.0, 0.0, 0.0)
         };
+        pass.bind_vertex_uniform(
+            uniforms.material_ambient,
+            Uniform::Float(FVec4::new(amb.x, amb.y, amb.z, amb.w)),
+        );
 
-        unsafe {
-            citro3d_sys::C3D_FVUnifSet(
-                citro3d::shader::Type::Vertex.into(),
-                uniforms.material_ambient.into(),
-                amb.x,
-                amb.y,
-                amb.z,
-                amb.w,
-            );
-            citro3d_sys::C3D_FVUnifSet(
-                citro3d::shader::Type::Vertex.into(),
-                uniforms.material_emission.into(),
-                emi.x,
-                emi.y,
-                emi.z,
-                emi.w,
-            );
-        }
+        pass.bind_vertex_uniform(
+            uniforms.material_emission,
+            Uniform::Float(FVec4::new(emi.x, emi.y, emi.z, emi.w)),
+        );
     }
 }
 

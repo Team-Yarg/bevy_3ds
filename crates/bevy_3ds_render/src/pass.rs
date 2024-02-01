@@ -7,6 +7,7 @@ use bevy::ecs::{
 };
 use citro3d::{
     buffer::Primitive,
+    math::Matrix4,
     render::Target,
     shader::{self, Program},
     uniform::Index,
@@ -92,7 +93,7 @@ impl<'g, 'f> RenderPass<'g, 'f> {
         tex.0.bind(index);
     }
 
-    pub fn bind_vertex_uniform(&mut self, index: Index, uni: impl citro3d::uniform::Uniform) {
+    pub fn bind_vertex_uniform(&mut self, index: Index, uni: impl Into<citro3d::uniform::Uniform>) {
         self.gpu
             .instance
             .lock()
@@ -100,18 +101,13 @@ impl<'g, 'f> RenderPass<'g, 'f> {
             .bind_vertex_uniform(index, uni);
     }
     pub fn bind_vertex_uniform_bevy(&mut self, index: Index, mat: &bevy::math::Mat4) {
-        let _gpu = self.gpu.inst();
         let mut cells = mat.transpose().to_cols_array();
         cells[0..4].reverse();
         cells[4..8].reverse();
         cells[8..12].reverse();
         cells[12..16].reverse();
-        let c3d_mat = citro3d_sys::C3D_Mtx { m: cells };
-
-        // Safety: It actually does a deep copy of the matrix so we arn't leaving a pointer dangling
-        unsafe {
-            citro3d_sys::C3D_FVUnifMtxNx4(shader::Type::Vertex.into(), index.into(), &c3d_mat, 4);
-        }
+        let mtx = Matrix4::from_cells_wzyx(cells);
+        self.gpu.inst().bind_vertex_uniform(index, mtx);
     }
 
     pub fn draw(&mut self, prim: Primitive, verts: VboSlice<'f, '_>) {
