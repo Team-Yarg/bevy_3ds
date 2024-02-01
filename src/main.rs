@@ -12,7 +12,7 @@ use bevy::render::texture::{CompressedImageFormats, Image};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy::transform::components::Transform;
 use bevy::{
-    app::{App, Startup},
+    app::{App, Startup, Update},
     core_pipeline::core_2d::Camera2dBundle,
     ecs::system::Commands,
     hierarchy::BuildChildren,
@@ -56,7 +56,7 @@ fn ds_main() {
     let mut app = App::new();
     app.add_plugins(bevy_3ds::DefaultPlugins);
     app.add_systems(Startup, setup);
-    app.add_systems(PostUpdate, pupdate);
+    app.add_systems(Update, pupdate);
 
     app.run();
 }
@@ -80,11 +80,20 @@ fn main() {
     ds_main();
 }
 
+use bevy::input::Input;
+use bevy_3ds_input::button::*;
 /// Update function for sprite movement.
 /// Moves each sprite in the `sprites` query to the right each frame.
-fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
+fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>, buttons: Res<Input<_3dsButton>>) {
     for (_, mut pos) in &mut sprites {
-        pos.translation.x += 1.0;
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadLeft)) {
+            pos.translation.x += 1.0;
+        }
+
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadRight)) {
+            pos.translation.x -= 1.0;
+        }
+
         if pos.translation.x > 32. {
             pos.translation.x = -32.;
         }

@@ -15,8 +15,8 @@ pub mod button;
 pub mod settings;
 pub mod event;
 
-pub struct Bevy3dsInputPlugin;
-impl Plugin for Bevy3dsInputPlugin {
+pub struct InputPlugin;
+impl Plugin for InputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_event::<_3dsButtonChangedEvent>()
             .add_event::<_3dsAxisChangedEvent>()
@@ -68,7 +68,7 @@ pub fn ctru_event_system(
     // TODO: add axis
 }
 
-fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType{
+fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {
     match key {
         KeyPad::DPAD_RIGHT => {
             return _3dsButtonType::DPadRight;

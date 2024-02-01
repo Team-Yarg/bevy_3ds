@@ -8,6 +8,7 @@ use bevy::{
 use bevy_3ds_pbr::Bevy3dsPbrPlugin;
 use bevy_3ds_render::texture::ImagePlugin;
 use bevy_3ds_ui::UiPlugin;
+use bevy_3ds_input::InputPlugin;
 
 use super::Core3dsPlugin;
 use crate::{render, sprite};
@@ -27,7 +28,7 @@ impl PluginGroup for DefaultPlugins {
             .add(Core3dsPlugin)
             .add(TransformPlugin)
             .add(HierarchyPlugin)
-            .add(bevy::input::InputPlugin)
+            .add(InputPlugin)
             //.add_plugins(romfs_assets::RomfsAssetPlugin)
             .add(WindowPlugin {
                 primary_window: Some(Window {
