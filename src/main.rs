@@ -86,13 +86,23 @@ use bevy_3ds_input::button::*;
 /// Moves each sprite in the `sprites` query to the right each frame.
 fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>, buttons: Res<Input<_3dsButton>>) {
     for (_, mut pos) in &mut sprites {
+        let d = 10.0;
         if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadLeft)) {
-            pos.translation.x += 1.0;
+            pos.translation.x += d;
         }
 
         if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadRight)) {
-            pos.translation.x -= 1.0;
+            pos.translation.x -= d;
         }
+
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadUp)) {
+            pos.translation.y -= d;
+        }
+
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadDown)) {
+            pos.translation.y += d;
+        }
+
 
         if pos.translation.x > 32. {
             pos.translation.x = -32.;

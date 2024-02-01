@@ -47,7 +47,7 @@ impl PluginGroup for DefaultPlugins {
         group = group.add(Bevy3dsPbrPlugin);
         group = group.add(render::plugin::CorePipeline3ds);
         group = group.add(sprite::SpritesPlugin).add(TextPlugin);
-        group = group.add(UiPlugin::default());
+        // group = group.add(UiPlugin::default());
         group
     }
 }

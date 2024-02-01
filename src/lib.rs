@@ -22,26 +22,29 @@ pub struct Core3dsPlugin;
 impl Plugin for Core3dsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         std::env::set_var("BEVY_ASSET_ROOT", "romfs:/");
-
+        // app.insert_resource(Hid::new().unwrap());
         app.set_runner(app_runner);
     }
 }
 
-fn app_runner(mut app: App) {
+fn app_runner(
+    mut app: App,
+    // mut hid: ResMut<Hid>,
+) {
     if app.plugins_state() == PluginsState::Ready {
         app.finish();
         app.cleanup();
     }
 
-    let mut hid = Hid::new().unwrap();
+    // let mut hid = Hid::new().unwrap();
 
     let apt = Apt::new().unwrap();
     while apt.main_loop() {
-        hid.scan_input();
+        // hid.scan_input();
 
-        if hid.keys_down().contains(KeyPad::START) {
-            break;
-        }
+        // if hid.keys_down().contains(KeyPad::START) {
+        //     break;
+        // }
 
         if app.plugins_state() != PluginsState::Cleaned {
             if app.plugins_state() != PluginsState::Ready {
