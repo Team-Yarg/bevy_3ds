@@ -56,22 +56,25 @@ impl _3dsButton {
 )]
 pub enum _3dsButtonType {
     /// The bottom action button of the action pad
-    South,
+    B,
     /// The right action button of the action pad
-    East,
+    A,
     /// The upper action button of the action pad
-    North,
+    Y,
     /// The left action button of the action pad
-    West,
+    X,
 
-    /// The up button of the D-Pad.
-    DPadUp,
-    /// The down button of the D-Pad.
-    DPadDown,
-    /// The left button of the D-Pad.
-    DPadLeft,
+    SELECT,
+    START,
+
     /// The right button of the D-Pad.
-    DPadRight,
+    DPAD_RIGHT,
+    /// The left button of the D-Pad.
+    DPAD_LEFT,
+    /// The up button of the D-Pad.
+    DPAD_UP,
+    /// The down button of the D-Pad.
+    DPAD_DOWN,
 
     /// The ZL button.
     ZL,
@@ -82,10 +85,6 @@ pub enum _3dsButtonType {
     L,
     /// The R button.
     R,
-
-    /// The start button.
-    Start,
-    /// The select button.
-    Select,
+    NULL,
 
 }

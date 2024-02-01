@@ -71,25 +71,64 @@ pub fn ctru_event_system(
 
 fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {
     match key {
+        KeyPad::B => {
+            return _3dsButtonType::B;
+        }
+
+        KeyPad::A => {
+            return _3dsButtonType::A;
+        }
+
+        KeyPad::Y => {
+            return _3dsButtonType::Y;
+        }
+
+        KeyPad::X => {
+            return _3dsButtonType::X;
+        }
+
+        KeyPad::SELECT => {
+            return _3dsButtonType::SELECT;
+        }
+
+        KeyPad::START => {
+            return _3dsButtonType::START;
+        }
+
         KeyPad::DPAD_RIGHT => {
-            return _3dsButtonType::DPadRight;
+            return _3dsButtonType::DPAD_RIGHT;
         }
 
         KeyPad::DPAD_LEFT => {
-            return _3dsButtonType::DPadLeft;
+            return _3dsButtonType::DPAD_LEFT;
         }
 
         KeyPad::DPAD_UP => {
-            return _3dsButtonType::DPadUp;
+            return _3dsButtonType::DPAD_UP;
         }
 
         KeyPad::DPAD_DOWN => {
-            return _3dsButtonType::DPadDown;
+            return _3dsButtonType::DPAD_DOWN;
         }
-        _ => {
-            panic!("ctru key does not match");
-        }
-        // TODO: add more or just use KeyPad as enum in button.rs
-    }
 
+        KeyPad::ZL => {
+            return _3dsButtonType::ZL;
+        }
+
+        KeyPad::ZR => {
+            return _3dsButtonType::ZR;
+        }
+
+        KeyPad::L => {
+            return _3dsButtonType::L;
+        }
+
+        KeyPad::R => {
+            return _3dsButtonType::R;
+        }
+
+        _ => {
+            return _3dsButtonType::NULL;
+        }
+    }
 }
