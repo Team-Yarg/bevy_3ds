@@ -9,6 +9,8 @@ use bevy::app::PreUpdate;
 use bevy::prelude::IntoSystemConfigs;
 use ctru::services::hid::{Hid, KeyPad};
 use bevy::ecs::event::EventWriter;
+use tracing::debug;
+use num_traits::pow::Pow;
 
 pub mod axis;
 pub mod button;
@@ -49,6 +51,8 @@ impl Plugin for InputPlugin {
     }
 }
 
+const DEADZONE_BOUND: f32 = 10.0;
+const LIVEZONE_BOUND: f32 = 150.0;
 pub fn ctru_event_system(
     mut events: EventWriter<_3dsEvent>,
 ) {
@@ -70,8 +74,33 @@ pub fn ctru_event_system(
     }
     //TODO convert cpad_x & cpad_y to be between -1.0 and 1.0
     let (cpad_x, cpad_y) = hid.circlepad_position();
-    events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADX, cpad_x as f32).into());
-    events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADY, cpad_y as f32).into());
+    let mut cpad_x: f32 = cpad_x as f32;
+    let mut cpad_y: f32 = cpad_y as f32;
+    // calculate the distance from the origin
+    let distance: f32 = ((cpad_x.pow(2) + cpad_y.pow(2)) as f32).sqrt();
+
+    if distance < DEADZONE_BOUND {
+        cpad_x = 0.0;
+        cpad_y = 0.0;
+    } else {
+        if cpad_x < 0.0 {
+            cpad_x += DEADZONE_BOUND;
+        } else {
+            cpad_x -= DEADZONE_BOUND;
+        }
+
+        if cpad_y < 0.0 {
+            cpad_y += DEADZONE_BOUND;
+        } else {
+            cpad_y -= DEADZONE_BOUND;
+        }
+    }
+    let adjusted_livezone_bound = LIVEZONE_BOUND - DEADZONE_BOUND; // so that scale is smooth
+    let x: f32 = (cpad_x) / (adjusted_livezone_bound);
+    let y: f32 = (cpad_y) / (adjusted_livezone_bound);
+    // debug!("x: {}, y: {}", cpad_x , cpad_y);
+    events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADX, x).into());
+    events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADY, y).into());
     // TODO: add cstick (I don't think ctru-rs supports this)
     // TODO: add volume slider axis
     // TODO: add 3d slider axis
@@ -118,6 +147,23 @@ fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {
         KeyPad::DPAD_DOWN => {
             return _3dsButtonType::DPAD_DOWN;
         }
+
+        KeyPad::CPAD_RIGHT => {
+            return _3dsButtonType::CPAD_RIGHT;
+        }
+
+        KeyPad::CPAD_LEFT => {
+            return _3dsButtonType::CPAD_LEFT;
+        }
+
+        KeyPad::CPAD_UP => {
+            return _3dsButtonType::CPAD_UP;
+        }
+
+        KeyPad::CPAD_DOWN => {
+            return _3dsButtonType::CPAD_DOWN;
+        }
+
 
         KeyPad::ZL => {
             return _3dsButtonType::ZL;

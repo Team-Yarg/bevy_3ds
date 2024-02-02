@@ -67,14 +67,24 @@ pub enum _3dsButtonType {
     SELECT,
     START,
 
-    /// The right button of the D-Pad.
+    /// The right button of the DPAD.
     DPAD_RIGHT,
-    /// The left button of the D-Pad.
+    /// The left button of the DPAD.
     DPAD_LEFT,
-    /// The up button of the D-Pad.
+    /// The up button of the DPAD.
     DPAD_UP,
-    /// The down button of the D-Pad.
+    /// The down button of the DPAD.
     DPAD_DOWN,
+
+
+    /// The right button of the CPAD.
+    CPAD_RIGHT,
+    /// The left button of the CPAD.
+    CPAD_LEFT,
+    /// The up button of the CPAD.
+    CPAD_UP,
+    /// The down button of the CPAD.
+    CPAD_DOWN,
 
     /// The ZL button.
     ZL,
@@ -102,6 +112,10 @@ impl _3dsButtonType {
             _3dsButtonType::DPAD_LEFT => "DPAD_LEFT",
             _3dsButtonType::DPAD_UP => "DPAD_UP",
             _3dsButtonType::DPAD_DOWN => "DPAD_DOWN",
+            _3dsButtonType::CPAD_RIGHT => "CPAD_RIGHT",
+            _3dsButtonType::CPAD_LEFT => "CPAD_LEFT",
+            _3dsButtonType::CPAD_UP => "CPAD_UP",
+            _3dsButtonType::CPAD_DOWN => "CPAD_DOWN",
             _3dsButtonType::ZL => "ZL",
             _3dsButtonType::ZR => "ZR",
             _3dsButtonType::L => "L",
