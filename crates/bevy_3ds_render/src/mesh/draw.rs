@@ -1,20 +1,8 @@
-use std::f32::consts::TAU;
-
 use bevy::{
-    asset::{Assets, Handle},
     ecs::system::{lifetimeless::SRes, Query, Res},
-    math::{Mat4, Vec3},
-    pbr::StandardMaterial,
     render::{mesh::Mesh, texture::Image, view::ExtractedView},
-    transform::components::GlobalTransform,
 };
-use bevy_3ds_core::util::wgpu_projection_to_opengl;
-use citro3d::{
-    buffer,
-    macros::include_shader,
-    math::{ClipPlanes, Matrix4, Perspective, Projection},
-    texenv::Stage,
-};
+use citro3d::{macros::include_shader, texenv::Stage};
 use lazy_static::lazy_static;
 use log::debug;
 
@@ -25,7 +13,7 @@ use crate::{
     pass::{RenderCommand, VboBuffer},
     pipeline::VertexAttrs,
     shader::PicaShader,
-    vertattr::{VertAttrBuilder, VertAttrs},
+    vertattr::VertAttrBuilder,
     RenderAssets,
 };
 
@@ -66,24 +54,8 @@ impl RenderCommand for MeshDraw {
 
         pass.set_vertex_shader(&MESH_SHADER, 0)
             .expect("failed to set mesh shader");
-
         let uniforms = Uniforms::build(&MESH_SHADER);
-        let view_proj = wgpu_projection_to_opengl(view.projection);
-        let proj = Projection::perspective(
-            40.,
-            citro3d::math::AspectRatio::TopScreen,
-            ClipPlanes {
-                near: 0.01,
-                far: 1000.,
-            },
-        );
-        //pass.bind_vertex_uniform(uniforms.projection_matrix, &proj.into());
-        //pass.bind_vertex_uniform(uniforms.camera_matrix, &Matrix4::identity());
-
-        pass.bind_vertex_uniform_bevy(uniforms.projection_matrix, &view_proj);
-        pass.bind_vertex_uniform_bevy(uniforms.camera_matrix, &view.transform.compute_matrix());
-
-        debug!("draw mesh");
+        uniforms.bind_views(pass, view);
 
         for ExtractedMesh {
             mesh: mesh_handle,
@@ -144,20 +116,7 @@ impl RenderCommand for MeshDraw {
             });
             let mat = Material::new(Some(material.base_color), None);
             mat.set_uniforms(pass, &uniforms);
-
-            pass.bind_vertex_uniform_bevy(uniforms.model_matrix, transform);
-            let verts = mesh
-                .vert_buf
-                .iter()
-                .map(|v| {
-                    view.projection.transform_point3(
-                        view.transform
-                            .compute_matrix()
-                            .transform_point3(transform.transform_point3(v.pos)),
-                    )
-                })
-                .collect::<Vec<_>>();
-            debug!("verts: {verts:#?}");
+            pass.bind_vertex_uniform(uniforms.model_matrix, *transform);
 
             let mut buf = VboBuffer::new();
             let vbo = buf

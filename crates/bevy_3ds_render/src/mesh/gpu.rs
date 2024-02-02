@@ -2,10 +2,7 @@ use crate::{
     gpu_buffer::LinearBuffer,
     vertattr::{VertAttrBuilder, VertAttrs},
 };
-use bevy::{
-    math::{Vec2, Vec3},
-    render::render_resource::PrimitiveTopology,
-};
+use bevy::math::{Vec2, Vec3};
 use citro3d::buffer::Primitive;
 
 pub enum BufKind {

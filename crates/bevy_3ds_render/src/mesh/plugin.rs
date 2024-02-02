@@ -7,7 +7,7 @@ use bevy::{
     math::Mat4,
     pbr::StandardMaterial,
     render::{mesh::Mesh, texture::Image, Extract, ExtractSchedule, RenderApp},
-    transform::components::{GlobalTransform, Transform},
+    transform::components::GlobalTransform,
 };
 use log::debug;
 
