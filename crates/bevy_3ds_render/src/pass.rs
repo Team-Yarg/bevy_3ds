@@ -100,15 +100,6 @@ impl<'g, 'f> RenderPass<'g, 'f> {
             .unwrap()
             .bind_vertex_uniform(index, uni);
     }
-    pub fn bind_vertex_uniform_bevy(&mut self, index: Index, mat: &bevy::math::Mat4) {
-        let mut cells = mat.transpose().to_cols_array();
-        cells[0..4].reverse();
-        cells[4..8].reverse();
-        cells[8..12].reverse();
-        cells[12..16].reverse();
-        let mtx = Matrix4::from_cells_wzyx(cells);
-        self.gpu.inst().bind_vertex_uniform(index, mtx);
-    }
 
     pub fn draw(&mut self, prim: Primitive, verts: VboSlice<'f, '_>) {
         unsafe {

@@ -198,10 +198,9 @@ impl RenderCommand for DrawSprites {
 
         let uniforms = Uniforms::build(&SPRITE_SHADER);
         pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::vert_attrs()));
-        pass.bind_vertex_uniform_bevy(uniforms.camera_matrix, &view.transform.compute_matrix());
+        pass.bind_vertex_uniform(uniforms.camera_matrix, view.transform.compute_matrix());
         let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
-        pass.bind_vertex_uniform_bevy(view_uniform, &view_proj);
-        //pass.bind_vertex_uniform(view_uniform, &calculate_projections());
+        pass.bind_vertex_uniform(view_uniform, view_proj);
         log::debug!("draw sprites, {} batches", entity.batches.len());
 
         for sprite in &entity.batches {
@@ -242,7 +241,7 @@ impl RenderCommand for DrawSprites {
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);
                 //pass.bind_vertex_uniform(uniforms.model_matrix, &Matrix4::identity());
-                pass.bind_vertex_uniform_bevy(uniforms.model_matrix, &s.transform);
+                pass.bind_vertex_uniform(uniforms.model_matrix, s.transform);
                 log::debug!("transform: {:#?}", s.transform);
 
                 let mut buf = VboBuffer::new();
