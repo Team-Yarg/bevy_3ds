@@ -7,10 +7,7 @@ use citro3d::buffer::Primitive;
 
 pub enum BufKind {
     Array,
-    Elements {
-        index_buf: LinearBuffer<u8>,
-        nb: u32,
-    },
+    Elements { index_buf: LinearBuffer<u16> },
 }
 
 #[repr(C)]

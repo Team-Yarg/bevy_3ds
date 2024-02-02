@@ -62,17 +62,12 @@ impl PrepareAsset for Mesh {
         }
 
         let indecies = mesh
-            .get_index_buffer_bytes()
-            .map(|idx| {
-                assert_eq!(
-                    IndexFormat::from(mesh.indices().unwrap()),
-                    IndexFormat::Uint32,
-                    "can't use non-u32 index format"
-                );
-                BufKind::Elements {
-                    index_buf: LinearBuffer::new(idx),
-                    nb: mesh.indices().unwrap().len() as u32,
-                }
+            .indices()
+            .map(|i| match i {
+                bevy::render::mesh::Indices::U16(u) => BufKind::Elements {
+                    index_buf: LinearBuffer::new(&u),
+                },
+                bevy::render::mesh::Indices::U32(i) => panic!("can't use 32bit indices"),
             })
             .unwrap_or(BufKind::Array);
 

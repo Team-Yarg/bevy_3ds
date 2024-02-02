@@ -124,8 +124,14 @@ impl RenderCommand for MeshDraw {
                 .expect("failed to add vbo data");
 
             pass.set_attr_info(&VertexAttrs::from_citro3d(MeshVertex::vert_attrs()));
-
-            pass.draw(mesh.prim_kind, vbo);
+            match &mesh.indices {
+                crate::mesh::gpu::BufKind::Array => {
+                    pass.draw(mesh.prim_kind, vbo);
+                }
+                crate::mesh::gpu::BufKind::Elements { index_buf } => {
+                    pass.draw_indexed(mesh.prim_kind, &vbo, index_buf);
+                }
+            }
         }
 
         Ok(())
