@@ -27,8 +27,6 @@ use bevy_3ds_render::{
     RenderAssets,
 };
 
-use bevy_3ds_core::util::wgpu_projection_to_opengl;
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, VertAttrBuilder)]
 struct Vertex {
@@ -187,14 +185,10 @@ impl RenderCommand for DrawSprites {
         let entity = entity.into_inner();
         let images = images.into_inner();
         let view = views.get(view_id).expect("failed to find view for draw");
-        let uniforms = Uniforms::build(&SPRITE_SHADER);
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
-        let view_proj = wgpu_projection_to_opengl(view.projection);
-        pass.bind_vertex_uniform(uniforms.projection_matrix, view_proj);
-
-        pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::vert_attrs()));
-        pass.bind_vertex_uniform(uniforms.camera_matrix, view.transform.compute_matrix());
+        let uniforms = Uniforms::build(&SPRITE_SHADER);
+        uniforms.bind_views(pass, view);
         log::debug!("draw sprites, {} batches", entity.batches.len());
 
         for sprite in &entity.batches {

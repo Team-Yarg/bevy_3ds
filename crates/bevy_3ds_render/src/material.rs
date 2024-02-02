@@ -1,4 +1,8 @@
-use bevy::{math::Vec4, render::color::Color};
+use bevy::{
+    math::Vec4,
+    render::{color::Color, view::ExtractedView},
+};
+use bevy_3ds_core::util::wgpu_projection_to_opengl;
 
 use crate::{pass::RenderPass, shader::PicaShader};
 
@@ -76,5 +80,13 @@ impl Uniforms {
             material_diffuse,
             material_specular,
         }
+    }
+    pub fn bind_views(&self, pass: &mut RenderPass, view: &ExtractedView) {
+        let view_proj = wgpu_projection_to_opengl(view.projection);
+        pass.bind_vertex_uniform(self.projection_matrix, view_proj);
+        pass.bind_vertex_uniform(
+            self.camera_matrix,
+            view.transform.compute_matrix().inverse(),
+        );
     }
 }
