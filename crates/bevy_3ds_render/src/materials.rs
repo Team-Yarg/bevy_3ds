@@ -2,11 +2,11 @@ use std::collections::{HashMap, HashSet};
 
 use bevy::{
     app::Plugin,
-    asset::{Asset, AssetEvent, AssetId, Assets},
+    asset::{AssetEvent, AssetId, Assets},
     ecs::{
         event::EventReader,
         schedule::IntoSystemConfigs,
-        system::{Commands, Res, ResMut, Resource, StaticSystemParam},
+        system::{Commands, Res, ResMut, Resource},
     },
     pbr::StandardMaterial,
     render::{Extract, ExtractSchedule, Render, RenderApp},

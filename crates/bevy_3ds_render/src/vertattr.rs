@@ -1,7 +1,6 @@
 use bevy::math::{Vec2, Vec3, Vec4};
 pub use bevy_3ds_macros::*;
 use citro3d::attrib::Format::*;
-use citro3d::math::*;
 
 pub trait VertAttrs {
     const FORMAT: citro3d::attrib::Format;

@@ -54,7 +54,7 @@ impl GpuDevice {
     fn inst(&self) -> MutexGuard<Instance> {
         self.instance.lock().unwrap()
     }
-    pub fn start_new_frame<'m>(&'m self) -> Citro3dFrame<'m> {
+    pub fn start_new_frame(&self) -> Citro3dFrame<'_> {
         Citro3dFrame::new(self)
     }
 
@@ -71,6 +71,10 @@ impl GpuDevice {
         self.inst().set_attr_info(&attr.0);
     }
 
+    /// Draw vertexes
+    ///
+    /// # Safety
+    /// If `verts` goes out of scope before the frame ends there will be a use-after-free by the GPU
     pub unsafe fn draw(&self, prim: Primitive, verts: citro3d::buffer::Slice) {
         self.inst().draw_arrays(prim, verts);
     }

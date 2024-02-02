@@ -1,5 +1,3 @@
-use std::f32::consts::PI;
-
 use bevy::{
     asset::{AssetId, AssetServer},
     ecs::{
@@ -7,17 +5,14 @@ use bevy::{
         entity::Entity,
         system::{lifetimeless::SRes, Query, Res, ResMut, Resource},
     },
-    math::{Mat4, Quat, Vec2, Vec3, Vec4},
-    render::{color::Color, texture::Image, view::ExtractedView},
+    math::{Mat4, Quat, Vec2},
+    render::{texture::Image, view::ExtractedView},
     sprite::ExtractedSprites,
 };
 use citro3d::{
-    attrib::Register,
     buffer::{self},
     macros::include_shader,
-    math::Matrix4,
     texenv::Stage,
-    uniform::Index,
 };
 use lazy_static::lazy_static;
 use tracing::debug;
@@ -192,15 +187,14 @@ impl RenderCommand for DrawSprites {
         let entity = entity.into_inner();
         let images = images.into_inner();
         let view = views.get(view_id).expect("failed to find view for draw");
+        let uniforms = Uniforms::build(&SPRITE_SHADER);
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
         let view_proj = wgpu_projection_to_opengl(view.projection);
+        pass.bind_vertex_uniform(uniforms.projection_matrix, view_proj);
 
-        let uniforms = Uniforms::build(&SPRITE_SHADER);
         pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::vert_attrs()));
         pass.bind_vertex_uniform(uniforms.camera_matrix, view.transform.compute_matrix());
-        let view_uniform = SPRITE_SHADER.get_uniform("projMtx").unwrap();
-        pass.bind_vertex_uniform(view_uniform, view_proj);
         log::debug!("draw sprites, {} batches", entity.batches.len());
 
         for sprite in &entity.batches {
@@ -240,10 +234,7 @@ impl RenderCommand for DrawSprites {
 
             for s in &sprite.sprites {
                 s.mat.set_uniforms(pass, &uniforms);
-                //pass.bind_vertex_uniform(uniforms.model_matrix, &Matrix4::identity());
                 pass.bind_vertex_uniform(uniforms.model_matrix, s.transform);
-                log::debug!("transform: {:#?}", s.transform);
-
                 let mut buf = VboBuffer::new();
                 let vbo = buf
                     .add(&s.verts, &Vertex::vert_attrs())
@@ -251,17 +242,6 @@ impl RenderCommand for DrawSprites {
 
                 pass.set_attr_info(&VertexAttrs::from_citro3d(Vertex::vert_attrs()));
                 pass.draw(buffer::Primitive::TriangleFan, vbo);
-
-                /*let mut buf = VboBuffer::new();
-                let verts = [Vertex {
-                    pos: Vec2::new(0., 0.),
-                    uv: Vec2::new(0., 0.),
-                }];
-                let verts = LinearBuffer::new(&verts);
-                let vbo = buf
-                    .add(&verts, &Vertex::attr_info())
-                    .expect("failed to add vbo data");
-                pass.draw(buffer::Primitive::TriangleFan, vbo);*/
             }
         }
         Ok(())

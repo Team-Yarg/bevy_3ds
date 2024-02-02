@@ -5,13 +5,7 @@ use bevy::ecs::{
     entity::Entity,
     system::{SystemParam, SystemParamItem},
 };
-use citro3d::{
-    buffer::Primitive,
-    math::Matrix4,
-    render::Target,
-    shader::{self, Program},
-    uniform::Index,
-};
+use citro3d::{buffer::Primitive, render::Target, shader::Program, uniform::Index};
 use std::{marker::PhantomData, ops::Deref, sync::Arc};
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
