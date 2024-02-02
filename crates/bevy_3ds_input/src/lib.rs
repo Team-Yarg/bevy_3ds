@@ -72,7 +72,6 @@ pub fn ctru_event_system(
             CtruButtonChangedEvent::new(button_type, ButtonState::Released).into(),
         );
     }
-    //TODO convert cpad_x & cpad_y to be between -1.0 and 1.0
     let (cpad_x, cpad_y) = hid.circlepad_position();
     let mut cpad_x: f32 = cpad_x as f32;
     let mut cpad_y: f32 = cpad_y as f32;
@@ -96,13 +95,18 @@ pub fn ctru_event_system(
         }
     }
     let adjusted_livezone_bound = LIVEZONE_BOUND - DEADZONE_BOUND; // so that scale is smooth
-    let x: f32 = (cpad_x) / (adjusted_livezone_bound);
-    let y: f32 = (cpad_y) / (adjusted_livezone_bound);
-    // debug!("x: {}, y: {}", cpad_x , cpad_y);
-    events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADX, x).into());
-    events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADY, y).into());
+    if cpad_x > 0.0 {
+        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADX, cpad_x / adjusted_livezone_bound).into());
+    }
+    if cpad_y > 0.0 {
+        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADY, cpad_y / adjusted_livezone_bound).into());
+    }
+
+    let volume: f32 = hid.volume_slider();
+    if volume > 0.0 {
+        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::VOLUME, volume).into());
+    }
     // TODO: add cstick (I don't think ctru-rs supports this)
-    // TODO: add volume slider axis
     // TODO: add 3d slider axis
 }
 
@@ -162,6 +166,22 @@ fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {
 
         KeyPad::CPAD_DOWN => {
             return _3dsButtonType::CPAD_DOWN;
+        }
+
+        KeyPad::CSTICK_RIGHT => {
+            return _3dsButtonType::CSTICK_RIGHT;
+        }
+
+        KeyPad::CSTICK_LEFT => {
+            return _3dsButtonType::CSTICK_LEFT;
+        }
+
+        KeyPad::CSTICK_UP => {
+            return _3dsButtonType::CSTICK_UP;
+        }
+
+        KeyPad::CSTICK_DOWN => {
+            return _3dsButtonType::CSTICK_DOWN;
         }
 
 

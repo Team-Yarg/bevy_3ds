@@ -155,12 +155,12 @@ pub fn _3ds_button_event_system(
     mut button_input: ResMut<Input<_3dsButton>>,
     mut button_input_events: EventWriter<_3dsButtonChangedEvent>,
 ) {
-    //TODO: remove all button state checking logic, because ctru already does that for us.
     for button_event in button_changed_events.read() {
         let button = _3dsButton::new(button_event.button_type);
         if !button_event.state.is_pressed() {
             // Check if button was previously pressed
-            if button_input.pressed(button) {
+            if button_input.pressed(button) { //todo this if statement is redundant because ctru
+                //already checks that button wasn't pressed in previous frame
                 button_input_events.send(_3dsButtonChangedEvent {
                     button_type: button.button_type,
                     state: ButtonState::Released,
@@ -171,7 +171,7 @@ pub fn _3ds_button_event_system(
             button_input.release(button);
         } else if button_event.state.is_pressed() {
             // Check if button was previously not pressed
-            if !button_input.pressed(button) {
+            if !button_input.pressed(button) { // same as the if statement above
                 button_input_events.send(_3dsButtonChangedEvent {
                     button_type: button.button_type,
                     state: ButtonState::Pressed,

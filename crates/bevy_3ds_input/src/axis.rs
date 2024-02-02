@@ -63,4 +63,7 @@ pub enum _3dsAxisType {
     CSTICKX,
     /// The vertical value of the right CSTICK.
     CSTICKY,
+
+    // volume slider
+    VOLUME,
 }

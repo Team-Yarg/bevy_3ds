@@ -17,6 +17,11 @@ fn button_text_system(
     axis: Res<Axis<_3dsAxis>>,
 ) {
     let pressed_buttons = buttons.get_pressed();
+    if let Some(volume) = axis.get(_3dsAxis::new(_3dsAxisType::VOLUME)) {
+        if volume > 0.0 {
+            debug!("volume: {}", volume);
+        }
+    }
     for button in pressed_buttons {
         let button_name = button.button_type.to_string();
         if button_name.contains("CPAD") {
@@ -24,6 +29,7 @@ fn button_text_system(
             let y = axis.get(_3dsAxis::new(_3dsAxisType::CPADY)).unwrap();
             debug!("x: {}, y: {}", x, y);
         }
+
         else {
             debug!("{}", button_name);
         }

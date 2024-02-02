@@ -89,19 +89,19 @@ fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>, buttons: Res<Input<_3d
     for (_, mut pos) in &mut sprites {
         let d = 10.0;
         if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_LEFT)) {
-            pos.translation.x += d;
-        }
-
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_RIGHT)) {
             pos.translation.x -= d;
         }
 
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_RIGHT)) {
+            pos.translation.x += d;
+        }
+
         if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_UP)) {
-            pos.translation.y -= d;
+            pos.translation.y += d;
         }
 
         if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_DOWN)) {
-            pos.translation.y += d;
+            pos.translation.y -= d;
         }
 
         if pos.translation.x > 32. {

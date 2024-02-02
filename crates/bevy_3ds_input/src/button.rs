@@ -86,6 +86,15 @@ pub enum _3dsButtonType {
     /// The down button of the CPAD.
     CPAD_DOWN,
 
+    /// The right button of the CSTICK.
+    CSTICK_RIGHT,
+    /// The left button of the CSTICK.
+    CSTICK_LEFT,
+    /// The up button of the CSTICK.
+    CSTICK_UP,
+    /// The down button of the CSTICK.
+    CSTICK_DOWN,
+
     /// The ZL button.
     ZL,
     /// The ZR button.
@@ -116,6 +125,10 @@ impl _3dsButtonType {
             _3dsButtonType::CPAD_LEFT => "CPAD_LEFT",
             _3dsButtonType::CPAD_UP => "CPAD_UP",
             _3dsButtonType::CPAD_DOWN => "CPAD_DOWN",
+            _3dsButtonType::CSTICK_RIGHT => "CSTICK_RIGHT",
+            _3dsButtonType::CSTICK_LEFT => "CSTICK_LEFT",
+            _3dsButtonType::CSTICK_UP => "CSTICK_UP",
+            _3dsButtonType::CSTICK_DOWN => "CSTICK_DOWN",
             _3dsButtonType::ZL => "ZL",
             _3dsButtonType::ZR => "ZR",
             _3dsButtonType::L => "L",
