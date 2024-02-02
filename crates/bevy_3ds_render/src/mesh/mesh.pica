@@ -40,8 +40,8 @@
 .out outtex texcoord0
 
 ; Inputs (passed in through v0..=v15, with aliases for convenience)
-.alias inpos v0
-.alias intex v1
+.in inpos
+.in intex
 
 ; The actual shader function
 .proc main
