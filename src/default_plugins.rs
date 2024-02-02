@@ -8,7 +8,6 @@ use bevy::{
 use bevy_3ds_input::InputPlugin;
 use bevy_3ds_pbr::Bevy3dsPbrPlugin;
 use bevy_3ds_render::texture::ImagePlugin;
-use bevy_3ds_ui::UiPlugin;
 
 use super::Core3dsPlugin;
 use crate::{render, sprite};

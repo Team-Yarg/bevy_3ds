@@ -51,6 +51,7 @@ impl Plugin for InputPlugin {
 pub fn ctru_event_system(
     mut events: EventWriter<_3dsEvent>,
 ) {
+    // TODO: check if it is better to store a handle to the hid as a resource
     let mut hid = Hid::new().unwrap();
     hid.scan_input();
     for key in hid.keys_down() {
