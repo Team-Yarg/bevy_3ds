@@ -66,7 +66,11 @@ pub fn ctru_event_system(
             CtruButtonChangedEvent::new(button_type, ButtonState::Released).into(),
         );
     }
-    // TODO: add axis
+    //TODO convert cpad_x & cpad_y to be between -1.0 and 1.0
+    let (cpad_x, cpad_y) = hid.circlepad_position();
+    events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADX, cpad_x as f32).into());
+    events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADY, cpad_y as f32).into());
+    // TODO: add cstick (I don't think ctru-rs supports this)
 }
 
 fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {

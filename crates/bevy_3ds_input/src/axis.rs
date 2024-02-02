@@ -54,13 +54,13 @@ impl _3dsAxis {
     reflect(Serialize, Deserialize)
 )]
 pub enum _3dsAxisType {
-    /// The horizontal value of the left stick.
-    LeftStickX,
-    /// The vertical value of the left stick.
-    LeftStickY,
+    /// The horizontal value of the left CPAD.
+    CPADX,
+    /// The vertical value of the left CPAD.
+    CPADY,
 
-    /// The horizontal value of the right stick.
-    RightStickX,
-    /// The vertical value of the right stick.
-    RightStickY,
+    /// The horizontal value of the right CSTICK.
+    CSTICKX,
+    /// The vertical value of the right CSTICK.
+    CSTICKY,
 }
