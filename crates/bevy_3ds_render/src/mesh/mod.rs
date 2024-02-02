@@ -1,10 +1,7 @@
 use bevy::{
     app::Plugin,
     math::{Vec2, Vec3},
-    render::{
-        mesh::Mesh, render_asset::PrepareAssetError, render_resource::IndexFormat, texture::Image,
-        RenderApp,
-    },
+    render::mesh::{Mesh, VertexAttributeValues},
 };
 use bevy_3ds_core::util::without_render_app;
 
@@ -15,8 +12,6 @@ use self::gpu::{BufKind, GpuMesh};
 use super::prep_asset::{PrepareAsset, PrepareAssetsPlugin};
 
 use citro3d::texture::{Tex, TexParams};
-use image::EncodableLayout;
-use log::{trace, warn};
 
 mod draw;
 pub mod gpu;
@@ -42,9 +37,10 @@ impl PrepareAsset for Mesh {
             .expect("failed to get vertex positions")
             .as_float3()
             .expect("failed to convert positions");
-        let uvs = mesh
-            .attribute(Mesh::ATTRIBUTE_UV_0)
-            .map(|uv| uv.as_float3().expect("failed to convert UVs"));
+        let uvs = mesh.attribute(Mesh::ATTRIBUTE_UV_0).map(|uv| match uv {
+            VertexAttributeValues::Float32x2(f) => f,
+            _ => unreachable!("should've already been caught by bevy"),
+        });
 
         let mut vbo = vec![];
         for index in 0..positions.len() {
@@ -52,7 +48,7 @@ impl PrepareAsset for Mesh {
             let uv = if let Some(t) = uvs {
                 t[index]
             } else {
-                [0.0; 3]
+                [0.0; 2]
             };
 
             vbo.push(MeshVertex {

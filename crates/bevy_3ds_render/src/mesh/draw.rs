@@ -126,9 +126,11 @@ impl RenderCommand for MeshDraw {
             pass.set_attr_info(&VertexAttrs::from_citro3d(MeshVertex::vert_attrs()));
             match &mesh.indices {
                 crate::mesh::gpu::BufKind::Array => {
+                    debug!("draw array");
                     pass.draw(mesh.prim_kind, vbo);
                 }
                 crate::mesh::gpu::BufKind::Elements { index_buf } => {
+                    debug!("draw indexed");
                     pass.draw_indexed(mesh.prim_kind, &vbo, index_buf);
                 }
             }
