@@ -49,11 +49,13 @@ fn setup_logger() -> Result<(), fern::InitError> {
 /// Sets up the Bevy application.
 #[cfg(target_os = "horizon")]
 fn ds_main() {
-
     let _romfs = ctru::services::romfs::RomFS::new().unwrap();
 
     let mut app = App::new();
-    app.add_plugins(bevy_3ds::DefaultPlugins);
+    app.add_plugins((
+        bevy_3ds::DefaultPlugins,
+        bevy_3ds_input::test::_3dsInputTestPlugin,
+    ));
     app.add_systems(Startup, setup);
     app.add_systems(Update, pupdate);
 
@@ -101,7 +103,6 @@ fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>, buttons: Res<Input<_3d
         if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_DOWN)) {
             pos.translation.y += d;
         }
-
 
         if pos.translation.x > 32. {
             pos.translation.x = -32.;

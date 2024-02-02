@@ -239,7 +239,7 @@ fn extract(main_world: &mut World, render_app: &mut App) {
 }
 
 fn render_system(world: &mut World) {
-    log::debug!("render on thread {:?}", std::thread::current().id());
+    // log::debug!("render on thread {:?}", std::thread::current().id());
     #[allow(clippy::type_complexity)]
     let mut st: SystemState<(
         Res<GpuDevice>,
@@ -276,7 +276,7 @@ fn render_system(world: &mut World) {
     target.clear(ClearFlags::ALL, 0, 0);
     drop(frame);
 
-    log::debug!("render fin");
+    //log::debug!("render fin");
 
     let time_send = world.resource::<TimeSender>();
     if let Err(e) = time_send.0.try_send(Instant::now()) {

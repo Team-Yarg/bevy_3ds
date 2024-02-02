@@ -88,3 +88,25 @@ pub enum _3dsButtonType {
     NULL,
 
 }
+
+impl _3dsButtonType {
+    pub fn to_string(&self) -> &str {
+        match self {
+            _3dsButtonType::B => "B",
+            _3dsButtonType::A => "A",
+            _3dsButtonType::Y => "Y",
+            _3dsButtonType::X => "X",
+            _3dsButtonType::SELECT => "SELECT",
+            _3dsButtonType::START => "START",
+            _3dsButtonType::DPAD_RIGHT => "DPAD_RIGHT",
+            _3dsButtonType::DPAD_LEFT => "DPAD_LEFT",
+            _3dsButtonType::DPAD_UP => "DPAD_UP",
+            _3dsButtonType::DPAD_DOWN => "DPAD_DOWN",
+            _3dsButtonType::ZL => "ZL",
+            _3dsButtonType::ZR => "ZR",
+            _3dsButtonType::L => "L",
+            _3dsButtonType::R => "R",
+            _3dsButtonType::NULL => "NULL",
+        }
+    }
+}

@@ -14,6 +14,7 @@ pub mod axis;
 pub mod button;
 pub mod settings;
 pub mod event;
+pub mod test;
 
 pub struct InputPlugin;
 impl Plugin for InputPlugin {
@@ -72,6 +73,8 @@ pub fn ctru_event_system(
     events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADX, cpad_x as f32).into());
     events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADY, cpad_y as f32).into());
     // TODO: add cstick (I don't think ctru-rs supports this)
+    // TODO: add volume slider axis
+    // TODO: add 3d slider axis
 }
 
 fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {

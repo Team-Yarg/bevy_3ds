@@ -363,6 +363,7 @@ dependencies = [
  "bevy",
  "ctru-rs",
  "thiserror",
+ "tracing",
 ]
 
 [[package]]

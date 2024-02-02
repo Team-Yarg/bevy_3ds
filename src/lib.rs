@@ -43,6 +43,7 @@ fn app_runner(
         if buttons.pressed(_3dsButton::new(_3dsButtonType::START)) {
             break;
         }
+
         if app.plugins_state() != PluginsState::Cleaned {
             if app.plugins_state() != PluginsState::Ready {
                 tick_global_task_pools_on_main_thread();

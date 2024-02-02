@@ -189,13 +189,13 @@ impl RenderCommand for DrawSprites {
             .expect("failed to set sprite shader");
         let uniforms = Uniforms::build(&SPRITE_SHADER);
         uniforms.bind_views(pass, view);
-        log::debug!("draw sprites, {} batches", entity.batches.len());
+        // log::debug!("draw sprites, {} batches", entity.batches.len());
 
         for sprite in &entity.batches {
             let img = images.get(sprite.image);
             let uses_img = img.is_some();
             if let Some(t) = img {
-                debug!("bind texture for batch");
+                // debug!("bind texture for batch");
                 pass.bind_texture(0, t);
             }
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
