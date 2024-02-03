@@ -102,5 +102,4 @@ pub enum _3dsButtonType {
     L,
     /// The R button.
     R,
-    Null,
 }

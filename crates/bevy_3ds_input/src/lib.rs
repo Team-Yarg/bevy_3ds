@@ -59,17 +59,19 @@ pub fn ctru_event_system(
     let mut hid = Hid::new().unwrap();
     hid.scan_input();
     for key in hid.keys_down() {
-       let button_type: _3dsButtonType = ctru_to_bevy_keypad(key);
-        events.send(
-            CtruButtonChangedEvent::new(button_type, ButtonState::Pressed).into(),
-        );
+       if let Some(button_type) = ctru_to_bevy_keypad(key) {
+            events.send(
+                CtruButtonChangedEvent::new(button_type, ButtonState::Pressed).into(),
+            );
+        }
     }
 
     for key in hid.keys_up() {
-       let button_type: _3dsButtonType = ctru_to_bevy_keypad(key);
-        events.send(
-            CtruButtonChangedEvent::new(button_type, ButtonState::Released).into(),
-        );
+       if let Some(button_type) = ctru_to_bevy_keypad(key) {
+            events.send(
+                CtruButtonChangedEvent::new(button_type, ButtonState::Released).into(),
+            );
+        }
     }
     let (cpad_x, cpad_y) = hid.circlepad_position();
     let mut cpad_x: f32 = cpad_x as f32;
@@ -109,99 +111,30 @@ pub fn ctru_event_system(
     // TODO: add 3d slider axis
 }
 
-fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {
+fn ctru_to_bevy_keypad(key: KeyPad) -> Option<_3dsButtonType> {
     match key {
-        KeyPad::B => {
-            return _3dsButtonType::B;
-        }
-
-        KeyPad::A => {
-            return _3dsButtonType::A;
-        }
-
-        KeyPad::Y => {
-            return _3dsButtonType::Y;
-        }
-
-        KeyPad::X => {
-            return _3dsButtonType::X;
-        }
-
-        KeyPad::SELECT => {
-            return _3dsButtonType::Select;
-        }
-
-        KeyPad::START => {
-            return _3dsButtonType::Start;
-        }
-
-        KeyPad::DPAD_RIGHT => {
-            return _3dsButtonType::DPadRight;
-        }
-
-        KeyPad::DPAD_LEFT => {
-            return _3dsButtonType::DPadLeft;
-        }
-
-        KeyPad::DPAD_UP => {
-            return _3dsButtonType::DPadUp;
-        }
-
-        KeyPad::DPAD_DOWN => {
-            return _3dsButtonType::DPadDown;
-        }
-
-        KeyPad::CPAD_RIGHT => {
-            return _3dsButtonType::CPadRight;
-        }
-
-        KeyPad::CPAD_LEFT => {
-            return _3dsButtonType::CPadLeft;
-        }
-
-        KeyPad::CPAD_UP => {
-            return _3dsButtonType::CPadUp;
-        }
-
-        KeyPad::CPAD_DOWN => {
-            return _3dsButtonType::CPadDown;
-        }
-
-        KeyPad::CSTICK_RIGHT => {
-            return _3dsButtonType::CStickRight;
-        }
-
-        KeyPad::CSTICK_LEFT => {
-            return _3dsButtonType::CStickLeft;
-        }
-
-        KeyPad::CSTICK_UP => {
-            return _3dsButtonType::CStickUp;
-        }
-
-        KeyPad::CSTICK_DOWN => {
-            return _3dsButtonType::CStickDown;
-        }
-
-
-        KeyPad::ZL => {
-            return _3dsButtonType::ZL;
-        }
-
-        KeyPad::ZR => {
-            return _3dsButtonType::ZR;
-        }
-
-        KeyPad::L => {
-            return _3dsButtonType::L;
-        }
-
-        KeyPad::R => {
-            return _3dsButtonType::R;
-        }
-
-        _ => {
-            return _3dsButtonType::Null;
-        }
+        KeyPad::B => Some(_3dsButtonType::B),
+        KeyPad::A => Some(_3dsButtonType::A),
+        KeyPad::Y => Some(_3dsButtonType::Y),
+        KeyPad::X => Some(_3dsButtonType::X),
+        KeyPad::SELECT => Some(_3dsButtonType::Select),
+        KeyPad::START => Some(_3dsButtonType::Start),
+        KeyPad::DPAD_RIGHT => Some(_3dsButtonType::DPadRight),
+        KeyPad::DPAD_LEFT => Some(_3dsButtonType::DPadLeft),
+        KeyPad::DPAD_UP => Some(_3dsButtonType::DPadUp),
+        KeyPad::DPAD_DOWN => Some(_3dsButtonType::DPadDown),
+        KeyPad::CPAD_RIGHT => Some(_3dsButtonType::CPadRight),
+        KeyPad::CPAD_LEFT => Some(_3dsButtonType::CPadLeft),
+        KeyPad::CPAD_UP => Some(_3dsButtonType::CPadUp),
+        KeyPad::CPAD_DOWN => Some(_3dsButtonType::CPadDown),
+        KeyPad::CSTICK_RIGHT => Some(_3dsButtonType::CStickRight),
+        KeyPad::CSTICK_LEFT => Some(_3dsButtonType::CStickLeft),
+        KeyPad::CSTICK_UP => Some(_3dsButtonType::CStickUp),
+        KeyPad::CSTICK_DOWN => Some(_3dsButtonType::CStickDown),
+        KeyPad::ZL => Some(_3dsButtonType::ZL),
+        KeyPad::ZR => Some(_3dsButtonType::ZR),
+        KeyPad::L => Some(_3dsButtonType::L),
+        KeyPad::R => Some(_3dsButtonType::R),
+        _ => None,
     }
 }
