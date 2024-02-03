@@ -1,4 +1,6 @@
 use bevy::reflect::Reflect;
+use strum_macros::Display;
+use strum_macros::EnumString;
 
 /// A button of a 3ds.
 ///
@@ -35,19 +37,16 @@ impl _3dsButton {
     /// );
     /// ```
     pub fn new(button_type: _3dsButtonType) -> Self {
-        Self {
-            button_type,
-        }
+        Self { button_type }
     }
 }
-
 
 /// A type of a [`_3dsButton`].
 ///
 /// ## Usage
 ///
 /// This is used in [`_3dsButton`] which in turn is used to create the [`Input<_3dsButton>`]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
+#[derive(EnumString, Display, Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
 #[reflect(Debug, Hash, PartialEq)]
 #[cfg_attr(
     feature = "serialize",
@@ -75,7 +74,6 @@ pub enum _3dsButtonType {
     DPAD_UP,
     /// The down button of the DPAD.
     DPAD_DOWN,
-
 
     /// The right button of the CPAD.
     CPAD_RIGHT,
@@ -105,35 +103,4 @@ pub enum _3dsButtonType {
     /// The R button.
     R,
     NULL,
-
-}
-
-impl _3dsButtonType {
-    pub fn to_string(&self) -> &str {
-        match self {
-            _3dsButtonType::B => "B",
-            _3dsButtonType::A => "A",
-            _3dsButtonType::Y => "Y",
-            _3dsButtonType::X => "X",
-            _3dsButtonType::SELECT => "SELECT",
-            _3dsButtonType::START => "START",
-            _3dsButtonType::DPAD_RIGHT => "DPAD_RIGHT",
-            _3dsButtonType::DPAD_LEFT => "DPAD_LEFT",
-            _3dsButtonType::DPAD_UP => "DPAD_UP",
-            _3dsButtonType::DPAD_DOWN => "DPAD_DOWN",
-            _3dsButtonType::CPAD_RIGHT => "CPAD_RIGHT",
-            _3dsButtonType::CPAD_LEFT => "CPAD_LEFT",
-            _3dsButtonType::CPAD_UP => "CPAD_UP",
-            _3dsButtonType::CPAD_DOWN => "CPAD_DOWN",
-            _3dsButtonType::CSTICK_RIGHT => "CSTICK_RIGHT",
-            _3dsButtonType::CSTICK_LEFT => "CSTICK_LEFT",
-            _3dsButtonType::CSTICK_UP => "CSTICK_UP",
-            _3dsButtonType::CSTICK_DOWN => "CSTICK_DOWN",
-            _3dsButtonType::ZL => "ZL",
-            _3dsButtonType::ZR => "ZR",
-            _3dsButtonType::L => "L",
-            _3dsButtonType::R => "R",
-            _3dsButtonType::NULL => "NULL",
-        }
-    }
 }
