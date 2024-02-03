@@ -46,7 +46,7 @@ impl Button3ds {
 /// ## Usage
 ///
 /// This is used in [`Button3ds`] which in turn is used to create the [`Input<Button3ds>`]
-#[derive(EnumString, Display, Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
 #[reflect(Debug, Hash, PartialEq)]
 #[cfg_attr(
     feature = "serialize",
