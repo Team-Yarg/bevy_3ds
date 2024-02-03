@@ -1,9 +1,8 @@
 use bevy::app::Plugin;
 use bevy::input::InputSystem;
-use event::{_3ds_axis_event_system, _3ds_button_event_system, _3ds_event_system, _3dsAxisChangedEvent, _3dsButtonChangedEvent, CtruButtonChangedEvent, _3dsEvent};
-use settings::{_3dsInputSettings, _3dsAxisSettings};
-use axis::{_3dsAxis, _3dsAxisType};
-use button::{_3dsButton, _3dsButtonType};
+use event::{axis_3ds_event_system, button_3ds_event_system, event_system_3ds, Axis3dsChangedEvent, Button3dsChangedEvent, CtruButtonChangedEvent, Event3ds};
+use axis::{Axis3ds, Axis3dsType};
+use button::{Button3ds, Button3dsType};
 use bevy::input::{ButtonState, Input, Axis};
 use bevy::app::PreUpdate;
 use bevy::prelude::IntoSystemConfigs;
@@ -13,47 +12,43 @@ use num_traits::pow::Pow;
 
 pub mod axis;
 pub mod button;
-pub mod settings;
 pub mod event;
 pub mod test;
 
 pub struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_event::<_3dsButtonChangedEvent>()
+        app.add_event::<Button3dsChangedEvent>()
             .add_event::<CtruButtonChangedEvent>()
-            .add_event::<_3dsAxisChangedEvent>()
-            .add_event::<_3dsEvent>()
-            .init_resource::<_3dsInputSettings>()
-            .init_resource::<Input<_3dsButton>>()
-            .init_resource::<Axis<_3dsAxis>>()
+            .add_event::<Axis3dsChangedEvent>()
+            .add_event::<Event3ds>()
+            .init_resource::<Input<Button3ds>>()
+            .init_resource::<Axis<Axis3ds>>()
             .add_systems(
                 PreUpdate,
                 (
                     ctru_event_system,
-                    _3ds_event_system
+                    event_system_3ds
                         .after(ctru_event_system),
-                    _3ds_button_event_system
-                        .after(_3ds_event_system),
-                    _3ds_axis_event_system
-                        .after(_3ds_event_system),
+                    button_3ds_event_system
+                        .after(event_system_3ds),
+                    axis_3ds_event_system
+                        .after(event_system_3ds),
                 )
                     .in_set(InputSystem),
             );
 
-        app.register_type::<_3dsButtonType>()
-            .register_type::<_3dsButton>()
-            .register_type::<_3dsAxisType>()
-            .register_type::<_3dsAxis>()
-            .register_type::<_3dsInputSettings>()
-            .register_type::<_3dsAxisSettings>();
+        app.register_type::<Button3dsType>()
+            .register_type::<Button3ds>()
+            .register_type::<Axis3dsType>()
+            .register_type::<Axis3ds>();
     }
 }
 
 const DEADZONE_BOUND: f32 = 10.0;
 const LIVEZONE_BOUND: f32 = 150.0;
 pub fn ctru_event_system(
-    mut events: EventWriter<_3dsEvent>,
+    mut events: EventWriter<Event3ds>,
 ) {
     // TODO: check if it is better to store a handle to the hid as a resource
     let mut hid = Hid::new().unwrap();
@@ -97,44 +92,44 @@ pub fn ctru_event_system(
     }
     let adjusted_livezone_bound = LIVEZONE_BOUND - DEADZONE_BOUND; // so that scale is smooth
     if cpad_x > 0.0 {
-        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPadX, cpad_x / adjusted_livezone_bound).into());
+        events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadX, cpad_x / adjusted_livezone_bound).into());
     }
     if cpad_y > 0.0 {
-        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPadY, cpad_y / adjusted_livezone_bound).into());
+        events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadY, cpad_y / adjusted_livezone_bound).into());
     }
 
     let volume: f32 = hid.volume_slider();
     if volume > 0.0 {
-        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::Volume, volume).into());
+        events.send(Axis3dsChangedEvent::new(Axis3dsType::Volume, volume).into());
     }
     // TODO: add cstick (I don't think ctru-rs supports this)
     // TODO: add 3d slider axis
 }
 
-fn ctru_to_bevy_keypad(key: KeyPad) -> Option<_3dsButtonType> {
+fn ctru_to_bevy_keypad(key: KeyPad) -> Option<Button3dsType> {
     match key {
-        KeyPad::B => Some(_3dsButtonType::B),
-        KeyPad::A => Some(_3dsButtonType::A),
-        KeyPad::Y => Some(_3dsButtonType::Y),
-        KeyPad::X => Some(_3dsButtonType::X),
-        KeyPad::SELECT => Some(_3dsButtonType::Select),
-        KeyPad::START => Some(_3dsButtonType::Start),
-        KeyPad::DPAD_RIGHT => Some(_3dsButtonType::DPadRight),
-        KeyPad::DPAD_LEFT => Some(_3dsButtonType::DPadLeft),
-        KeyPad::DPAD_UP => Some(_3dsButtonType::DPadUp),
-        KeyPad::DPAD_DOWN => Some(_3dsButtonType::DPadDown),
-        KeyPad::CPAD_RIGHT => Some(_3dsButtonType::CPadRight),
-        KeyPad::CPAD_LEFT => Some(_3dsButtonType::CPadLeft),
-        KeyPad::CPAD_UP => Some(_3dsButtonType::CPadUp),
-        KeyPad::CPAD_DOWN => Some(_3dsButtonType::CPadDown),
-        KeyPad::CSTICK_RIGHT => Some(_3dsButtonType::CStickRight),
-        KeyPad::CSTICK_LEFT => Some(_3dsButtonType::CStickLeft),
-        KeyPad::CSTICK_UP => Some(_3dsButtonType::CStickUp),
-        KeyPad::CSTICK_DOWN => Some(_3dsButtonType::CStickDown),
-        KeyPad::ZL => Some(_3dsButtonType::ZL),
-        KeyPad::ZR => Some(_3dsButtonType::ZR),
-        KeyPad::L => Some(_3dsButtonType::L),
-        KeyPad::R => Some(_3dsButtonType::R),
+        KeyPad::B => Some(Button3dsType::B),
+        KeyPad::A => Some(Button3dsType::A),
+        KeyPad::Y => Some(Button3dsType::Y),
+        KeyPad::X => Some(Button3dsType::X),
+        KeyPad::SELECT => Some(Button3dsType::Select),
+        KeyPad::START => Some(Button3dsType::Start),
+        KeyPad::DPAD_RIGHT => Some(Button3dsType::DPadRight),
+        KeyPad::DPAD_LEFT => Some(Button3dsType::DPadLeft),
+        KeyPad::DPAD_UP => Some(Button3dsType::DPadUp),
+        KeyPad::DPAD_DOWN => Some(Button3dsType::DPadDown),
+        KeyPad::CPAD_RIGHT => Some(Button3dsType::CPadRight),
+        KeyPad::CPAD_LEFT => Some(Button3dsType::CPadLeft),
+        KeyPad::CPAD_UP => Some(Button3dsType::CPadUp),
+        KeyPad::CPAD_DOWN => Some(Button3dsType::CPadDown),
+        KeyPad::CSTICK_RIGHT => Some(Button3dsType::CStickRight),
+        KeyPad::CSTICK_LEFT => Some(Button3dsType::CStickLeft),
+        KeyPad::CSTICK_UP => Some(Button3dsType::CStickUp),
+        KeyPad::CSTICK_DOWN => Some(Button3dsType::CStickDown),
+        KeyPad::ZL => Some(Button3dsType::ZL),
+        KeyPad::ZR => Some(Button3dsType::ZR),
+        KeyPad::L => Some(Button3dsType::L),
+        KeyPad::R => Some(Button3dsType::R),
         _ => None,
     }
 }

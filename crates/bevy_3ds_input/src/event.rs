@@ -4,10 +4,9 @@ use bevy::ecs::event::{EventReader, EventWriter};
 use bevy::ecs::system::{ResMut};
 use bevy::input::{ButtonState, Input, Axis};
 use bevy::prelude::DetectChangesMut;
-use crate::axis::{_3dsAxis, _3dsAxisType};
-use crate::button::{_3dsButton, _3dsButtonType};
+use crate::axis::{Axis3ds, Axis3dsType};
+use crate::button::{Button3ds, Button3dsType};
 /// 3ds event for when the "value" on the axis changes
-/// by an amount larger than the threshold defined in [`_3dsInputSettings`].
 #[derive(Event, Debug, Clone, PartialEq, Reflect)]
 #[reflect(Debug, PartialEq)]
 #[cfg_attr(
@@ -15,16 +14,16 @@ use crate::button::{_3dsButton, _3dsButtonType};
     derive(serde::Serialize, serde::Deserialize),
     reflect(Serialize, Deserialize)
 )]
-pub struct _3dsAxisChangedEvent {
+pub struct Axis3dsChangedEvent {
     /// The type of the triggered axis.
-    pub axis_type: _3dsAxisType,
+    pub axis_type: Axis3dsType,
     /// The value of the axis.
     pub value: f32,
 }
 
-impl _3dsAxisChangedEvent {
-    /// Creates a [`_3dsAxisChangedEvent`].
-    pub fn new(axis_type: _3dsAxisType, value: f32) -> Self {
+impl Axis3dsChangedEvent {
+    /// Creates a [`Axis3dsChangedEvent`].
+    pub fn new(axis_type: Axis3dsType, value: f32) -> Self {
         Self {
             axis_type,
             value,
@@ -41,16 +40,16 @@ impl _3dsAxisChangedEvent {
     derive(serde::Serialize, serde::Deserialize),
     reflect(Serialize, Deserialize)
 )]
-pub struct _3dsButtonChangedEvent {
+pub struct Button3dsChangedEvent {
     /// The 3ds button assigned to the event.
-    pub button_type: _3dsButtonType,
+    pub button_type: Button3dsType,
     /// The pressed state of the button.
     pub state: ButtonState,
 }
 
-impl _3dsButtonChangedEvent {
-    /// Creates a [`_3dsButtonChangedEvent`].
-    pub fn new(button_type: _3dsButtonType, state: ButtonState) -> Self {
+impl Button3dsChangedEvent {
+    /// Creates a [`Button3dsChangedEvent`].
+    pub fn new(button_type: Button3dsType, state: ButtonState) -> Self {
         Self {
             button_type,
             state,
@@ -69,14 +68,14 @@ impl _3dsButtonChangedEvent {
 )]
 pub struct CtruButtonChangedEvent {
     /// The 3ds button assigned to the event.
-    pub button_type: _3dsButtonType,
+    pub button_type: Button3dsType,
     /// The pressed state of the button.
     pub state: ButtonState,
 }
 
 impl CtruButtonChangedEvent {
     /// Creates a [`CtruButtonChangedEvent`].
-    pub fn new(button_type: _3dsButtonType, state: ButtonState) -> Self {
+    pub fn new(button_type: Button3dsType, state: ButtonState) -> Self {
         Self {
             button_type,
             state,
@@ -88,7 +87,7 @@ impl CtruButtonChangedEvent {
 /// A 3ds event.
 ///
 /// This event type is used over the
-/// [`_3dsButtonChangedEvent`] and [`_3dsAxisChangedEvent`] when
+/// [`Button3dsChangedEvent`] and [`Axis3dsChangedEvent`] when
 /// the in-frame relative ordering of events is important.
 #[derive(Event, Debug, Clone, PartialEq, Reflect)]
 #[reflect(Debug, PartialEq)]
@@ -97,71 +96,71 @@ impl CtruButtonChangedEvent {
     derive(serde::Serialize, serde::Deserialize),
     reflect(Serialize, Deserialize)
 )]
-pub enum _3dsEvent {
+pub enum Event3ds {
     /// A button of the 3ds has been triggered.
     Button(CtruButtonChangedEvent),
     /// An axis of the 3ds has been triggered.
-    Axis(_3dsAxisChangedEvent),
+    Axis(Axis3dsChangedEvent),
 }
 
-impl From<CtruButtonChangedEvent> for _3dsEvent {
+impl From<CtruButtonChangedEvent> for Event3ds {
     fn from(value: CtruButtonChangedEvent) -> Self {
         Self::Button(value)
     }
 }
 
-impl From<_3dsAxisChangedEvent> for _3dsEvent {
-    fn from(value: _3dsAxisChangedEvent) -> Self {
+impl From<Axis3dsChangedEvent> for Event3ds {
+    fn from(value: Axis3dsChangedEvent) -> Self {
         Self::Axis(value)
     }
 }
 
 
-/// Splits the [`_3dsEvent`] event stream into it's component events.
-pub fn _3ds_event_system(
-    mut _3ds_events: EventReader<_3dsEvent>,
+/// Splits the [`Event3ds`] event stream into it's component events.
+pub fn event_system_3ds(
+    mut events_3ds: EventReader<Event3ds>,
     mut button_events: EventWriter<CtruButtonChangedEvent>,
-    mut axis_events: EventWriter<_3dsAxisChangedEvent>,
-    mut button_input: ResMut<Input<_3dsButton>>,
+    mut axis_events: EventWriter<Axis3dsChangedEvent>,
+    mut button_input: ResMut<Input<Button3ds>>,
 ) {
     button_input.bypass_change_detection().clear();
-    for _3ds_event in _3ds_events.read() {
-        match _3ds_event {
-            _3dsEvent::Button(button_event) => button_events.send(button_event.clone()),
-            _3dsEvent::Axis(axis_event) => axis_events.send(axis_event.clone()),
+    for event_3ds in events_3ds.read() {
+        match event_3ds {
+            Event3ds::Button(button_event) => button_events.send(button_event.clone()),
+            Event3ds::Axis(axis_event) => axis_events.send(axis_event.clone()),
         }
     }
 }
 
 
-/// Uses [`_3dsAxisChangedEvent`]s to update the relevant [`Input`] and [`Axis`] values.
-pub fn _3ds_axis_event_system(
-    mut _3ds_axis: ResMut<Axis<_3dsAxis>>,
-    mut axis_events: EventReader<_3dsAxisChangedEvent>,
+/// Uses [`Axis3dsChangedEvent`]s to update the relevant [`Input`] and [`Axis`] values.
+pub fn axis_3ds_event_system(
+    mut axis_3ds: ResMut<Axis<Axis3ds>>,
+    mut axis_events: EventReader<Axis3dsChangedEvent>,
 ) {
     for axis_event in axis_events.read() {
-        let axis = _3dsAxis::new(axis_event.axis_type);
+        let axis = Axis3ds::new(axis_event.axis_type);
         //if we want to put thresholds for udpating axis, we would use AxisSettings.filter here
         // after having fetched the old value from the axis resource that matches this axis_type.
-        _3ds_axis.set(axis, axis_event.value);
+        axis_3ds.set(axis, axis_event.value);
         // TODO: decide if we want to send this as an event
     }
 }
 
 
-/// Uses [`_3dsButtonChangedEvent`]s to update the relevant [`Input`] values.
-pub fn _3ds_button_event_system(
+/// Uses [`Button3dsChangedEvent`]s to update the relevant [`Input`] values.
+pub fn button_3ds_event_system(
     mut button_changed_events: EventReader<CtruButtonChangedEvent>,
-    mut button_input: ResMut<Input<_3dsButton>>,
-    mut button_input_events: EventWriter<_3dsButtonChangedEvent>,
+    mut button_input: ResMut<Input<Button3ds>>,
+    mut button_input_events: EventWriter<Button3dsChangedEvent>,
 ) {
     for button_event in button_changed_events.read() {
-        let button = _3dsButton::new(button_event.button_type);
+        let button = Button3ds::new(button_event.button_type);
         if !button_event.state.is_pressed() {
             // Check if button was previously pressed
             if button_input.pressed(button) { //todo this if statement is redundant because ctru
                 //already checks that button wasn't pressed in previous frame
-                button_input_events.send(_3dsButtonChangedEvent {
+                button_input_events.send(Button3dsChangedEvent {
                     button_type: button.button_type,
                     state: ButtonState::Released,
                 });
@@ -172,7 +171,7 @@ pub fn _3ds_button_event_system(
         } else if button_event.state.is_pressed() {
             // Check if button was previously not pressed
             if !button_input.pressed(button) { // same as the if statement above
-                button_input_events.send(_3dsButtonChangedEvent {
+                button_input_events.send(Button3dsChangedEvent {
                     button_type: button.button_type,
                     state: ButtonState::Pressed,
                 });

@@ -8,7 +8,7 @@ use bevy::reflect::Reflect;
 ///
 /// ## Updating
 ///
-/// The 3ds axes resources are updated inside of the [`_3ds_axis_event_system`].
+/// The 3ds axes resources are updated inside of the [`axis_3ds_event_system`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
 #[reflect(Debug, Hash, PartialEq)]
 #[cfg_attr(
@@ -16,36 +16,36 @@ use bevy::reflect::Reflect;
     derive(serde::Serialize, serde::Deserialize),
     reflect(Serialize, Deserialize)
 )]
-pub struct _3dsAxis {
+pub struct Axis3ds {
     /// The type of the axis.
-    pub axis_type: _3dsAxisType,
+    pub axis_type: Axis3dsType,
 }
 
-impl _3dsAxis {
-    /// Creates a new [`_3dsAxis`].
+impl Axis3ds {
+    /// Creates a new [`Axis3ds`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # use bevy_3ds::input::axis::{_3dsAxis, _3dsAxisType};
+    /// # use bevy_3ds::input::axis::{Axis3ds, Axis3dsType};
     /// #
-    /// let 3ds_axis = _3dsAxis::new(
-    ///     _3dsAxisType::LeftStickX,
+    /// let 3ds_axis = Axis3ds::new(
+    ///     Axis3dsType::LeftStickX,
     /// );
     /// ```
-    pub fn new(axis_type: _3dsAxisType) -> Self {
+    pub fn new(axis_type: Axis3dsType) -> Self {
         Self { axis_type }
     }
 }
 
 
-/// A type of a [`_3dsAxis`].
+/// A type of a [`Axis3ds`].
 ///
 /// ## Usage
 ///
 /// This is used to determine which axis has changed its value when receiving a
-/// [`_3dsAxisChangedEvent`]. It is also used in the [`_3dsAxis`]
-/// which in turn is used to create the [`Axis<_3dsAxis>`] `bevy` resource.
+/// [`Axis3dsChangedEvent`]. It is also used in the [`Axis3ds`]
+/// which in turn is used to create the [`Axis<Axis3ds>`] `bevy` resource.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
 #[reflect(Debug, Hash, PartialEq)]
 #[cfg_attr(
@@ -53,7 +53,7 @@ impl _3dsAxis {
     derive(serde::Serialize, serde::Deserialize),
     reflect(Serialize, Deserialize)
 )]
-pub enum _3dsAxisType {
+pub enum Axis3dsType {
     /// The horizontal value of the left CPAD.
     CPadX,
     /// The vertical value of the left CPAD.

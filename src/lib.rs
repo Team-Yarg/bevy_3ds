@@ -15,7 +15,7 @@ pub mod sprite {
 
 mod default_plugins;
 
-use bevy_3ds_input::button::{_3dsButton, _3dsButtonType};
+use bevy_3ds_input::button::{Button3ds, Button3dsType};
 use ctru::prelude::*;
 pub use default_plugins::DefaultPlugins;
 
@@ -38,9 +38,9 @@ fn app_runner(
 
     let apt = Apt::new().unwrap();
     while apt.main_loop() {
-        let buttons = app.world.get_resource::<Input<_3dsButton>>().expect("Input<_3dsButton> resource not found");
+        let buttons = app.world.get_resource::<Input<Button3ds>>().expect("Input<_3dsButton> resource not found");
 
-        if buttons.pressed(_3dsButton::new(_3dsButtonType::Start)) {
+        if buttons.pressed(Button3ds::new(Button3dsType::Start)) {
             break;
         }
 

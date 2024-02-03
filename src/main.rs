@@ -53,7 +53,7 @@ fn ds_main() {
     let mut app = App::new();
     app.add_plugins((
         bevy_3ds::DefaultPlugins,
-        bevy_3ds_input::test::_3dsInputTestPlugin,
+        bevy_3ds_input::test::Input3dsTestPlugin,
     ));
     app.add_systems(Startup, setup);
     app.add_systems(Update, pupdate);
@@ -84,22 +84,22 @@ use bevy::input::Input;
 use bevy_3ds_input::button::*;
 /// Update function for sprite movement.
 /// Moves each sprite in the `sprites` query to the right each frame.
-fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>, buttons: Res<Input<_3dsButton>>) {
+fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>, buttons: Res<Input<Button3ds>>) {
     for (_, mut pos) in &mut sprites {
         let d = 10.0;
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadLeft)) {
+        if buttons.just_pressed(Button3ds::new(Button3dsType::DPadLeft)) {
             pos.translation.x -= d;
         }
 
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadRight)) {
+        if buttons.just_pressed(Button3ds::new(Button3dsType::DPadRight)) {
             pos.translation.x += d;
         }
 
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadUp)) {
+        if buttons.just_pressed(Button3ds::new(Button3dsType::DPadUp)) {
             pos.translation.y += d;
         }
 
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadDown)) {
+        if buttons.just_pressed(Button3ds::new(Button3dsType::DPadDown)) {
             pos.translation.y -= d;
         }
 

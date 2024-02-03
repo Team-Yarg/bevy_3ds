@@ -11,7 +11,7 @@ use strum_macros::EnumString;
 ///
 /// ## Updating
 ///
-/// The 3ds button resources are updated inside of the [`_3ds_button_event_system`].
+/// The 3ds button resources are updated inside of the [`button_3ds_event_system`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
 #[reflect(Debug, Hash, PartialEq)]
 #[cfg_attr(
@@ -19,33 +19,33 @@ use strum_macros::EnumString;
     derive(serde::Serialize, serde::Deserialize),
     reflect(Serialize, Deserialize)
 )]
-pub struct _3dsButton {
+pub struct Button3ds {
     /// The type of the button.
-    pub button_type: _3dsButtonType,
+    pub button_type: Button3dsType,
 }
 
-impl _3dsButton {
-    /// Creates a new [`_3dsButton`].
+impl Button3ds {
+    /// Creates a new [`Button3ds`].
     ///
     /// # Examples
     ///
     /// ```
-    /// # use bevy_3ds::input::button::{_3dsButton, _3dsButtonType};
+    /// # use bevy_3ds::input::button::{Button3ds, Button3dsType};
     /// #
-    /// let 3ds_button = _3dsButton::new(
-    ///     _3dsButtonType::South,
+    /// let 3ds_button = Button3ds::new(
+    ///     Button3dsType::South,
     /// );
     /// ```
-    pub fn new(button_type: _3dsButtonType) -> Self {
+    pub fn new(button_type: Button3dsType) -> Self {
         Self { button_type }
     }
 }
 
-/// A type of a [`_3dsButton`].
+/// A type of a [`Button3ds`].
 ///
 /// ## Usage
 ///
-/// This is used in [`_3dsButton`] which in turn is used to create the [`Input<_3dsButton>`]
+/// This is used in [`Button3ds`] which in turn is used to create the [`Input<Button3ds>`]
 #[derive(EnumString, Display, Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
 #[reflect(Debug, Hash, PartialEq)]
 #[cfg_attr(
@@ -53,7 +53,7 @@ impl _3dsButton {
     derive(serde::Serialize, serde::Deserialize),
     reflect(Serialize, Deserialize)
 )]
-pub enum _3dsButtonType {
+pub enum Button3dsType {
     /// The bottom action button of the action pad
     B,
     /// The right action button of the action pad
