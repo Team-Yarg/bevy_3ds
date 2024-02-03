@@ -1,7 +1,5 @@
 use bevy::reflect::Reflect;
 use ctru::services::hid::KeyPad;
-use strum_macros::Display;
-use strum_macros::EnumString;
 /// A button of a 3ds.
 ///
 /// ## Usage

@@ -10,7 +10,4 @@ bevy = { version = "0.12.1", default-features = false }
 
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
 num-traits = "0.2.17"
-strum = "0.26.1"
-strum_macros = "0.26.1"
-thiserror = "1.0.56"
 tracing = "0.1.40"
