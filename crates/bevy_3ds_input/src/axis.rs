@@ -55,15 +55,15 @@ impl _3dsAxis {
 )]
 pub enum _3dsAxisType {
     /// The horizontal value of the left CPAD.
-    CPADX,
+    CPadX,
     /// The vertical value of the left CPAD.
-    CPADY,
+    CPadY,
 
     /// The horizontal value of the right CSTICK.
-    CSTICKX,
+    CStickX,
     /// The vertical value of the right CSTICK.
-    CSTICKY,
+    CstickY,
 
     // volume slider
-    VOLUME,
+    Volume,
 }

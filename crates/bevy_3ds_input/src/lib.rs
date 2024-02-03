@@ -9,7 +9,6 @@ use bevy::app::PreUpdate;
 use bevy::prelude::IntoSystemConfigs;
 use ctru::services::hid::{Hid, KeyPad};
 use bevy::ecs::event::EventWriter;
-use tracing::debug;
 use num_traits::pow::Pow;
 
 pub mod axis;
@@ -96,15 +95,15 @@ pub fn ctru_event_system(
     }
     let adjusted_livezone_bound = LIVEZONE_BOUND - DEADZONE_BOUND; // so that scale is smooth
     if cpad_x > 0.0 {
-        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADX, cpad_x / adjusted_livezone_bound).into());
+        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPadX, cpad_x / adjusted_livezone_bound).into());
     }
     if cpad_y > 0.0 {
-        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPADY, cpad_y / adjusted_livezone_bound).into());
+        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::CPadY, cpad_y / adjusted_livezone_bound).into());
     }
 
     let volume: f32 = hid.volume_slider();
     if volume > 0.0 {
-        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::VOLUME, volume).into());
+        events.send(_3dsAxisChangedEvent::new(_3dsAxisType::Volume, volume).into());
     }
     // TODO: add cstick (I don't think ctru-rs supports this)
     // TODO: add 3d slider axis
@@ -129,59 +128,59 @@ fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {
         }
 
         KeyPad::SELECT => {
-            return _3dsButtonType::SELECT;
+            return _3dsButtonType::Select;
         }
 
         KeyPad::START => {
-            return _3dsButtonType::START;
+            return _3dsButtonType::Start;
         }
 
         KeyPad::DPAD_RIGHT => {
-            return _3dsButtonType::DPAD_RIGHT;
+            return _3dsButtonType::DPadRight;
         }
 
         KeyPad::DPAD_LEFT => {
-            return _3dsButtonType::DPAD_LEFT;
+            return _3dsButtonType::DPadLeft;
         }
 
         KeyPad::DPAD_UP => {
-            return _3dsButtonType::DPAD_UP;
+            return _3dsButtonType::DPadUp;
         }
 
         KeyPad::DPAD_DOWN => {
-            return _3dsButtonType::DPAD_DOWN;
+            return _3dsButtonType::DPadDown;
         }
 
         KeyPad::CPAD_RIGHT => {
-            return _3dsButtonType::CPAD_RIGHT;
+            return _3dsButtonType::CPadRight;
         }
 
         KeyPad::CPAD_LEFT => {
-            return _3dsButtonType::CPAD_LEFT;
+            return _3dsButtonType::CPadLeft;
         }
 
         KeyPad::CPAD_UP => {
-            return _3dsButtonType::CPAD_UP;
+            return _3dsButtonType::CPadUp;
         }
 
         KeyPad::CPAD_DOWN => {
-            return _3dsButtonType::CPAD_DOWN;
+            return _3dsButtonType::CPadDown;
         }
 
         KeyPad::CSTICK_RIGHT => {
-            return _3dsButtonType::CSTICK_RIGHT;
+            return _3dsButtonType::CStickRight;
         }
 
         KeyPad::CSTICK_LEFT => {
-            return _3dsButtonType::CSTICK_LEFT;
+            return _3dsButtonType::CStickLeft;
         }
 
         KeyPad::CSTICK_UP => {
-            return _3dsButtonType::CSTICK_UP;
+            return _3dsButtonType::CStickUp;
         }
 
         KeyPad::CSTICK_DOWN => {
-            return _3dsButtonType::CSTICK_DOWN;
+            return _3dsButtonType::CStickDown;
         }
 
 
@@ -202,7 +201,7 @@ fn ctru_to_bevy_keypad(key: KeyPad) -> _3dsButtonType {
         }
 
         _ => {
-            return _3dsButtonType::NULL;
+            return _3dsButtonType::Null;
         }
     }
 }

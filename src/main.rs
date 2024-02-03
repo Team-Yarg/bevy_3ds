@@ -28,7 +28,6 @@ mod shims;
 
 //use libc::c_void;
 
-/// Uses fern for logging with chrono for timestamp formatting.
 fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()
         .level(log::LevelFilter::Trace)
@@ -88,19 +87,19 @@ use bevy_3ds_input::button::*;
 fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>, buttons: Res<Input<_3dsButton>>) {
     for (_, mut pos) in &mut sprites {
         let d = 10.0;
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_LEFT)) {
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadLeft)) {
             pos.translation.x -= d;
         }
 
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_RIGHT)) {
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadRight)) {
             pos.translation.x += d;
         }
 
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_UP)) {
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadUp)) {
             pos.translation.y += d;
         }
 
-        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPAD_DOWN)) {
+        if buttons.just_pressed(_3dsButton::new(_3dsButtonType::DPadDown)) {
             pos.translation.y -= d;
         }
 

@@ -40,7 +40,7 @@ fn app_runner(
     while apt.main_loop() {
         let buttons = app.world.get_resource::<Input<_3dsButton>>().expect("Input<_3dsButton> resource not found");
 
-        if buttons.pressed(_3dsButton::new(_3dsButtonType::START)) {
+        if buttons.pressed(_3dsButton::new(_3dsButtonType::Start)) {
             break;
         }
 

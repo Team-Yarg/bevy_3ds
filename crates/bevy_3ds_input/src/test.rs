@@ -1,7 +1,6 @@
 use bevy::{app::{Plugin, Update}, ecs::system::Res, input::{Axis, Input}};
 use tracing::debug;
-use std::any::type_name_of_val;
-use crate::{axis::{_3dsAxis, _3dsAxisType}, button::{_3dsButton, _3dsButtonType}};
+use crate::{axis::{_3dsAxis, _3dsAxisType}, button::_3dsButton};
 
 /// This plugin logs every keypress
 pub struct _3dsInputTestPlugin;
@@ -17,7 +16,7 @@ fn button_text_system(
     axis: Res<Axis<_3dsAxis>>,
 ) {
     let pressed_buttons = buttons.get_pressed();
-    if let Some(volume) = axis.get(_3dsAxis::new(_3dsAxisType::VOLUME)) {
+    if let Some(volume) = axis.get(_3dsAxis::new(_3dsAxisType::Volume)) {
         if volume > 0.0 {
             debug!("volume: {}", volume);
         }
@@ -25,8 +24,8 @@ fn button_text_system(
     for button in pressed_buttons {
         let button_name = button.button_type.to_string();
         if button_name.contains("CPAD") {
-            let x = axis.get(_3dsAxis::new(_3dsAxisType::CPADX)).unwrap();
-            let y = axis.get(_3dsAxis::new(_3dsAxisType::CPADY)).unwrap();
+            let x = axis.get(_3dsAxis::new(_3dsAxisType::CPadX)).unwrap();
+            let y = axis.get(_3dsAxis::new(_3dsAxisType::CPadY)).unwrap();
             debug!("x: {}, y: {}", x, y);
         }
 

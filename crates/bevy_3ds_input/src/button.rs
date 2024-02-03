@@ -63,35 +63,35 @@ pub enum _3dsButtonType {
     /// The left action button of the action pad
     X,
 
-    SELECT,
-    START,
+    Select,
+    Start,
 
     /// The right button of the DPAD.
-    DPAD_RIGHT,
+    DPadRight,
     /// The left button of the DPAD.
-    DPAD_LEFT,
+    DPadLeft,
     /// The up button of the DPAD.
-    DPAD_UP,
+    DPadUp,
     /// The down button of the DPAD.
-    DPAD_DOWN,
+    DPadDown,
 
     /// The right button of the CPAD.
-    CPAD_RIGHT,
+    CPadRight,
     /// The left button of the CPAD.
-    CPAD_LEFT,
+    CPadLeft,
     /// The up button of the CPAD.
-    CPAD_UP,
+    CPadUp,
     /// The down button of the CPAD.
-    CPAD_DOWN,
+    CPadDown,
 
     /// The right button of the CSTICK.
-    CSTICK_RIGHT,
+    CStickRight,
     /// The left button of the CSTICK.
-    CSTICK_LEFT,
+    CStickLeft,
     /// The up button of the CSTICK.
-    CSTICK_UP,
+    CStickUp,
     /// The down button of the CSTICK.
-    CSTICK_DOWN,
+    CStickDown,
 
     /// The ZL button.
     ZL,
@@ -102,5 +102,5 @@ pub enum _3dsButtonType {
     L,
     /// The R button.
     R,
-    NULL,
+    Null,
 }
