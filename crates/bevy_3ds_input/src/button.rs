@@ -1,7 +1,7 @@
 use bevy::reflect::Reflect;
+use ctru::services::hid::KeyPad;
 use strum_macros::Display;
 use strum_macros::EnumString;
-
 /// A button of a 3ds.
 ///
 /// ## Usage
@@ -102,4 +102,38 @@ pub enum Button3dsType {
     L,
     /// The R button.
     R,
+}
+
+use std::convert::TryFrom;
+
+impl TryFrom<KeyPad> for Button3dsType {
+    type Error = ();
+
+    fn try_from(key: KeyPad) -> Result<Self, Self::Error> {
+        match key {
+            KeyPad::B => Ok(Button3dsType::B),
+            KeyPad::A => Ok(Button3dsType::A),
+            KeyPad::Y => Ok(Button3dsType::Y),
+            KeyPad::X => Ok(Button3dsType::X),
+            KeyPad::SELECT => Ok(Button3dsType::Select),
+            KeyPad::START => Ok(Button3dsType::Start),
+            KeyPad::DPAD_RIGHT => Ok(Button3dsType::DPadRight),
+            KeyPad::DPAD_LEFT => Ok(Button3dsType::DPadLeft),
+            KeyPad::DPAD_UP => Ok(Button3dsType::DPadUp),
+            KeyPad::DPAD_DOWN => Ok(Button3dsType::DPadDown),
+            KeyPad::CPAD_RIGHT => Ok(Button3dsType::CPadRight),
+            KeyPad::CPAD_LEFT => Ok(Button3dsType::CPadLeft),
+            KeyPad::CPAD_UP => Ok(Button3dsType::CPadUp),
+            KeyPad::CPAD_DOWN => Ok(Button3dsType::CPadDown),
+            KeyPad::CSTICK_RIGHT => Ok(Button3dsType::CStickRight),
+            KeyPad::CSTICK_LEFT => Ok(Button3dsType::CStickLeft),
+            KeyPad::CSTICK_UP => Ok(Button3dsType::CStickUp),
+            KeyPad::CSTICK_DOWN => Ok(Button3dsType::CStickDown),
+            KeyPad::ZL => Ok(Button3dsType::ZL),
+            KeyPad::ZR => Ok(Button3dsType::ZR),
+            KeyPad::L => Ok(Button3dsType::L),
+            KeyPad::R => Ok(Button3dsType::R),
+            _ => Err(()),
+        }
+    }
 }

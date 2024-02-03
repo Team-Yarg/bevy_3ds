@@ -6,7 +6,7 @@ use button::{Button3ds, Button3dsType};
 use bevy::input::{ButtonState, Input, Axis};
 use bevy::app::PreUpdate;
 use bevy::prelude::IntoSystemConfigs;
-use ctru::services::hid::{Hid, KeyPad};
+use ctru::services::hid::Hid;
 use bevy::ecs::event::EventWriter;
 use num_traits::pow::Pow;
 
@@ -54,7 +54,7 @@ pub fn ctru_event_system(
     let mut hid = Hid::new().unwrap();
     hid.scan_input();
     for key in hid.keys_down() {
-       if let Some(button_type) = ctru_to_bevy_keypad(key) {
+       if let Ok(button_type) = Button3dsType::try_from(key) {
             events.send(
                 CtruButtonChangedEvent::new(button_type, ButtonState::Pressed).into(),
             );
@@ -62,7 +62,7 @@ pub fn ctru_event_system(
     }
 
     for key in hid.keys_up() {
-       if let Some(button_type) = ctru_to_bevy_keypad(key) {
+       if let Ok(button_type) = Button3dsType::try_from(key) {
             events.send(
                 CtruButtonChangedEvent::new(button_type, ButtonState::Released).into(),
             );
@@ -104,32 +104,4 @@ pub fn ctru_event_system(
     }
     // TODO: add cstick (I don't think ctru-rs supports this)
     // TODO: add 3d slider axis
-}
-
-fn ctru_to_bevy_keypad(key: KeyPad) -> Option<Button3dsType> {
-    match key {
-        KeyPad::B => Some(Button3dsType::B),
-        KeyPad::A => Some(Button3dsType::A),
-        KeyPad::Y => Some(Button3dsType::Y),
-        KeyPad::X => Some(Button3dsType::X),
-        KeyPad::SELECT => Some(Button3dsType::Select),
-        KeyPad::START => Some(Button3dsType::Start),
-        KeyPad::DPAD_RIGHT => Some(Button3dsType::DPadRight),
-        KeyPad::DPAD_LEFT => Some(Button3dsType::DPadLeft),
-        KeyPad::DPAD_UP => Some(Button3dsType::DPadUp),
-        KeyPad::DPAD_DOWN => Some(Button3dsType::DPadDown),
-        KeyPad::CPAD_RIGHT => Some(Button3dsType::CPadRight),
-        KeyPad::CPAD_LEFT => Some(Button3dsType::CPadLeft),
-        KeyPad::CPAD_UP => Some(Button3dsType::CPadUp),
-        KeyPad::CPAD_DOWN => Some(Button3dsType::CPadDown),
-        KeyPad::CSTICK_RIGHT => Some(Button3dsType::CStickRight),
-        KeyPad::CSTICK_LEFT => Some(Button3dsType::CStickLeft),
-        KeyPad::CSTICK_UP => Some(Button3dsType::CStickUp),
-        KeyPad::CSTICK_DOWN => Some(Button3dsType::CStickDown),
-        KeyPad::ZL => Some(Button3dsType::ZL),
-        KeyPad::ZR => Some(Button3dsType::ZR),
-        KeyPad::L => Some(Button3dsType::L),
-        KeyPad::R => Some(Button3dsType::R),
-        _ => None,
-    }
 }
