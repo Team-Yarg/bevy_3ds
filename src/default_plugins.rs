@@ -1,6 +1,8 @@
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
+    gltf::GltfPlugin,
     hierarchy::HierarchyPlugin,
+    scene::ScenePlugin,
     text::TextPlugin,
     transform::TransformPlugin,
     window::{Window, WindowPlugin, WindowResolution},
@@ -47,6 +49,8 @@ impl PluginGroup for DefaultPlugins {
         group = group.add(render::plugin::CorePipeline3ds);
         group = group.add(sprite::SpritesPlugin).add(TextPlugin);
         //group = group.add(UiPlugin::default());
+        group = group.add(ScenePlugin);
+        group = group.add(GltfPlugin::default());
         group
     }
 }
