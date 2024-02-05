@@ -1,3 +1,7 @@
+//! # Bevy Game Example
+//!
+//! This module demonstrates a simple Bevy game application, including setup & sprite movement.
+
 #![feature(allocator_api)]
 
 use bevy::asset::AssetServer;
@@ -8,7 +12,7 @@ use bevy::render::texture::{CompressedImageFormats, Image};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy::transform::components::Transform;
 use bevy::{
-    app::{App, Startup},
+    app::{App, Startup, Update},
     core_pipeline::core_2d::Camera2dBundle,
     ecs::system::Commands,
     hierarchy::BuildChildren,
@@ -41,20 +45,24 @@ fn setup_logger() -> Result<(), fern::InitError> {
     Ok(())
 }
 
+/// Sets up the Bevy application.
 #[cfg(target_os = "horizon")]
 fn ds_main() {
-    use bevy::app::PostUpdate;
-
     let _romfs = ctru::services::romfs::RomFS::new().unwrap();
 
     let mut app = App::new();
-    app.add_plugins(bevy_3ds::DefaultPlugins);
+    app.add_plugins((
+        bevy_3ds::DefaultPlugins,
+        bevy_3ds_input::test::Input3dsTestPlugin,
+    ));
     app.add_systems(Startup, setup);
-    app.add_systems(PostUpdate, pupdate);
+    app.add_systems(Update, pupdate);
 
     app.run();
 }
 
+/// Main entry point for the application.
+/// Configures panic hook and logger, then calls `ds_main`.
 fn main() {
     {
         let prev = std::panic::take_hook();
@@ -72,15 +80,37 @@ fn main() {
     ds_main();
 }
 
-fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>) {
+use bevy::input::Input;
+use bevy_3ds_input::button::*;
+/// Update function for sprite movement.
+/// Moves each sprite in the `sprites` query to the right each frame.
+fn pupdate(mut sprites: Query<(&Sprite, &mut Transform)>, buttons: Res<Input<Button3ds>>) {
     for (_, mut pos) in &mut sprites {
-        pos.translation.x += 1.0;
+        let d = 10.0;
+        if buttons.just_pressed(Button3ds::new(Button3dsType::DPadLeft)) {
+            pos.translation.x -= d;
+        }
+
+        if buttons.just_pressed(Button3ds::new(Button3dsType::DPadRight)) {
+            pos.translation.x += d;
+        }
+
+        if buttons.just_pressed(Button3ds::new(Button3dsType::DPadUp)) {
+            pos.translation.y += d;
+        }
+
+        if buttons.just_pressed(Button3ds::new(Button3dsType::DPadDown)) {
+            pos.translation.y -= d;
+        }
+
         if pos.translation.x > 32. {
             pos.translation.x = -32.;
         }
     }
 }
 
+/// Setup function for initialising game entities.
+/// Loads assets, creates a sprite, and sets up the camera and UI.
 fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
     let img_bytes = include_bytes!("../romfs/assets/peach.png");
     let _img = Image::from_buffer(

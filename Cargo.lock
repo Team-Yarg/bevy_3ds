@@ -332,6 +332,7 @@ name = "bevy_3ds"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_3ds_input",
  "bevy_3ds_pbr",
  "bevy_3ds_render",
  "bevy_3ds_sprite",
@@ -353,6 +354,16 @@ name = "bevy_3ds_core"
 version = "0.1.0"
 dependencies = [
  "bevy",
+]
+
+[[package]]
+name = "bevy_3ds_input"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "ctru-rs",
+ "num-traits",
+ "tracing",
 ]
 
 [[package]]
