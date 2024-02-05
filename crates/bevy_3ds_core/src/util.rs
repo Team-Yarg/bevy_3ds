@@ -11,13 +11,17 @@ pub fn without_render_app<R>(app: &mut App, f: impl FnOnce(&mut App) -> R) -> R 
 
 pub fn wgpu_projection_to_opengl(projection: Mat4) -> Mat4 {
     /// 3ds screens are actually tilted 90deg left, this corrects that
+    /// This is actually just a -90 along Z rotation but its inline so
+    /// it can be const
     #[rustfmt::skip]
     const CORRECT_TILT: Mat4 = Mat4::from_cols_array(&[
         0.0, -1.0,  0.0, 0.0,
-        1.0, 0.0,  0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0,  0.0, 1.0,
+        1.0,  0.0,  0.0, 0.0,
+        0.0,  0.0,  1.0, 0.0,
+        0.0,  0.0,  0.0, 1.0,
     ]);
+    /// This turns transforms the depth space from vulkan NDS ([0, -1]) to the PICA200
+    /// NDS depth ([-1, 0])
     #[rustfmt::skip]
     const WGPU_TO_OPENGL_DEPTH: Mat4 = Mat4::from_cols_array(&[
         1.0,  0.0,  0.0,  0.0,
@@ -26,5 +30,5 @@ pub fn wgpu_projection_to_opengl(projection: Mat4) -> Mat4 {
         0.0,  0.0,  0.0,  1.0,
     ]);
 
-    WGPU_TO_OPENGL_DEPTH * projection * CORRECT_TILT
+    CORRECT_TILT * WGPU_TO_OPENGL_DEPTH * projection
 }
