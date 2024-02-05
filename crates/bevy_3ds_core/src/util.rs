@@ -25,9 +25,9 @@ pub fn wgpu_projection_to_opengl(projection: Mat4) -> Mat4 {
     #[rustfmt::skip]
     const WGPU_TO_OPENGL_DEPTH: Mat4 = Mat4::from_cols_array(&[
         1.0,  0.0,  0.0,  0.0,
-        0.0, -1.0,  0.0,  0.0,
-        0.0,  0.0,  2.0,  0.0,
-        0.0,  0.0, -1.0,  1.0,
+        0.0,  1.0,  0.0,  0.0,
+        0.0,  0.0, -1.0,  0.0,
+        0.0,  0.0,  0.0,  1.0,
     ]);
 
     CORRECT_TILT * WGPU_TO_OPENGL_DEPTH * projection
