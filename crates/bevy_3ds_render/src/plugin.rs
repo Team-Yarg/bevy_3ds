@@ -11,6 +11,7 @@ use bevy::render::extract_resource::ExtractResourcePlugin;
 use bevy::render::view::{
     ColorGrading, NoFrustumCulling, RenderLayers, VisibilityPlugin, VisibleEntities,
 };
+use bevy::render::{color, primitives};
 use bevy::time::TimeSender;
 use bevy::{
     app::{App, Plugin, SubApp},
@@ -137,6 +138,12 @@ impl Plugin for Render3dsPlugin {
             shader::PicaShaderPlugin,
             materials::StandardMaterialPlugin,
         ));
+
+        app.register_type::<color::Color>()
+            .register_type::<primitives::Aabb>()
+            .register_type::<primitives::CascadesFrusta>()
+            .register_type::<primitives::CubemapFrusta>()
+            .register_type::<primitives::Frustum>();
     }
 }
 
