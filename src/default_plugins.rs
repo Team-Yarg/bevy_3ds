@@ -31,7 +31,7 @@ impl PluginGroup for DefaultPlugins {
             //.add_plugins(romfs_assets::RomfsAssetPlugin)
             .add(WindowPlugin {
                 primary_window: Some(Window {
-                    resolution: WindowResolution::new(480., 240.),
+                    resolution: WindowResolution::new(400., 240.),
                     resizable: false,
                     ..Default::default()
                 }),
