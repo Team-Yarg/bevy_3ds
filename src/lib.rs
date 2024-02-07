@@ -13,6 +13,10 @@ pub mod sprite {
     pub use bevy_3ds_sprite::*;
 }
 
+pub mod input{
+    pub use bevy_3ds_input::*;
+}
+
 mod default_plugins;
 
 use bevy_3ds_input::button::{Button3ds, Button3dsType};
