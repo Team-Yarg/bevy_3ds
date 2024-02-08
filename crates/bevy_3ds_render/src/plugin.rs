@@ -245,9 +245,10 @@ fn render_system(world: &mut World) {
         Res<GpuDevice>,
         NonSend<GfxInstance>,
         Res<DrawCommands>,
+        Res<ClearColor>,
         Query<(Entity, &ExtractedCamera)>,
     )> = SystemState::new(world);
-    let (gpu, gfx, commands, cameras) = st.get(world);
+    let (gpu, gfx, commands, clear_colour, cameras) = st.get(world);
     let gpu = gpu.into_inner();
     gfx.0.wait_for_vblank();
     let mut screen = gfx.0.top_screen.borrow_mut();
@@ -260,10 +261,14 @@ fn render_system(world: &mut World) {
         Some(citro3d::render::DepthFormat::Depth16),
     )
     .expect("failed to create left render target");
-    target.clear(ClearFlags::ALL, 0, 0);
 
     let frame = gpu.start_new_frame();
     let mut pass = RenderPass::new(gpu, &frame);
+    target.clear(
+        ClearFlags::ALL,
+        clear_colour.as_linear_rgba_u32().to_be(),
+        0,
+    );
     pass.select_render_target(&target);
     commands.prepare(world);
 
@@ -272,8 +277,6 @@ fn render_system(world: &mut World) {
             .run(world, &mut pass, id)
             .expect("failed to run draws");
     }
-    // you have to clear it _after_ for some reason
-    target.clear(ClearFlags::ALL, 0, 0);
     drop(frame);
 
     log::debug!("render fin");
