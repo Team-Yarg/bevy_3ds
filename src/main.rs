@@ -6,9 +6,7 @@
 
 use bevy::asset::AssetServer;
 use bevy::ecs::system::{Query, Res};
-use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::render::color::Color;
-use bevy::render::mesh::Mesh;
 use bevy::render::texture::{CompressedImageFormats, Image};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy::transform::components::Transform;
@@ -124,29 +122,6 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
     .unwrap();
     //let peach = assets.add(img);
     let peach = assets.load("peach.png");
-
-    let _tri = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList)
-        .with_inserted_attribute(
-            Mesh::ATTRIBUTE_POSITION,
-            vec![
-                [0.0, 0.0, 0.0],
-                [1.0, 2.0, 0.0],
-                [2.0, 2.0, 0.0],
-                [1.0, 0.0, 0.0],
-            ],
-        )
-        .with_indices(Some(bevy::render::mesh::Indices::U32(vec![
-            0, 3, 1, 1, 3, 2,
-        ])));
-
-    cmds.spawn(PbrBundle {
-        mesh: assets.add(_tri),
-        material: assets.add(StandardMaterial {
-            base_color_texture: Some(peach.clone()),
-            ..Default::default()
-        }),
-        ..Default::default()
-    });
 
     cmds.spawn(SpriteBundle {
         sprite: Sprite {
