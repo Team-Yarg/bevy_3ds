@@ -45,7 +45,7 @@ impl Plugin for InputPlugin {
     }
 }
 
-const DEADZONE_BOUND: f32 = 10.0;
+const DEADZONE_BOUND: f32 = 20.0;
 const LIVEZONE_BOUND: f32 = 150.0;
 pub fn ctru_event_system(
     mut events: EventWriter<Event3ds>,
