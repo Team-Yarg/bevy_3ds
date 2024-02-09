@@ -91,12 +91,8 @@ pub fn ctru_event_system(
         }
     }
     let adjusted_livezone_bound = LIVEZONE_BOUND - DEADZONE_BOUND; // so that scale is smooth
-    if cpad_x > 0.0 {
-        events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadX, cpad_x / adjusted_livezone_bound).into());
-    }
-    if cpad_y > 0.0 {
-        events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadY, cpad_y / adjusted_livezone_bound).into());
-    }
+    events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadX, cpad_x / adjusted_livezone_bound).into());
+    events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadY, cpad_y / adjusted_livezone_bound).into());
 
     let volume: f32 = hid.volume_slider();
     if volume > 0.0 {
