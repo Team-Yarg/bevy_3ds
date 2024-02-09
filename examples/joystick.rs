@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::app::Update;
 use bevy::asset::AssetServer;
-use bevy::core_pipeline::core_3d::Camera3dBundle;
+use bevy::core_pipeline::core_3d::{Camera3d, Camera3dBundle};
 use bevy::ecs::component::Component;
 use bevy::ecs::query::With;
 use bevy::ecs::system::{Query, Res};
@@ -46,7 +46,7 @@ fn main() {
 }
 fn update(
     time: Res<Time>,
-    mut s: Query<(&mut Transform), With<CornellBox>>,
+    mut s: Query<(&mut Transform), With<Camera3d>>,
     axis: Res<Axis<Axis3ds>>,
 ) {
     let velocity = PI / 4.0;
@@ -60,14 +60,16 @@ fn update(
         y_velocity *= y;
     }
     for mut t in &mut s {
+        let time = time.delta_seconds();
         t.rotate_around(
             Vec3::ZERO,
-            Quat::from_rotation_y(x_velocity * time.delta_seconds()),
+            Quat::from_rotation_y(x_velocity * time),
         );
         t.rotate_around(
             Vec3::ZERO,
-            Quat::from_rotation_x(y_velocity * time.delta_seconds()),
+            Quat::from_rotation_x(y_velocity * time),
         );
+        t.look_at(Vec3::ZERO, Vec3::Y);
     }
 }
 
