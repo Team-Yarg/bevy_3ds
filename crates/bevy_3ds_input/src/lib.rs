@@ -45,7 +45,7 @@ impl Plugin for InputPlugin {
     }
 }
 
-const DEADZONE_BOUND: f32 = 10.0;
+const DEADZONE_BOUND: f32 = 20.0;
 const LIVEZONE_BOUND: f32 = 150.0;
 pub fn ctru_event_system(
     mut events: EventWriter<Event3ds>,
@@ -91,12 +91,8 @@ pub fn ctru_event_system(
         }
     }
     let adjusted_livezone_bound = LIVEZONE_BOUND - DEADZONE_BOUND; // so that scale is smooth
-    if cpad_x > 0.0 {
-        events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadX, cpad_x / adjusted_livezone_bound).into());
-    }
-    if cpad_y > 0.0 {
-        events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadY, cpad_y / adjusted_livezone_bound).into());
-    }
+    events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadX, cpad_x / adjusted_livezone_bound).into());
+    events.send(Axis3dsChangedEvent::new(Axis3dsType::CPadY, cpad_y / adjusted_livezone_bound).into());
 
     let volume: f32 = hid.volume_slider();
     if volume > 0.0 {
