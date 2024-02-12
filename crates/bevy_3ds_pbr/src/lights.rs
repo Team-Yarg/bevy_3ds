@@ -16,6 +16,7 @@ pub fn extract_point_lights(
             transform: transform.to_owned(),
             radius: light.radius,
             intensity: light.intensity,
+            shadow: light.shadows_enabled,
         });
     }
 }

@@ -1,4 +1,4 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, pin::Pin};
 
 use bevy::{
     app::Plugin,
@@ -10,7 +10,7 @@ use bevy::{
     render::{color::Color, Extract, ExtractSchedule, Render, RenderApp},
     transform::components::GlobalTransform,
 };
-use citro3d::light::{LightIndex, LightLutId, LutData, LutInput};
+use citro3d::light::{LightEnv, LightIndex, LightLutId, LutData, LutInput};
 
 use crate::{GpuDevice, RenderSet3ds};
 
@@ -29,25 +29,41 @@ pub struct ExtractedPointLight {
     pub radius: f32,
     pub intensity: f32,
     pub color: Color,
+    pub shadow: bool,
+}
+
+fn ensure_all_lights_created(mut lights: Pin<&mut LightEnv>) {
+    let to_add = lights.lights().iter().filter(|l| l.is_none()).count();
+    for _ in 0..to_add {
+        lights.as_mut().create_light();
+    }
 }
 
 fn prepare_point_lights(lights: Query<&ExtractedPointLight>, gpu: Res<GpuDevice>) {
     let mut gpu_raw = gpu.inst();
-    let light_env = gpu_raw.light_env_mut();
-    light_env.connect_lut(LightLutId::D0, LutInput::LightNormal, LutData::phong(30.0));
+    let mut light_env = gpu_raw.light_env_mut();
+    light_env
+        .as_mut()
+        .connect_lut(LightLutId::D0, LutInput::LightNormal, LutData::phong(30.0));
+    ensure_all_lights_created(light_env.as_mut());
 
-    for (i, l) in lights.iter().enumerate() {
-        let light = if let Some(l) = light_env.light_mut(LightIndex::new(i)) {
-            l
+    for (mut light, l) in light_env
+        .as_mut()
+        .lights_mut()
+        .iter_mut()
+        .map(|l| l.as_pin_mut().unwrap())
+        .zip(lights.iter().map(Some).chain(std::iter::once(None).cycle()))
+    {
+        if let Some(l) = l {
+            light.as_mut().set_enabled(true);
+            light
+                .as_mut()
+                .set_color(l.color.r(), l.color.g(), l.color.b());
+            let pos = l.transform.compute_transform().translation;
+            light.as_mut().set_position(pos.into());
+            light.as_mut().set_shadow(l.shadow);
         } else {
-            let l = light_env.create_light().unwrap();
-            light_env.light_mut(l).unwrap()
-        };
-        light.set_color(l.color.r(), l.color.g(), l.color.b());
-        let pos = l.transform.compute_transform().translation;
-        light.set_position(pos.into());
-        unsafe {
-            citro3d_sys::C3D_LightShadowEnable(light as *mut _ as *mut _, true);
+            light.as_mut().set_enabled(false);
         }
     }
 }
