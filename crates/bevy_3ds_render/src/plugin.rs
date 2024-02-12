@@ -32,7 +32,7 @@ use citro3d::render::ClearFlags;
 use ctru::services::apt::Apt;
 use ctru::services::gfx::{RawFrameBuffer, Screen};
 
-use crate::materials;
+use crate::{lighting, materials};
 
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
@@ -137,6 +137,7 @@ impl Plugin for Render3dsPlugin {
             MorphPlugin,
             shader::PicaShaderPlugin,
             materials::StandardMaterialPlugin,
+            lighting::LightingRenderPlugin,
         ));
 
         app.register_type::<color::Color>()

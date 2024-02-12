@@ -89,6 +89,7 @@ impl RenderCommand for MeshDraw {
 
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
                 if uses_tex {
+                    panic!("kaboom");
                     s0.reset();
                     s0.src(
                         citro3d::texenv::Mode::BOTH,
@@ -104,18 +105,19 @@ impl RenderCommand for MeshDraw {
                     s0.reset();
                     s0.src(
                         citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::Source::PrimaryColor,
-                        None,
+                        citro3d::texenv::Source::FragmentPrimaryColor,
+                        Some(citro3d::texenv::Source::FragmentSecondaryColor),
                         None,
                     )
                     .func(
                         citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::CombineFunc::Replace,
+                        citro3d::texenv::CombineFunc::Add,
                     );
                 }
             });
-            let mat = Material::new(Some(material.base_color), None);
-            mat.set_uniforms(pass, &uniforms);
+            let mat = Material::new(Some(material.attenuation_color), Some(material.base_color));
+            pass.set_lighting_material(mat);
+            //mat.set_uniforms(pass, &uniforms);
             pass.bind_vertex_uniform(uniforms.model_matrix, *transform);
 
             let mut buf = VboBuffer::new();

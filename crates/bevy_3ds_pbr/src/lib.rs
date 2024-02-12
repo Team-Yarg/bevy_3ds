@@ -2,8 +2,11 @@ use bevy::{
     app::Plugin,
     asset::{AssetApp, AssetId, Assets, Handle},
     pbr::StandardMaterial,
-    render::{color::Color, extract_instances::ExtractInstancesPlugin},
+    render::{color::Color, extract_instances::ExtractInstancesPlugin, ExtractSchedule, RenderApp},
 };
+use lights::extract_point_lights;
+
+mod lights;
 
 pub struct Bevy3dsPbrPlugin;
 
@@ -20,5 +23,9 @@ impl Plugin for Bevy3dsPbrPlugin {
                 ..Default::default()
             },
         );
+
+        if let Ok(render_app) = app.get_sub_app_mut(RenderApp) {
+            render_app.add_systems(ExtractSchedule, extract_point_lights);
+        }
     }
 }

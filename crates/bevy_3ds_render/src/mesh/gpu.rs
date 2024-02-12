@@ -15,6 +15,7 @@ pub enum BufKind {
 pub struct MeshVertex {
     pub pos: Vec3,
     pub uv: Vec2,
+    pub normal: Vec3,
 }
 
 pub struct GpuMesh {

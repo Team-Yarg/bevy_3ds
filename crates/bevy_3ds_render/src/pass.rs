@@ -1,4 +1,4 @@
-use crate::{frame::Citro3dFrame, gpu_buffer::LinearBuffer};
+use crate::{frame::Citro3dFrame, gpu_buffer::LinearBuffer, material::Material};
 
 use super::{pipeline::VertexAttrs, shader::PicaShader, GpuDevice, GpuImage};
 use bevy::ecs::{
@@ -93,6 +93,12 @@ impl<'g, 'f> RenderPass<'g, 'f> {
             .lock()
             .unwrap()
             .bind_vertex_uniform(index, uni);
+    }
+    pub fn set_lighting_material(&mut self, mat: Material) {
+        self.gpu
+            .inst()
+            .light_env_mut()
+            .set_material(mat.as_citro3d());
     }
 
     pub fn draw(&mut self, prim: Primitive, verts: VboSlice<'f, '_>) {

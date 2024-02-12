@@ -11,15 +11,26 @@ use citro3d::{
     uniform::{Index, Uniform},
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Material {
     colour: Option<Color>,
     ambient: Option<Color>,
 }
 
+fn bevy_to_citro3d_clr(c: Color) -> citro3d::material::Color {
+    citro3d::material::Color::new(c.r(), c.g(), c.b())
+}
+
 impl Material {
     pub fn new(colour: Option<Color>, ambient: Option<Color>) -> Self {
         Self { colour, ambient }
+    }
+    pub(crate) fn as_citro3d(self) -> citro3d::material::Material {
+        citro3d::material::Material {
+            ambient: self.ambient.map(bevy_to_citro3d_clr),
+            diffuse: self.colour.map(bevy_to_citro3d_clr),
+            ..Default::default()
+        }
     }
 
     pub fn set_uniforms(&self, pass: &mut RenderPass, uniforms: &Uniforms) {

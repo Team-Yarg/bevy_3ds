@@ -41,6 +41,16 @@ impl PrepareAsset for Mesh {
             VertexAttributeValues::Float32x2(f) => f,
             _ => unreachable!("should've already been caught by bevy"),
         });
+        let normals = mesh
+            .attribute(Mesh::ATTRIBUTE_NORMAL)
+            .map(|n| {
+                n.as_float3()
+                    .expect("normals not float3??")
+                    .iter()
+                    .map(|s| Vec3::from_array(*s))
+                    .collect::<Vec<_>>()
+            })
+            .expect("cannot render mesh without normals");
 
         let mut vbo = vec![];
         for index in 0..positions.len() {
@@ -54,6 +64,7 @@ impl PrepareAsset for Mesh {
             vbo.push(MeshVertex {
                 pos: Vec3::new(pos[0], pos[1], pos[2]),
                 uv: Vec2::new(uv[0], uv[1]),
+                normal: normals[index],
             });
         }
 

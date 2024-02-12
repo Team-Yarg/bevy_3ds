@@ -7,7 +7,7 @@ use bevy::ecs::component::Component;
 use bevy::ecs::query::With;
 use bevy::ecs::system::{Query, Res};
 use bevy::math::{Quat, Vec3};
-use bevy::pbr::{PbrBundle, StandardMaterial};
+use bevy::pbr::{PbrBundle, PointLight, PointLightBundle, StandardMaterial};
 use bevy::render::color::Color;
 use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
@@ -61,6 +61,13 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
 
     cmds.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 0.0, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    });
+    cmds.spawn(PointLightBundle {
+        point_light: PointLight {
+            color: Color::rgb(0.5, 0.5, 0.7),
+            ..Default::default()
+        },
         ..Default::default()
     });
 }

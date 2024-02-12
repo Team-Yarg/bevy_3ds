@@ -19,6 +19,7 @@ pub mod draw;
 mod extract;
 mod frame;
 pub mod gpu_buffer;
+pub mod lighting;
 pub mod material;
 pub mod materials;
 pub mod mesh;
