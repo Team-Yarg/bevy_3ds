@@ -1,6 +1,6 @@
 use bevy::{
     ecs::system::{lifetimeless::SRes, Query, Res},
-    render::{mesh::Mesh, texture::Image, view::ExtractedView},
+    render::{color::Color, mesh::Mesh, texture::Image, view::ExtractedView},
 };
 use citro3d::{macros::include_shader, texenv::Stage};
 use lazy_static::lazy_static;
@@ -115,7 +115,12 @@ impl RenderCommand for MeshDraw {
                     );
                 }
             });
-            let mat = Material::new(Some(material.attenuation_color), Some(material.base_color));
+            let mat = Material {
+                colour: Some(material.base_color),
+                ambient: Some(material.base_color),
+                //specular0: Some(Color::rgb(1.0, 1.0, 1.0)),
+                ..Default::default()
+            };
             pass.set_lighting_material(mat);
             //mat.set_uniforms(pass, &uniforms);
             pass.bind_vertex_uniform(uniforms.model_matrix, *transform);

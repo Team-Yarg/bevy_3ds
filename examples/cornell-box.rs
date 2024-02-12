@@ -68,6 +68,7 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
             color: Color::rgb(0.5, 0.5, 0.7),
             ..Default::default()
         },
+        transform: Transform::from_xyz(0.0, 0.0, 0.2),
         ..Default::default()
     });
 }

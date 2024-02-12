@@ -46,5 +46,8 @@ fn prepare_point_lights(lights: Query<&ExtractedPointLight>, gpu: Res<GpuDevice>
         light.set_color(l.color.r(), l.color.g(), l.color.b());
         let pos = l.transform.compute_transform().translation;
         light.set_position(pos.into());
+        unsafe {
+            citro3d_sys::C3D_LightShadowEnable(light as *mut _ as *mut _, true);
+        }
     }
 }
