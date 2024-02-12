@@ -151,7 +151,7 @@ pub(super) fn prepare_sprites(
                 verts,
                 indexes,
                 transform,
-                mat: Material::new(Some(sprite.color), None),
+                mat: Material::new(None, Some(sprite.color), None, None, None),
             }],
         };
         batches.batches.push(batch);
@@ -227,7 +227,7 @@ impl RenderCommand for DrawSprites {
             });
 
             for s in &sprite.sprites {
-                s.mat.set_uniforms(pass, &uniforms);
+                //s.mat.set_uniforms(pass, &uniforms);
                 pass.bind_vertex_uniform(uniforms.model_matrix, s.transform);
                 let mut buf = VboBuffer::new();
                 let vbo = buf

@@ -116,9 +116,9 @@ impl RenderCommand for MeshDraw {
                 }
             });
             let mat = Material {
-                colour: Some(material.base_color),
-                ambient: Some(material.base_color),
-                //specular0: Some(Color::rgb(1.0, 1.0, 1.0)),
+                ambient: Some(material.base_color * 0.2),
+                diffuse: Some(material.base_color),
+                specular0: Some(Color::rgb(0.8, 0.8, 0.8)),
                 ..Default::default()
             };
             pass.set_lighting_material(mat);

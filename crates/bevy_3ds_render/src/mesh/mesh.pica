@@ -61,13 +61,13 @@
     dp4 r1.z, modelMtx[2], r0
     dp4 r1.w, modelMtx[3], r0
 
-    mov outview, -r1
-
     ; r2 = cameraMatrix * r1
     dp4 r2.x, camMtx[0], r1
     dp4 r2.y, camMtx[1], r1
     dp4 r2.z, camMtx[2], r1
     dp4 r2.w, camMtx[3], r1
+
+    mov outview, -r2
 
     ; outpos = projectionMatrix * r2
     dp4 outpos.x, projMtx[0], r2
@@ -78,9 +78,12 @@
     ; outtex = intex
     mov outtex, intex
 
-    dp3 r14.x, modelMtx[0], innorm
-    dp3 r14.y, modelMtx[1], innorm
-    dp3 r14.z, modelMtx[2], innorm
+    dp3 r15.x, modelMtx[0], innorm
+    dp3 r15.y, modelMtx[1], innorm
+    dp3 r15.z, modelMtx[2], innorm
+    dp3 r14.x, camMtx[0], r15
+    dp3 r14.y, camMtx[1], r15
+    dp3 r14.z, camMtx[2], r15
     dp3 r6.x, r14, r14
     rsq r6.x, r6.x
     mul r14.xyz, r14.xyz, r6.x

@@ -13,9 +13,11 @@ use citro3d::{
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Material {
-    pub colour: Option<Color>,
     pub ambient: Option<Color>,
+    pub diffuse: Option<Color>,
     pub specular0: Option<Color>,
+    pub specular1: Option<Color>,
+    pub emission: Option<Color>,
 }
 
 fn bevy_to_citro3d_clr(c: Color) -> citro3d::material::Color {
@@ -23,23 +25,32 @@ fn bevy_to_citro3d_clr(c: Color) -> citro3d::material::Color {
 }
 
 impl Material {
-    pub fn new(colour: Option<Color>, ambient: Option<Color>) -> Self {
+    pub fn new(
+        ambient: Option<Color>,
+        diffuse: Option<Color>,
+        specular0: Option<Color>,
+        specular1: Option<Color>,
+        emission: Option<Color>,
+    ) -> Self {
         Self {
-            colour,
             ambient,
-            specular0: None,
+            diffuse,
+            specular0,
+            specular1,
+            emission,
         }
     }
     pub(crate) fn as_citro3d(self) -> citro3d::material::Material {
         citro3d::material::Material {
             ambient: self.ambient.map(bevy_to_citro3d_clr),
-            diffuse: self.colour.map(bevy_to_citro3d_clr),
+            diffuse: self.diffuse.map(bevy_to_citro3d_clr),
             specular0: self.specular0.map(bevy_to_citro3d_clr),
-            ..Default::default()
+            specular1: self.specular1.map(bevy_to_citro3d_clr),
+            emission: self.emission.map(bevy_to_citro3d_clr),
         }
     }
 
-    pub fn set_uniforms(&self, pass: &mut RenderPass, uniforms: &Uniforms) {
+    /*pub fn set_uniforms(&self, pass: &mut RenderPass, uniforms: &Uniforms) {
         let amb = if let Some(clr) = &self.ambient {
             clr.as_rgba_f32().into()
         } else {
@@ -60,7 +71,7 @@ impl Material {
             uniforms.material_emission,
             Uniform::Float(FVec4::new(emi.x, emi.y, emi.z, emi.w)),
         );
-    }
+    }*/
 }
 
 pub struct Uniforms {
