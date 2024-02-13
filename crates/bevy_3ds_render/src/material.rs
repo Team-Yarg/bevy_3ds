@@ -57,7 +57,6 @@ impl From<bevy::pbr::StandardMaterial> for Material {
             + base.xyz() * value.metallic;
         let spec_base = 0.16 * value.reflectance * value.reflectance;
         if value.metallic == 0.0 {
-            let spec_exponent = 1.0 / spec_base;
             let r = (1.0 - value.perceptual_roughness.min(1.0)).powf(2.0);
             luts.push((
                 LightLutId::D0,
@@ -71,25 +70,25 @@ impl From<bevy::pbr::StandardMaterial> for Material {
         let calc_transmitted = |vndot: f32| f_0 + (base.xyz() - f_0) * (1.0 - vndot).powf(5.0);
         luts.push((
             LightLutId::Fresnel,
-            LutInput::NormalView,
-            LutData::from_fn(|x| 1.0 - value.diffuse_transmission, false),
+            LutInput::ViewHalf,
+            LutData::from_fn(|_| 1.0 - value.diffuse_transmission, false),
         ));
 
         luts.push((
             LightLutId::ReflectRed,
-            LutInput::NormalView,
+            LutInput::ViewHalf,
             LutData::from_fn(|x| (1.0 - calc_transmitted(x)).x, false),
         ));
 
         luts.push((
             LightLutId::ReflectGreen,
-            LutInput::NormalView,
+            LutInput::ViewHalf,
             LutData::from_fn(|x| (1.0 - calc_transmitted(x)).y, false),
         ));
 
         luts.push((
             LightLutId::ReflectBlue,
-            LutInput::NormalView,
+            LutInput::ViewHalf,
             LutData::from_fn(|x| (1.0 - calc_transmitted(x)).z, false),
         ));
         Self {
