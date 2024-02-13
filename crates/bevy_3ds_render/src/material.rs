@@ -70,25 +70,28 @@ impl From<bevy::pbr::StandardMaterial> for Material {
         let calc_transmitted = |vndot: f32| f_0 + (base.xyz() - f_0) * (1.0 - vndot).powf(5.0);
         luts.push((
             LightLutId::Fresnel,
-            LutInput::ViewHalf,
-            LutData::from_fn(|_| 1.0 - value.diffuse_transmission, false),
+            LutInput::CosPhi,
+            LutData::from_fn(
+                |x| spec_base + (1.0 - spec_base) * (1.0 - value.diffuse_transmission),
+                false,
+            ),
         ));
 
         luts.push((
             LightLutId::ReflectRed,
-            LutInput::ViewHalf,
+            LutInput::CosPhi,
             LutData::from_fn(|x| (1.0 - calc_transmitted(x)).x, false),
         ));
 
         luts.push((
             LightLutId::ReflectGreen,
-            LutInput::ViewHalf,
+            LutInput::CosPhi,
             LutData::from_fn(|x| (1.0 - calc_transmitted(x)).y, false),
         ));
 
         luts.push((
             LightLutId::ReflectBlue,
-            LutInput::ViewHalf,
+            LutInput::CosPhi,
             LutData::from_fn(|x| (1.0 - calc_transmitted(x)).z, false),
         ));
         Self {
