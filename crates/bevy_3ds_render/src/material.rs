@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::{
     math::{Vec4, Vec4Swizzles},
     render::{color::Color, view::ExtractedView},
@@ -56,34 +58,39 @@ impl From<bevy::pbr::StandardMaterial> for Material {
         let spec_base = 0.16 * value.reflectance * value.reflectance;
         if value.metallic == 0.0 {
             let spec_exponent = 1.0 / spec_base;
+            let r = (1.0 - value.perceptual_roughness.min(1.0)).powf(2.0);
             luts.push((
                 LightLutId::D0,
-                LutInput::LightNormal,
-                LutData::from_fn(|x| x.powf(spec_exponent), false),
+                LutInput::NormalHalf,
+                LutData::from_fn(
+                    |x| (r / (PI * ((x * x) * (r - 1.0) + 1.0).powf(2.0))).min(1.0),
+                    false,
+                ),
             ));
         }
+        let calc_transmitted = |vndot: f32| f_0 + (base.xyz() - f_0) * (1.0 - vndot).powf(5.0);
         luts.push((
             LightLutId::Fresnel,
             LutInput::NormalView,
-            LutData::from_fn(|x| x, false),
+            LutData::from_fn(|x| 1.0 - value.diffuse_transmission, false),
         ));
 
         luts.push((
             LightLutId::ReflectRed,
             LutInput::NormalView,
-            LutData::from_fn(|x| (x * f_0).x, false),
+            LutData::from_fn(|x| (1.0 - calc_transmitted(x)).x, false),
         ));
 
         luts.push((
             LightLutId::ReflectGreen,
             LutInput::NormalView,
-            LutData::from_fn(|x| (x * f_0).y, false),
+            LutData::from_fn(|x| (1.0 - calc_transmitted(x)).y, false),
         ));
 
         luts.push((
             LightLutId::ReflectBlue,
             LutInput::NormalView,
-            LutData::from_fn(|x| (x * f_0).z, false),
+            LutData::from_fn(|x| (1.0 - calc_transmitted(x)).z, false),
         ));
         Self {
             ambient: None,
