@@ -42,9 +42,6 @@ fn ensure_all_lights_created(mut lights: Pin<&mut LightEnv>) {
 fn prepare_point_lights(lights: Query<&ExtractedPointLight>, gpu: Res<GpuDevice>) {
     let mut gpu_raw = gpu.inst();
     let mut light_env = gpu_raw.light_env_mut();
-    light_env
-        .as_mut()
-        .connect_lut(LightLutId::D0, LutInput::LightNormal, LutData::phong(30.0));
     ensure_all_lights_created(light_env.as_mut());
 
     for (mut light, l) in light_env

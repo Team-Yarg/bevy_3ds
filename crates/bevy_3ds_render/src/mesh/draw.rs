@@ -115,13 +115,7 @@ impl RenderCommand for MeshDraw {
                     );
                 }
             });
-            let mat = Material {
-                ambient: Some(material.base_color * 0.2),
-                diffuse: Some(material.base_color),
-                specular0: Some(Color::rgb(0.8, 0.8, 0.8)),
-                ..Default::default()
-            };
-            pass.set_lighting_material(mat);
+            pass.set_lighting_material(material.to_owned().into());
             //mat.set_uniforms(pass, &uniforms);
             pass.bind_vertex_uniform(uniforms.model_matrix, *transform);
 

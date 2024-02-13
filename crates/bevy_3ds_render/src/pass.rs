@@ -1,9 +1,12 @@
 use crate::{frame::Citro3dFrame, gpu_buffer::LinearBuffer, material::Material};
 
 use super::{pipeline::VertexAttrs, shader::PicaShader, GpuDevice, GpuImage};
-use bevy::ecs::{
-    entity::Entity,
-    system::{SystemParam, SystemParamItem},
+use bevy::{
+    ecs::{
+        entity::Entity,
+        system::{SystemParam, SystemParamItem},
+    },
+    render::color::Color,
 };
 use citro3d::{buffer::Primitive, render::Target, shader::Program, uniform::Index};
 use std::{marker::PhantomData, ops::Deref, sync::Arc};
@@ -95,10 +98,22 @@ impl<'g, 'f> RenderPass<'g, 'f> {
             .bind_vertex_uniform(index, uni);
     }
     pub fn set_lighting_material(&mut self, mat: Material) {
-        self.gpu
-            .inst()
-            .light_env_mut()
-            .set_material(mat.as_citro3d());
+        let citro_mat = citro3d::material::Material {
+            ambient: mat.ambient.map(bevy_to_citro3d_clr),
+            diffuse: mat.diffuse.map(bevy_to_citro3d_clr),
+            specular0: mat.specular0.map(bevy_to_citro3d_clr),
+            specular1: mat.specular1.map(bevy_to_citro3d_clr),
+            emission: mat.emission.map(bevy_to_citro3d_clr),
+        };
+        let mut gpu = self.gpu.inst();
+        let mut light_env = gpu.light_env_mut();
+        for (i, u, d) in mat.luts {
+            light_env.as_mut().connect_lut(i, u, d);
+        }
+        light_env
+            .as_mut()
+            .set_fresnel(citro3d::light::FresnelSelector::Both);
+        light_env.as_mut().set_material(citro_mat);
     }
 
     pub fn draw(&mut self, prim: Primitive, verts: VboSlice<'f, '_>) {
@@ -145,4 +160,8 @@ pub trait RenderCommand {
         pass: &mut RenderPass<'w, 'f>,
         view: Entity,
     ) -> Result<(), RenderError>;
+}
+
+fn bevy_to_citro3d_clr(c: Color) -> citro3d::material::Color {
+    citro3d::material::Color::new(c.r(), c.g(), c.b())
 }
