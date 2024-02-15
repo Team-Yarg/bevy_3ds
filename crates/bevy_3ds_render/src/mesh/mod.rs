@@ -55,12 +55,7 @@ impl PrepareAsset for Mesh {
         let mut vbo = vec![];
         for index in 0..positions.len() {
             let pos = positions[index];
-            let uv = if let Some(t) = uvs {
-                t[index]
-            } else {
-                [0.0; 2]
-            };
-
+            let uv = uvs.expect("require UVs for mesh")[index];
             vbo.push(MeshVertex {
                 pos: Vec3::new(pos[0], pos[1], pos[2]),
                 uv: Vec2::new(uv[0], uv[1]),
