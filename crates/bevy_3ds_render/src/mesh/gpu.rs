@@ -1,5 +1,6 @@
 use crate::{
     gpu_buffer::LinearBuffer,
+    pipeline::VertexAttrs,
     vertattr::{VertAttrBuilder, VertAttrs},
 };
 use bevy::math::{Vec2, Vec3};
@@ -18,8 +19,10 @@ pub struct MeshVertex {
 }
 
 pub struct GpuMesh {
-    pub vert_buf: LinearBuffer<MeshVertex>,
+    pub vert_buf: LinearBuffer<u8>,
     pub nb_verts: u32,
+    pub vert_stride: u32,
+    pub vert_attributes: VertexAttrs,
     pub indices: BufKind,
     pub prim_kind: Primitive,
 }

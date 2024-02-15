@@ -41,6 +41,7 @@
 
 ; Inputs (passed in through v0..=v15, with aliases for convenience)
 .in inpos
+.in innorm
 .in intex
 
 ; The actual shader function

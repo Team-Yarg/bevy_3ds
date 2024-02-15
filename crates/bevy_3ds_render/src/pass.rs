@@ -35,6 +35,19 @@ impl VboBuffer {
             _buf: PhantomData,
         })
     }
+    pub fn add_bytes<'vbo, 'me>(
+        &'me mut self,
+        vbo: &'vbo LinearBuffer<u8>,
+        attrib_info: &citro3d::attrib::Info,
+        stride: u32,
+    ) -> citro3d::Result<VboSlice<'vbo, 'me>> {
+        let slice = unsafe { self.buf.add_bytes(vbo, attrib_info, stride)? };
+        let slice = unsafe { std::mem::transmute::<_, citro3d::buffer::Slice<'vbo>>(slice) };
+        Ok(VboSlice {
+            slice,
+            _buf: PhantomData,
+        })
+    }
 }
 
 impl Default for VboBuffer {
