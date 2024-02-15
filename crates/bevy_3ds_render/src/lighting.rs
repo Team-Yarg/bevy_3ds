@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, pin::Pin};
+use std::{borrow::Borrow, f32::consts::PI, pin::Pin};
 
 use bevy::{
     app::Plugin,
@@ -11,7 +11,7 @@ use bevy::{
     render::{color::Color, Extract, ExtractSchedule, Render, RenderApp},
     transform::components::GlobalTransform,
 };
-use citro3d::light::{LightEnv, LightIndex, LightLut, LightLutId, LutInput};
+use citro3d::light::{LightEnv, LightIndex, LightLut, LightLutDistAtten, LightLutId, LutInput};
 
 use crate::{GpuDevice, RenderSet3ds};
 
@@ -33,6 +33,7 @@ pub struct ExtractedPointLight {
     pub intensity: f32,
     pub color: Color,
     pub shadow: bool,
+    pub range: f32,
 }
 
 fn ensure_all_lights_created(mut lights: Pin<&mut LightEnv>, max: usize) {
@@ -79,6 +80,12 @@ fn prepare_point_lights(
                 .set_color(l.color.r(), l.color.g(), l.color.b());
             let pos = l.transform.compute_transform().translation;
             light.as_mut().set_shadow(l.shadow);
+            light
+                .as_mut()
+                .set_distance_attenutation(Some(LightLutDistAtten::new(
+                    l.radius..l.range,
+                    |dist| (l.intensity / (4.0 * PI * dist * dist)).min(1.0),
+                )));
             gpu_lights.lights.push(GpuLight {
                 index: LightIndex::new(i),
                 global_pos: pos,

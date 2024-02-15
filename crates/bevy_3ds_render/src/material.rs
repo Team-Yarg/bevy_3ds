@@ -57,16 +57,16 @@ impl From<bevy::pbr::StandardMaterial> for Material {
         let f_0 = spec_base * (1.0 - value.metallic) + base.xyz() * value.metallic;
 
         let r = value.perceptual_roughness.min(1.0).max(0.089);
-        /// ok before you scream allow me to explain
-        ///
-        /// We are using the D0 channel for the D part of the PBR equation, with fresnel
-        /// actually just for the translucency. The GPU does the geometric part for us
-        /// and I \*think\*, _pray_ that it gives us G/4(l * n)(v * n)
-        ///
-        /// helpful references:
-        /// - https://marmoset.co/posts/basic-theory-of-physically-based-rendering/
-        /// - https://google.github.io/filament/Filament.html
-        ///
+        // ok before you scream allow me to explain
+        //
+        // We are using the D0 channel for the D part of the PBR equation, with fresnel
+        // actually just for the translucency. The GPU does the geometric part for us
+        // and I \*think\*, _pray_ that it gives us G/4(l * n)(v * n)
+        //
+        // helpful references:
+        // - https://marmoset.co/posts/basic-theory-of-physically-based-rendering/
+        // - https://google.github.io/filament/Filament.html
+        //
         luts.push((
             LightLutId::D0,
             LutInput::NormalHalf,
