@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    math::{Vec4, Vec4Swizzles},
+    math::{Vec3, Vec4, Vec4Swizzles},
     render::{color::Color, view::ExtractedView},
 };
 use bevy_3ds_core::util::wgpu_projection_to_opengl;
@@ -53,16 +53,16 @@ impl From<bevy::pbr::StandardMaterial> for Material {
             * (1.0 - value.specular_transmission)
             * (1.0 - value.diffuse_transmission);
         let emissive = emissive.xyz() * base.w;
-        let f_0 = 0.16 * value.reflectance * value.reflectance * (1.0 - value.metallic)
-            + base.xyz() * value.metallic;
         let spec_base = 0.16 * value.reflectance * value.reflectance;
+        let f_0 = spec_base * (1.0 - value.metallic) + base.xyz() * value.metallic;
 
-        let r = (1.0 - value.perceptual_roughness.min(1.0)).powf(2.0);
+        let r = value.perceptual_roughness.min(1.0).max(0.089);
+
         luts.push((
             LightLutId::D0,
             LutInput::NormalHalf,
             LightLut::from_fn(
-                |x| (r / (PI * ((x * x) * (r - 1.0) + 1.0).powf(2.0))).min(1.0),
+                |x| ((r * r) / (PI * ((x * x) * ((r * r) - 1.0) + 1.0).powf(2.0))).min(1.0),
                 false,
             ),
         ));
@@ -97,8 +97,9 @@ impl From<bevy::pbr::StandardMaterial> for Material {
         Self {
             ambient: Some(diffuse * 0.1),
             diffuse: Some(diffuse),
-            specular0: Some(Color::WHITE),
-            specular1: Some(Color::rgb(f_0.x, f_0.y, f_0.z)),
+            specular0: Some(Color::rgb(f_0.x, f_0.y, f_0.z)),
+            specular1: None,
+            //specular1: Some(Color::rgb(f_0.x, f_0.y, f_0.z)),
             emission: Some(Color::rgb(emissive.x, emissive.y, emissive.z)),
             luts,
         }
