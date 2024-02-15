@@ -1323,7 +1323,7 @@ dependencies = [
 [[package]]
 name = "citro3d"
 version = "0.1.0"
-source = "git+https://github.com/Team-Yarg/citro3d-rs?branch=team-yarg/lighting-stuffs#475f896998ec1061f51d168556d32b6e326a3d5d"
+source = "git+https://github.com/Team-Yarg/citro3d-rs#ac0ba302fe9a99219876a6595c0a8320a22fd41a"
 dependencies = [
  "bitflags 1.3.2",
  "bytemuck",
@@ -1342,7 +1342,7 @@ dependencies = [
 [[package]]
 name = "citro3d-macros"
 version = "0.1.0"
-source = "git+https://github.com/Team-Yarg/citro3d-rs?branch=team-yarg/lighting-stuffs#475f896998ec1061f51d168556d32b6e326a3d5d"
+source = "git+https://github.com/Team-Yarg/citro3d-rs#ac0ba302fe9a99219876a6595c0a8320a22fd41a"
 dependencies = [
  "litrs",
  "quote",
@@ -1351,7 +1351,7 @@ dependencies = [
 [[package]]
 name = "citro3d-sys"
 version = "0.1.0"
-source = "git+https://github.com/Team-Yarg/citro3d-rs?branch=team-yarg/lighting-stuffs#475f896998ec1061f51d168556d32b6e326a3d5d"
+source = "git+https://github.com/Team-Yarg/citro3d-rs#ac0ba302fe9a99219876a6595c0a8320a22fd41a"
 dependencies = [
  "bindgen 0.68.1",
  "cc",
@@ -2830,9 +2830,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pin_array"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b87974b3039117a965a2fadd6b0f6d4d812af86e2c04e57b0e25196a26be53ae"
+checksum = "2874ddffb9f748369a4c437884317b58592860471947af08b25002932b4c8d1a"
 
 [[package]]
 name = "piper"
@@ -2847,9 +2847,9 @@ dependencies = [
 
 [[package]]
 name = "pkg-config"
-version = "0.3.29"
+version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2900ede94e305130c13ddd391e0ab7cbaeb783945ae07a279c268cb05109c6cb"
+checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
 
 [[package]]
 name = "png"

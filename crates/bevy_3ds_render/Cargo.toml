@@ -12,8 +12,8 @@ bevy_3ds_macros = { version = "0.1.0", path = "../bevy_3ds_macros" }
 bevy = { version = "0.12.1", default-features = false, features = ["bevy_pbr"] }
 
 #citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
-citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0", branch = "team-yarg/lighting-stuffs" }
-citro3d-sys = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0",  branch = "team-yarg/lighting-stuffs" }
+citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
+citro3d-sys = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
 
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
 ctru-sys = { git = "https://github.com/rust3ds/ctru-rs" }

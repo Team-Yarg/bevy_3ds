@@ -9,7 +9,7 @@ use bevy_3ds_core::util::wgpu_projection_to_opengl;
 use crate::{pass::RenderPass, shader::PicaShader};
 
 use citro3d::{
-    light::{LightLutId, LutData, LutInput},
+    light::{LightLut, LightLutId, LutInput},
     math::FVec4,
     uniform::{Index, Uniform},
 };
@@ -21,7 +21,7 @@ pub struct Material {
     pub specular0: Option<Color>,
     pub specular1: Option<Color>,
     pub emission: Option<Color>,
-    pub(crate) luts: Vec<(LightLutId, LutInput, LutData)>,
+    pub(crate) luts: Vec<(LightLutId, LutInput, LightLut)>,
 }
 
 impl Material {
@@ -56,22 +56,21 @@ impl From<bevy::pbr::StandardMaterial> for Material {
         let f_0 = 0.16 * value.reflectance * value.reflectance * (1.0 - value.metallic)
             + base.xyz() * value.metallic;
         let spec_base = 0.16 * value.reflectance * value.reflectance;
-        if value.metallic == 0.0 {
-            let r = (1.0 - value.perceptual_roughness.min(1.0)).powf(2.0);
-            luts.push((
-                LightLutId::D0,
-                LutInput::NormalHalf,
-                LutData::from_fn(
-                    |x| (r / (PI * ((x * x) * (r - 1.0) + 1.0).powf(2.0))).min(1.0),
-                    false,
-                ),
-            ));
-        }
+
+        let r = (1.0 - value.perceptual_roughness.min(1.0)).powf(2.0);
+        luts.push((
+            LightLutId::D0,
+            LutInput::NormalHalf,
+            LightLut::from_fn(
+                |x| (r / (PI * ((x * x) * (r - 1.0) + 1.0).powf(2.0))).min(1.0),
+                false,
+            ),
+        ));
         let calc_transmitted = |vndot: f32| f_0 + (base.xyz() - f_0) * (1.0 - vndot).powf(5.0);
         luts.push((
             LightLutId::Fresnel,
             LutInput::CosPhi,
-            LutData::from_fn(
+            LightLut::from_fn(
                 |x| spec_base + (1.0 - spec_base) * (1.0 - value.diffuse_transmission),
                 false,
             ),
@@ -80,25 +79,26 @@ impl From<bevy::pbr::StandardMaterial> for Material {
         luts.push((
             LightLutId::ReflectRed,
             LutInput::CosPhi,
-            LutData::from_fn(|x| (1.0 - calc_transmitted(x)).x, false),
+            LightLut::from_fn(|x| calc_transmitted(x).x, false),
         ));
 
         luts.push((
             LightLutId::ReflectGreen,
             LutInput::CosPhi,
-            LutData::from_fn(|x| (1.0 - calc_transmitted(x)).y, false),
+            LightLut::from_fn(|x| calc_transmitted(x).y, false),
         ));
 
         luts.push((
             LightLutId::ReflectBlue,
             LutInput::CosPhi,
-            LutData::from_fn(|x| (1.0 - calc_transmitted(x)).z, false),
+            LightLut::from_fn(|x| calc_transmitted(x).z, false),
         ));
+        let diffuse = Color::rgb(diffuse.x, diffuse.y, diffuse.z);
         Self {
-            ambient: None,
-            diffuse: Some(Color::rgb(diffuse.x, diffuse.y, diffuse.z)),
+            ambient: Some(diffuse * 0.1),
+            diffuse: Some(diffuse),
             specular0: Some(Color::WHITE),
-            specular1: None,
+            specular1: Some(Color::rgb(f_0.x, f_0.y, f_0.z)),
             emission: Some(Color::rgb(emissive.x, emissive.y, emissive.z)),
             luts,
         }

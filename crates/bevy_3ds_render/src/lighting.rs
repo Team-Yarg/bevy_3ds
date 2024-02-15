@@ -10,7 +10,7 @@ use bevy::{
     render::{color::Color, Extract, ExtractSchedule, Render, RenderApp},
     transform::components::GlobalTransform,
 };
-use citro3d::light::{LightEnv, LightIndex, LightLutId, LutData, LutInput};
+use citro3d::light::{LightEnv, LightIndex, LightLut, LightLutId, LutInput};
 
 use crate::{GpuDevice, RenderSet3ds};
 
@@ -32,9 +32,9 @@ pub struct ExtractedPointLight {
     pub shadow: bool,
 }
 
-fn ensure_all_lights_created(mut lights: Pin<&mut LightEnv>) {
+fn ensure_all_lights_created(mut lights: Pin<&mut LightEnv>, max: usize) {
     let to_add = lights.lights().iter().filter(|l| l.is_none()).count();
-    for _ in 0..to_add {
+    for _ in 0..to_add.min(max) {
         lights.as_mut().create_light();
     }
 }
@@ -42,16 +42,18 @@ fn ensure_all_lights_created(mut lights: Pin<&mut LightEnv>) {
 fn prepare_point_lights(lights: Query<&ExtractedPointLight>, gpu: Res<GpuDevice>) {
     let mut gpu_raw = gpu.inst();
     let mut light_env = gpu_raw.light_env_mut();
-    ensure_all_lights_created(light_env.as_mut());
+    let nb_lights = lights.iter().len();
+    ensure_all_lights_created(light_env.as_mut(), nb_lights);
 
     for (mut light, l) in light_env
         .as_mut()
         .lights_mut()
         .iter_mut()
-        .map(|l| l.as_pin_mut().unwrap())
+        .map(|l| l.as_pin_mut())
         .zip(lights.iter().map(Some).chain(std::iter::once(None).cycle()))
     {
         if let Some(l) = l {
+            let mut light = light.unwrap();
             light.as_mut().set_enabled(true);
             light
                 .as_mut()
@@ -60,7 +62,9 @@ fn prepare_point_lights(lights: Query<&ExtractedPointLight>, gpu: Res<GpuDevice>
             light.as_mut().set_position(pos.into());
             light.as_mut().set_shadow(l.shadow);
         } else {
-            light.as_mut().set_enabled(false);
+            if let Some(mut light) = light {
+                light.as_mut().set_enabled(false);
+            }
         }
     }
 }
