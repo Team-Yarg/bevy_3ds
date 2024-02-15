@@ -66,40 +66,19 @@ impl From<bevy::pbr::StandardMaterial> for Material {
                 false,
             ),
         ));
-        let calc_transmitted = |vndot: f32| f_0 + (base.xyz() - f_0) * (1.0 - vndot).powf(5.0);
         luts.push((
             LightLutId::Fresnel,
             LutInput::CosPhi,
-            LightLut::from_fn(
-                |x| spec_base + (1.0 - spec_base) * (1.0 - value.diffuse_transmission),
-                false,
-            ),
+            LightLut::from_fn(|_| (1.0 - value.diffuse_transmission), false),
         ));
 
-        luts.push((
-            LightLutId::ReflectRed,
-            LutInput::CosPhi,
-            LightLut::from_fn(|x| calc_transmitted(x).x, false),
-        ));
-
-        luts.push((
-            LightLutId::ReflectGreen,
-            LutInput::CosPhi,
-            LightLut::from_fn(|x| calc_transmitted(x).y, false),
-        ));
-
-        luts.push((
-            LightLutId::ReflectBlue,
-            LutInput::CosPhi,
-            LightLut::from_fn(|x| calc_transmitted(x).z, false),
-        ));
         let diffuse = Color::rgb(diffuse.x, diffuse.y, diffuse.z);
+        let spec = Color::rgb(f_0.x, f_0.y, f_0.z);
         Self {
-            ambient: Some(diffuse * 0.1),
+            ambient: Some(value.base_color * 0.1),
             diffuse: Some(diffuse),
-            specular0: Some(Color::rgb(f_0.x, f_0.y, f_0.z)),
+            specular0: Some(spec),
             specular1: None,
-            //specular1: Some(Color::rgb(f_0.x, f_0.y, f_0.z)),
             emission: Some(Color::rgb(emissive.x, emissive.y, emissive.z)),
             luts,
         }
