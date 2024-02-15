@@ -1,4 +1,6 @@
-use crate::{frame::Citro3dFrame, gpu_buffer::LinearBuffer, material::Material};
+use crate::{
+    frame::Citro3dFrame, gpu_buffer::LinearBuffer, lighting::GpuLight, material::Material,
+};
 
 use super::{pipeline::VertexAttrs, shader::PicaShader, GpuDevice, GpuImage};
 use bevy::{
@@ -6,6 +8,7 @@ use bevy::{
         entity::Entity,
         system::{SystemParam, SystemParamItem},
     },
+    math::Mat4,
     render::color::Color,
 };
 use citro3d::{buffer::Primitive, render::Target, shader::Program, uniform::Index};
@@ -88,6 +91,15 @@ impl<'g, 'f> RenderPass<'g, 'f> {
     }
     pub fn bind_texture(&mut self, index: i32, tex: &'f GpuImage) {
         tex.0.bind(index);
+    }
+    pub fn set_light_positions(&mut self, lights: &[GpuLight], view_matrix: Mat4) {
+        let mut gpu = self.gpu.inst();
+        let mut light_env = gpu.light_env_mut();
+        for l in lights {
+            let mut gl = light_env.as_mut().light_mut(l.index).unwrap();
+            let pos = view_matrix.transform_point3(l.global_pos);
+            gl.as_mut().set_position(pos.into());
+        }
     }
 
     pub fn bind_vertex_uniform(&mut self, index: Index, uni: impl Into<citro3d::uniform::Uniform>) {

@@ -9,7 +9,7 @@ use bevy::render::camera::ExtractedCamera;
 use bevy::render::extract_component::ExtractComponentPlugin;
 use bevy::render::extract_resource::ExtractResourcePlugin;
 use bevy::render::view::{
-    ColorGrading, NoFrustumCulling, RenderLayers, VisibilityPlugin, VisibleEntities,
+    ColorGrading, ExtractedView, NoFrustumCulling, RenderLayers, VisibilityPlugin, VisibleEntities,
 };
 use bevy::render::{color, primitives};
 use bevy::time::TimeSender;
@@ -32,6 +32,7 @@ use citro3d::render::ClearFlags;
 use ctru::services::apt::Apt;
 use ctru::services::gfx::{RawFrameBuffer, Screen};
 
+use crate::lighting::GpuLights;
 use crate::{lighting, materials};
 
 use super::draw::DrawCommands;
@@ -254,9 +255,10 @@ fn render_system(world: &mut World) {
         NonSend<GfxInstance>,
         Res<DrawCommands>,
         Res<ClearColor>,
-        Query<(Entity, &ExtractedCamera)>,
+        Query<(Entity, &ExtractedCamera, &ExtractedView)>,
+        Res<GpuLights>,
     )> = SystemState::new(world);
-    let (gpu, gfx, commands, clear_colour, cameras) = st.get(world);
+    let (gpu, gfx, commands, clear_colour, cameras, lights) = st.get(world);
     let gpu = gpu.into_inner();
     gfx.0.wait_for_vblank();
     let mut screen = gfx.0.top_screen.borrow_mut();
@@ -280,7 +282,10 @@ fn render_system(world: &mut World) {
     pass.select_render_target(&target);
     commands.prepare(world);
 
-    for (id, _) in &cameras {
+    for (id, _, view) in &cameras {
+        let view_mtx = view.transform.compute_matrix().inverse();
+        pass.set_light_positions(&lights.lights, view_mtx);
+
         commands
             .run(world, &mut pass, id)
             .expect("failed to run draws");
