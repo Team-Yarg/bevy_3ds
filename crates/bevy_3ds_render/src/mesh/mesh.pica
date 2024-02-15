@@ -103,15 +103,6 @@ degenerate:
     mov outnorm, r0
     mov outcol, ones
 
-    ; Here's where specular calculations would go
-
-    ; Here's where diffuse calculations would go
-
-    ; r1 += ambientColour * lightColour
-
-    ; Clamp r1 to a maximum of 1.0 when outputting
-    ; outcol = min(r1, 1.0)
-
     ; Done!
     end
 .end ; main
