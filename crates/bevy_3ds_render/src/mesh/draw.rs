@@ -115,15 +115,16 @@ impl RenderCommand for MeshDraw {
                 }
             });
             let mat = Material::new(Some(material.base_color), None);
+            let attrs = &mesh.vert_attributes;
             mat.set_uniforms(pass, &uniforms);
             pass.bind_vertex_uniform(uniforms.model_matrix, *transform);
 
             let mut buf = VboBuffer::new();
             let vbo = buf
-                .add(&mesh.vert_buf, &MeshVertex::vert_attrs())
+                .add_bytes(&mesh.vert_buf, &attrs.0, mesh.vert_stride)
                 .expect("failed to add vbo data");
 
-            pass.set_attr_info(&VertexAttrs::from_citro3d(MeshVertex::vert_attrs()));
+            pass.set_attr_info(attrs);
             match &mesh.indices {
                 crate::mesh::gpu::BufKind::Array => {
                     debug!("draw array");

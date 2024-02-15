@@ -1,17 +1,25 @@
 use bevy::{
     app::Plugin,
     math::{Vec2, Vec3},
-    render::mesh::{Mesh, VertexAttributeValues},
+    render::{
+        mesh::{Mesh, VertexAttributeValues},
+        render_resource::{VertexBufferLayout, VertexFormat},
+    },
 };
 use bevy_3ds_core::util::without_render_app;
 
-use crate::{bevy_topology_to_citro, gpu_buffer::LinearBuffer, mesh::gpu::MeshVertex};
+use crate::{
+    bevy_topology_to_citro, gpu_buffer::LinearBuffer, mesh::gpu::MeshVertex, pipeline::VertexAttrs,
+};
 
 use self::gpu::{BufKind, GpuMesh};
 
 use super::prep_asset::{PrepareAsset, PrepareAssetsPlugin};
 
-use citro3d::texture::{Tex, TexParams};
+use citro3d::{
+    attrib::{self, Format, Register},
+    texture::{Tex, TexParams},
+};
 
 mod draw;
 pub mod gpu;
@@ -32,30 +40,53 @@ impl PrepareAsset for Mesh {
     > {
         println!("prep asset 3ds");
 
-        let positions = mesh
-            .attribute(Mesh::ATTRIBUTE_POSITION)
-            .expect("failed to get vertex positions")
-            .as_float3()
-            .expect("failed to convert positions");
-        let uvs = mesh.attribute(Mesh::ATTRIBUTE_UV_0).map(|uv| match uv {
-            VertexAttributeValues::Float32x2(f) => f,
-            _ => unreachable!("should've already been caught by bevy"),
-        });
+        fn conv_vert_attrs(layout: &VertexBufferLayout) -> attrib::Info {
+            let mut attrs = attrib::Info::new();
+            for attr in &layout.attributes {
+                let reg = Register::new(attr.shader_location.try_into().unwrap())
+                    .expect("invalid shader location for attribute");
+                let ubyte_fallback = |f: VertexFormat| (Format::UnsignedByte, f.size());
+                let (fmt, sz) = match attr.format {
+                    bevy::render::render_resource::VertexFormat::Uint8x2 => {
+                        (Format::UnsignedByte, 2)
+                    }
+                    bevy::render::render_resource::VertexFormat::Uint8x4 => {
+                        (Format::UnsignedByte, 4)
+                    }
+                    bevy::render::render_resource::VertexFormat::Sint8x2 => (Format::Byte, 2),
+                    bevy::render::render_resource::VertexFormat::Sint8x4 => (Format::Byte, 4),
+                    bevy::render::render_resource::VertexFormat::Sint16x2 => (Format::Short, 2),
+                    bevy::render::render_resource::VertexFormat::Sint16x4 => (Format::Short, 4),
+                    bevy::render::render_resource::VertexFormat::Float32 => (Format::Float, 1),
+                    bevy::render::render_resource::VertexFormat::Float32x2 => (Format::Float, 2),
+                    bevy::render::render_resource::VertexFormat::Float32x3 => (Format::Float, 3),
+                    bevy::render::render_resource::VertexFormat::Float32x4 => (Format::Float, 4),
+                    bevy::render::render_resource::VertexFormat::Uint32
+                    | bevy::render::render_resource::VertexFormat::Uint32x2
+                    | bevy::render::render_resource::VertexFormat::Uint32x3
+                    | bevy::render::render_resource::VertexFormat::Uint32x4 => {
+                        ubyte_fallback(attr.format)
+                    }
 
-        let mut vbo = vec![];
-        for index in 0..positions.len() {
-            let pos = positions[index];
-            let uv = if let Some(t) = uvs {
-                t[index]
-            } else {
-                [0.0; 2]
-            };
-
-            vbo.push(MeshVertex {
-                pos: Vec3::new(pos[0], pos[1], pos[2]),
-                uv: Vec2::new(uv[0], uv[1]),
-            });
+                    f => {
+                        unimplemented!("GPU does not support {f:?} attributes")
+                    }
+                };
+                attrs
+                    .add_loader(reg, fmt, sz as u8)
+                    .expect("failed to register loader for attr");
+            }
+            attrs
         }
+
+        assert!(
+            mesh.attribute(Mesh::ATTRIBUTE_UV_0).is_some(),
+            "GPU requires UVs to render meshes correctly"
+        );
+        let vbo = mesh.get_vertex_buffer_data();
+        let vbo_layout = mesh.get_mesh_vertex_buffer_layout();
+        let vert_layout = vbo_layout.layout();
+        let vert_attributes = conv_vert_attrs(vert_layout);
 
         let indecies = mesh
             .indices()
@@ -69,7 +100,9 @@ impl PrepareAsset for Mesh {
 
         Ok(GpuMesh {
             vert_buf: LinearBuffer::new(vbo.as_slice()),
+            vert_attributes: VertexAttrs::from_citro3d(vert_attributes),
             nb_verts: mesh.count_vertices() as u32,
+            vert_stride: vert_layout.array_stride as u32,
             indices: indecies,
             prim_kind: bevy_topology_to_citro(mesh.primitive_topology())
                 .expect("unsupported primitive type"),

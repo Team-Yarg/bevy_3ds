@@ -9,7 +9,7 @@ edition = "2021"
 bevy_3ds_render = { version = "0.1.0", path = "../bevy_3ds_render" }
 bevy_3ds_core = { version = "0.1.0", path = "../bevy_3ds_core" }
 
-citro3d = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.0" }
+citro3d = {  version = "0.1.0", git = "https://github.com/Team-Yarg/citro3d-rs" }
 
 bevy = { version = "0.12.1", default-features = false, features = ["bevy_sprite", "bevy_asset"] }
 tracing = { version = "0.1.40" }
