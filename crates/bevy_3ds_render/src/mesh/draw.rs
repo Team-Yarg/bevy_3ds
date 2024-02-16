@@ -89,17 +89,16 @@ impl RenderCommand for MeshDraw {
 
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
                 if uses_tex {
-                    panic!("kaboom");
                     s0.reset();
                     s0.src(
                         citro3d::texenv::Mode::BOTH,
                         citro3d::texenv::Source::Texture0,
-                        None,
+                        Some(citro3d::texenv::Source::FragmentPrimaryColor),
                         None,
                     )
                     .func(
                         citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::CombineFunc::Replace,
+                        citro3d::texenv::CombineFunc::Modulate,
                     );
                 } else {
                     s0.reset();
@@ -113,6 +112,23 @@ impl RenderCommand for MeshDraw {
                         citro3d::texenv::Mode::BOTH,
                         citro3d::texenv::CombineFunc::Add,
                     );
+                }
+            });
+            pass.configure_texenv(Stage::new(1).unwrap(), |s1| {
+                if uses_tex {
+                    s1.reset();
+                    s1.src(
+                        citro3d::texenv::Mode::BOTH,
+                        citro3d::texenv::Source::Previous,
+                        Some(citro3d::texenv::Source::FragmentSecondaryColor),
+                        None,
+                    )
+                    .func(
+                        citro3d::texenv::Mode::BOTH,
+                        citro3d::texenv::CombineFunc::Add,
+                    );
+                } else {
+                    s1.reset();
                 }
             });
             pass.set_lighting_material(material.to_owned().into());
