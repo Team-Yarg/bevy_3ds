@@ -76,8 +76,7 @@ impl RenderCommand for MeshDraw {
 
             let tex = material
                 .base_color_texture
-                .as_ref()
-                .map_or(None, |t| images.get(t));
+                .as_ref().and_then(|t| images.get(t));
 
             let uses_tex = if let Some(t) = tex {
                 debug!("bind texture for mesh");
@@ -86,6 +85,18 @@ impl RenderCommand for MeshDraw {
             } else {
                 false
             };
+
+            let norm = material
+                .normal_map_texture
+                .as_ref().and_then(|n| images.get(n));
+
+            if let Some(n) = norm {
+                debug!("bind normal map for mesh");
+                pass.bind_texture(1, n);
+                pass.bind_normal_map(1);
+            } else {
+                pass.unbind_normal_map();
+            }
 
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
                 if uses_tex {

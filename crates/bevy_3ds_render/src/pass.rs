@@ -92,6 +92,20 @@ impl<'g, 'f> RenderPass<'g, 'f> {
     pub fn bind_texture(&mut self, index: i32, tex: &'f GpuImage) {
         tex.0.bind(index);
     }
+    pub fn bind_normal_map(&mut self, index: i32) {
+        let mut gpu = self.gpu.inst();
+        let mut light_env = gpu.light_env_mut();
+        light_env
+            .as_mut()
+            .set_normal_map(citro3d::light::BumpMode::AsBump, index);
+    }
+    pub fn unbind_normal_map(&mut self) {
+        let mut gpu = self.gpu.inst();
+        let mut light_env = gpu.light_env_mut();
+        light_env
+            .as_mut()
+            .set_normal_map(citro3d::light::BumpMode::None, 0);
+    }
     pub fn set_light_positions(&mut self, lights: &[GpuLight], view_matrix: Mat4) {
         let mut gpu = self.gpu.inst();
         let mut light_env = gpu.light_env_mut();

@@ -52,14 +52,30 @@ impl PrepareAsset for Mesh {
             })
             .expect("cannot render mesh without normals");
 
+        let tangents = mesh
+            .attribute(Mesh::ATTRIBUTE_TANGENT)
+            .map(|tan| match tan {
+                VertexAttributeValues::Float32x4(t) => t
+                    .iter()
+                    .map(|s| Vec3::from_slice(&s[..3]))
+                    .collect::<Vec<_>>(),
+                _ => todo!(),
+            });
+
         let mut vbo = vec![];
         for index in 0..positions.len() {
             let pos = positions[index];
             let uv = uvs.expect("require UVs for mesh")[index];
+            let tan = if let Some(t) = &tangents {
+                t[index]
+            } else {
+                Vec3::new(0.0, 0.0, 0.0)
+            };
             vbo.push(MeshVertex {
                 pos: Vec3::new(pos[0], pos[1], pos[2]),
                 uv: Vec2::new(uv[0], uv[1]),
                 normal: normals[index],
+                tangent: tan,
             });
         }
 
