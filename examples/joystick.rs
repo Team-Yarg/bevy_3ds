@@ -8,7 +8,7 @@ use bevy::ecs::query::With;
 use bevy::ecs::system::{Query, Res};
 use bevy::input::Axis;
 use bevy::math::{Quat, Vec3};
-use bevy::pbr::{PbrBundle, StandardMaterial};
+use bevy::pbr::{PbrBundle, PointLight, PointLightBundle, StandardMaterial};
 use bevy::render::color::Color;
 use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
@@ -29,6 +29,7 @@ use bevy::{
 };
 use bevy_3ds_input::axis::{Axis3ds, Axis3dsType};
 
+mod setup_logger;
 mod shims;
 
 #[derive(Component)]
@@ -36,6 +37,8 @@ struct CornellBox;
 
 fn main() {
     let _romfs = ctru::services::romfs::RomFS::new().unwrap();
+
+    setup_logger::setup_logger().unwrap();
 
     let mut app = App::new();
     app.add_plugins(bevy_3ds::DefaultPlugins);
@@ -61,14 +64,8 @@ fn update(
     }
     for mut t in &mut s {
         let time = time.delta_seconds();
-        t.rotate_around(
-            Vec3::ZERO,
-            Quat::from_rotation_y(x_velocity * time),
-        );
-        t.rotate_around(
-            Vec3::ZERO,
-            Quat::from_rotation_x(y_velocity * time),
-        );
+        t.rotate_around(Vec3::ZERO, Quat::from_rotation_y(x_velocity * time));
+        t.rotate_around(Vec3::ZERO, Quat::from_rotation_x(y_velocity * time));
         t.look_at(Vec3::ZERO, Vec3::Y);
     }
 }
@@ -82,6 +79,15 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
 
     cmds.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 0.0, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    });
+
+    cmds.spawn(PointLightBundle {
+        point_light: PointLight {
+            color: Color::rgb(1.0, 1.0, 1.0),
+            ..Default::default()
+        },
+        transform: Transform::from_xyz(0.0, 0.0, 0.2),
         ..Default::default()
     });
 }

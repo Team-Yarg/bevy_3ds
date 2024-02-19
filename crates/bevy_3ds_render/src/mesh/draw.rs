@@ -76,7 +76,8 @@ impl RenderCommand for MeshDraw {
 
             let tex = material
                 .base_color_texture
-                .as_ref().and_then(|t| images.get(t));
+                .as_ref()
+                .and_then(|t| images.get(t));
 
             let uses_tex = if let Some(t) = tex {
                 debug!("bind texture for mesh");
@@ -88,7 +89,8 @@ impl RenderCommand for MeshDraw {
 
             let norm = material
                 .normal_map_texture
-                .as_ref().and_then(|n| images.get(n));
+                .as_ref()
+                .and_then(|n| images.get(n));
 
             if let Some(n) = norm {
                 debug!("bind normal map for mesh");
@@ -100,7 +102,6 @@ impl RenderCommand for MeshDraw {
 
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
                 if uses_tex {
-                    s0.reset();
                     s0.src(
                         citro3d::texenv::Mode::BOTH,
                         citro3d::texenv::Source::Texture0,
@@ -113,16 +114,6 @@ impl RenderCommand for MeshDraw {
                     );
                 } else {
                     s0.reset();
-                    s0.src(
-                        citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::Source::FragmentPrimaryColor,
-                        Some(citro3d::texenv::Source::FragmentSecondaryColor),
-                        None,
-                    )
-                    .func(
-                        citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::CombineFunc::Add,
-                    );
                 }
             });
             pass.configure_texenv(Stage::new(1).unwrap(), |s1| {
@@ -140,6 +131,23 @@ impl RenderCommand for MeshDraw {
                     );
                 } else {
                     s1.reset();
+                }
+            });
+
+            pass.configure_texenv(Stage::new(2).unwrap(), |s0| {
+                if !uses_tex {
+                    s0.src(
+                        citro3d::texenv::Mode::BOTH,
+                        citro3d::texenv::Source::FragmentPrimaryColor,
+                        Some(citro3d::texenv::Source::FragmentSecondaryColor),
+                        None,
+                    )
+                    .func(
+                        citro3d::texenv::Mode::BOTH,
+                        citro3d::texenv::CombineFunc::Add,
+                    );
+                } else {
+                    s0.reset();
                 }
             });
             pass.set_lighting_material(material.to_owned().into());
