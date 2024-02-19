@@ -1,7 +1,11 @@
 use bevy::{
     app::Plugin,
+    asset::{AssetId, Handle},
     math::{Vec2, Vec3},
-    render::mesh::{Mesh, VertexAttributeValues},
+    render::{
+        mesh::{Mesh, VertexAttributeValues},
+        texture::Image,
+    },
 };
 use bevy_3ds_core::util::without_render_app;
 

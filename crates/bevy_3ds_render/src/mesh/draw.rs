@@ -1,18 +1,19 @@
 use bevy::{
     ecs::system::{lifetimeless::SRes, Query, Res},
-    render::{color::Color, mesh::Mesh, texture::Image, view::ExtractedView},
+    render::{mesh::Mesh, texture::Image, view::ExtractedView},
 };
 use citro3d::{macros::include_shader, texenv::Stage};
 use lazy_static::lazy_static;
 use log::debug;
 
 use crate::{
-    material::{Material, Uniforms},
+    material::Uniforms,
     materials::RenderMaterials,
     mesh::{gpu::MeshVertex, plugin::ExtractedMesh},
     pass::{RenderCommand, VboBuffer},
     pipeline::VertexAttrs,
     shader::PicaShader,
+    texture::BLANK_TEXTURE,
     vertattr::VertAttrBuilder,
     RenderAssets,
 };
@@ -74,18 +75,16 @@ impl RenderCommand for MeshDraw {
                 continue;
             };
 
-            let tex = material
-                .base_color_texture
-                .as_ref()
-                .and_then(|t| images.get(t));
+            let tex = images
+                .get(
+                    material
+                        .base_color_texture
+                        .as_ref()
+                        .unwrap_or(&BLANK_TEXTURE),
+                )
+                .unwrap_or_else(|| images.get(&BLANK_TEXTURE).unwrap());
 
-            let uses_tex = if let Some(t) = tex {
-                debug!("bind texture for mesh");
-                pass.bind_texture(0, t);
-                true
-            } else {
-                false
-            };
+            pass.bind_texture(0, tex);
 
             let norm = material
                 .normal_map_texture
@@ -101,55 +100,32 @@ impl RenderCommand for MeshDraw {
             }
 
             pass.configure_texenv(Stage::new(0).unwrap(), |s0| {
-                if uses_tex {
-                    s0.src(
-                        citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::Source::Texture0,
-                        Some(citro3d::texenv::Source::FragmentPrimaryColor),
-                        None,
-                    )
-                    .func(
-                        citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::CombineFunc::Modulate,
-                    );
-                } else {
-                    s0.reset();
-                }
+                s0.reset();
+                s0.src(
+                    citro3d::texenv::Mode::BOTH,
+                    citro3d::texenv::Source::Texture0,
+                    Some(citro3d::texenv::Source::FragmentPrimaryColor),
+                    None,
+                )
+                .func(
+                    citro3d::texenv::Mode::BOTH,
+                    citro3d::texenv::CombineFunc::Modulate,
+                );
             });
             pass.configure_texenv(Stage::new(1).unwrap(), |s1| {
-                if uses_tex {
-                    s1.reset();
-                    s1.src(
-                        citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::Source::Previous,
-                        Some(citro3d::texenv::Source::FragmentSecondaryColor),
-                        None,
-                    )
-                    .func(
-                        citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::CombineFunc::Add,
-                    );
-                } else {
-                    s1.reset();
-                }
+                s1.reset();
+                s1.src(
+                    citro3d::texenv::Mode::BOTH,
+                    citro3d::texenv::Source::Previous,
+                    Some(citro3d::texenv::Source::FragmentSecondaryColor),
+                    None,
+                )
+                .func(
+                    citro3d::texenv::Mode::BOTH,
+                    citro3d::texenv::CombineFunc::Add,
+                );
             });
 
-            pass.configure_texenv(Stage::new(2).unwrap(), |s0| {
-                if !uses_tex {
-                    s0.src(
-                        citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::Source::FragmentPrimaryColor,
-                        Some(citro3d::texenv::Source::FragmentSecondaryColor),
-                        None,
-                    )
-                    .func(
-                        citro3d::texenv::Mode::BOTH,
-                        citro3d::texenv::CombineFunc::Add,
-                    );
-                } else {
-                    s0.reset();
-                }
-            });
             pass.set_lighting_material(material.to_owned().into());
             //mat.set_uniforms(pass, &uniforms);
             pass.bind_vertex_uniform(uniforms.model_matrix, *transform);

@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    math::{Vec3, Vec4, Vec4Swizzles},
+    math::{Vec4, Vec4Swizzles},
     render::{color::Color, view::ExtractedView},
 };
 use bevy_3ds_core::util::wgpu_projection_to_opengl;
@@ -10,8 +10,7 @@ use crate::{pass::RenderPass, shader::PicaShader};
 
 use citro3d::{
     light::{LightLut, LightLutId, LutInput},
-    math::FVec4,
-    uniform::{Index, Uniform},
+    uniform::Index,
 };
 
 #[derive(Default)]

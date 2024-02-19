@@ -1,6 +1,6 @@
 use bevy::{
     app::Plugin,
-    asset::Handle,
+    asset::{Assets, Handle},
     ecs::system::{Query, ResMut, Resource},
     math::Mat4,
     pbr::StandardMaterial,

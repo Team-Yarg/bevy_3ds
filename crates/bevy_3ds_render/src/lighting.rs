@@ -1,17 +1,17 @@
-use std::{borrow::Borrow, f32::consts::PI, pin::Pin};
+use std::{f32::consts::PI, pin::Pin};
 
 use bevy::{
     app::Plugin,
     ecs::{
         component::Component,
         schedule::IntoSystemConfigs,
-        system::{Commands, Query, Res, ResMut, Resource},
+        system::{Query, Res, ResMut, Resource},
     },
     math::Vec3,
-    render::{color::Color, Extract, ExtractSchedule, Render, RenderApp},
+    render::{color::Color, Render, RenderApp},
     transform::components::GlobalTransform,
 };
-use citro3d::light::{LightEnv, LightIndex, LightLut, LightLutDistAtten, LightLutId, LutInput};
+use citro3d::light::{LightEnv, LightIndex, LightLutDistAtten};
 
 use crate::{GpuDevice, RenderSet3ds};
 
@@ -64,7 +64,7 @@ fn prepare_point_lights(
     ensure_all_lights_created(light_env.as_mut(), nb_lights);
     gpu_lights.lights.clear();
 
-    for (i, (mut light, l)) in light_env
+    for (i, (light, l)) in light_env
         .as_mut()
         .lights_mut()
         .iter_mut()

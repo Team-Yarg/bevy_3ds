@@ -1,5 +1,6 @@
 use bevy::{
     app::Plugin,
+    asset::{Assets, Handle},
     render::{render_asset::PrepareAssetError, texture::Image, RenderApp},
 };
 use citro3d::texture::{Tex, TexParams};
@@ -7,6 +8,8 @@ use image::EncodableLayout;
 use log::{trace, warn};
 
 use super::prep_asset::{PrepareAsset, PrepareAssetsPlugin};
+
+pub const BLANK_TEXTURE: Handle<Image> = Handle::weak_from_u128(0x48cefbd5e0f04f7b85a79f5735bd49fc);
 
 #[derive(Default)]
 pub struct ImagePlugin {
@@ -19,6 +22,15 @@ impl Plugin for ImagePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         self.inner.build(app);
         app.add_plugins(PrepareAssetsPlugin::<Image>::default());
+
+        let mut assets = app.world.resource_mut::<Assets<Image>>();
+        assets.insert(
+            BLANK_TEXTURE,
+            Image::from_dynamic(
+                image::RgbaImage::from_fn(8, 8, |_, _| image::Rgba([255u8, 255, 255, 255])).into(),
+                true,
+            ),
+        );
     }
 
     fn ready(&self, app: &bevy::prelude::App) -> bool {
