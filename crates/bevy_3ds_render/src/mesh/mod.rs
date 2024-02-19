@@ -77,27 +77,28 @@ impl PrepareAsset for Mesh {
             });
         }
 
-let indices = mesh
-    .indices()
-    .map(|i| match i {
-        bevy::render::mesh::Indices::U16(u) => BufKind::Elements {
-            index_buf: LinearBuffer::new(&u),
-        },
-        bevy::render::mesh::Indices::U32(u) => {
-            // Convert u32 to u16 with a check for overflow.
-            let u16_indices: Vec<u16> = u.iter().map(|&index| {
-                if index <= u16::MAX as u32 {
-                    index as u16
-                } else {
-                    panic!("Index value exceeds u16 maximum range, cannot convert to u16.");
+        let indices = mesh
+            .indices()
+            .map(|i| match i {
+                bevy::render::mesh::Indices::U16(u) => BufKind::Elements {
+                    index_buf: LinearBuffer::new(&u),
+                },
+                bevy::render::mesh::Indices::U32(u) => {
+                    // Convert u32 to u16 with a check for overflow.
+                    let u16_indices: Vec<u16> = u
+                        .iter()
+                        .map(|&index| {
+                            index.try_into().expect(
+                                "Index value exceeds u16 maximum range, cannot convert to u16.",
+                            )
+                        })
+                        .collect();
+                    BufKind::Elements {
+                        index_buf: LinearBuffer::new(&u16_indices),
+                    }
                 }
-            }).collect();
-            BufKind::Elements {
-                index_buf: LinearBuffer::new(&u16_indices),
-            }
-        },
-    })
-    .unwrap_or(BufKind::Array);
+            })
+            .unwrap_or(BufKind::Array);
 
         Ok(GpuMesh {
             vert_buf: LinearBuffer::new(vbo.as_slice()),
