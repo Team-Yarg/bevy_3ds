@@ -90,10 +90,8 @@ fn prepare_point_lights(
                 index: LightIndex::new(i),
                 global_pos: pos,
             });
-        } else {
-            if let Some(mut light) = light {
-                light.as_mut().set_enabled(false);
-            }
+        } else if let Some(mut light) = light {
+            light.as_mut().set_enabled(false);
         }
     }
 }

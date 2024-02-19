@@ -1,6 +1,6 @@
 use bevy::{
     app::Plugin,
-    asset::{Assets, Handle},
+    asset::Handle,
     ecs::system::{Query, ResMut, Resource},
     math::Mat4,
     pbr::StandardMaterial,
@@ -39,6 +39,7 @@ pub struct ExtractedMeshes {
     pub extracted: Vec<ExtractedMesh>,
 }
 
+#[allow(clippy::type_complexity)]
 fn extract_meshes(
     mut extracted: ResMut<ExtractedMeshes>,
     query: Extract<Query<(&Handle<Mesh>, &Handle<StandardMaterial>, &GlobalTransform)>>,

@@ -1,11 +1,7 @@
 use bevy::{
     app::Plugin,
-    asset::{AssetId, Handle},
     math::{Vec2, Vec3},
-    render::{
-        mesh::{Mesh, VertexAttributeValues},
-        texture::Image,
-    },
+    render::mesh::{Mesh, VertexAttributeValues},
 };
 use bevy_3ds_core::util::without_render_app;
 
@@ -13,9 +9,7 @@ use crate::{bevy_topology_to_citro, gpu_buffer::LinearBuffer, mesh::gpu::MeshVer
 
 use self::gpu::{BufKind, GpuMesh};
 
-use super::prep_asset::{PrepareAsset, PrepareAssetsPlugin};
-
-use citro3d::texture::{Tex, TexParams};
+use super::prep_asset::PrepareAsset;
 
 mod draw;
 pub mod gpu;
@@ -87,9 +81,9 @@ impl PrepareAsset for Mesh {
             .indices()
             .map(|i| match i {
                 bevy::render::mesh::Indices::U16(u) => BufKind::Elements {
-                    index_buf: LinearBuffer::new(&u),
+                    index_buf: LinearBuffer::new(u),
                 },
-                bevy::render::mesh::Indices::U32(i) => panic!("can't use 32bit indices"),
+                bevy::render::mesh::Indices::U32(_) => panic!("can't use 32bit indices"),
             })
             .unwrap_or(BufKind::Array);
 
