@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::time::Instant;
 
 use bevy::asset::AssetLoader;
@@ -30,7 +31,8 @@ use bevy::{
 };
 use citro3d::render::ClearFlags;
 use ctru::services::apt::Apt;
-use ctru::services::gfx::{RawFrameBuffer, Screen};
+use ctru::services::gfx::{Flush, RawFrameBuffer, Screen, Swap};
+use ctru::services::gspgpu::FramebufferFormat;
 
 use crate::lighting::GpuLights;
 use crate::{lighting, materials};
@@ -247,6 +249,12 @@ fn extract(main_world: &mut World, render_app: &mut App) {
     main_world.insert_resource(ScratchMainWorld(inserted_world));
 }
 
+const BOTTOM_SCREEN_IMAGE: &[u8] = include_bytes!("screen0.bin");
+
+thread_local! {
+    static TIMES_COPIED: RefCell<usize> = 0.into();
+}
+
 fn render_system(world: &mut World) {
     log::debug!("render on thread {:?}", std::thread::current().id());
     #[allow(clippy::type_complexity)]
@@ -272,25 +280,41 @@ fn render_system(world: &mut World) {
     )
     .expect("failed to create left render target");
 
-    let frame = gpu.start_new_frame();
-    let mut pass = RenderPass::new(gpu, &frame);
-    target.clear(
-        ClearFlags::ALL,
-        clear_colour.as_linear_rgba_u32().to_be(),
-        0,
-    );
-    pass.select_render_target(&target);
-    commands.prepare(world);
+    let mut bottom_screen = gfx.0.bottom_screen.borrow_mut();
+    TIMES_COPIED.with(|t| {
+        let mut times = t.borrow_mut();
+        if *times < 2 {
+            *times += 1;
+            bottom_screen.set_framebuffer_format(FramebufferFormat::Bgr8);
+            bottom_screen.set_double_buffering(true);
+            let RawFrameBuffer { ptr, .. } = bottom_screen.raw_framebuffer();
 
-    for (id, _, view) in &cameras {
-        let view_mtx = view.transform.compute_matrix().inverse();
-        pass.set_light_positions(&lights.lights, view_mtx);
+            unsafe { ptr.copy_from(BOTTOM_SCREEN_IMAGE.as_ptr(), BOTTOM_SCREEN_IMAGE.len()) };
+            bottom_screen.flush_buffers();
+            bottom_screen.swap_buffers();
+        }
+    });
 
-        commands
-            .run(world, &mut pass, id)
-            .expect("failed to run draws");
+    {
+        let frame: crate::frame::Citro3dFrame<'_> = gpu.start_new_frame();
+        let mut pass = RenderPass::new(gpu, &frame);
+        target.clear(
+            ClearFlags::ALL,
+            clear_colour.as_linear_rgba_u32().to_be(),
+            0,
+        );
+        pass.select_render_target(&target);
+        commands.prepare(world);
+
+        for (id, _, view) in &cameras {
+            let view_mtx = view.transform.compute_matrix().inverse();
+            pass.set_light_positions(&lights.lights, view_mtx);
+
+            commands
+                .run(world, &mut pass, id)
+                .expect("failed to run draws");
+        }
     }
-    drop(frame);
 
     log::debug!("render fin");
 
