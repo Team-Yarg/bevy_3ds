@@ -76,7 +76,7 @@
     dp4 outpos.w, projMtx[3], r2
 
     ; outtex = intex
-    mov outtex, intex
+    ; mov outtex, intex
 
     dp3 r15.x, modelMtx[0], innorm
     dp3 r15.y, modelMtx[1], innorm
@@ -102,6 +102,13 @@
 degenerate:
     mov outnorm, r0
     mov outcol, zeroes
+
+    ; r10 = [ intex.x, (intex.y - 1.0) * -1.0 ]
+    mov r10, intex.xy
+    add r10.y, neg_ones.x, r10.y
+    mul r10.y, neg_ones.x, r10.y
+    mov outtex, r10
+
 
     ; Done!
     end
