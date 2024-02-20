@@ -101,7 +101,7 @@
 
 degenerate:
     mov outnorm, r0
-    mov outcol, ones
+    mov outcol, zeroes
 
     ; Done!
     end

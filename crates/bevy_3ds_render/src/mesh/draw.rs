@@ -108,14 +108,14 @@ impl RenderCommand for MeshDraw {
                     None,
                 )
                 .func(
-                    citro3d::texenv::Mode::BOTH,
+                    citro3d::texenv::Mode::RGB,
                     citro3d::texenv::CombineFunc::Modulate,
                 );
             });
             pass.configure_texenv(Stage::new(1).unwrap(), |s1| {
                 s1.reset();
                 s1.src(
-                    citro3d::texenv::Mode::BOTH,
+                    citro3d::texenv::Mode::RGB,
                     citro3d::texenv::Source::Previous,
                     Some(citro3d::texenv::Source::FragmentSecondaryColor),
                     None,
