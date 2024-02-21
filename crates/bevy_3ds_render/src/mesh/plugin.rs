@@ -4,7 +4,9 @@ use bevy::{
     ecs::system::{Query, ResMut, Resource},
     math::Mat4,
     pbr::StandardMaterial,
-    render::{mesh::Mesh, texture::Image, Extract, ExtractSchedule, RenderApp},
+    render::{
+        mesh::Mesh, texture::Image, view::ViewVisibility, Extract, ExtractSchedule, RenderApp,
+    },
     transform::components::GlobalTransform,
 };
 use log::debug;
@@ -42,11 +44,21 @@ pub struct ExtractedMeshes {
 #[allow(clippy::type_complexity)]
 fn extract_meshes(
     mut extracted: ResMut<ExtractedMeshes>,
-    query: Extract<Query<(&Handle<Mesh>, &Handle<StandardMaterial>, &GlobalTransform)>>,
+    query: Extract<
+        Query<(
+            &Handle<Mesh>,
+            &Handle<StandardMaterial>,
+            &GlobalTransform,
+            &ViewVisibility,
+        )>,
+    >,
 ) {
     extracted.extracted.clear();
 
-    for (mesh_handle, material_handle, transform) in &query {
+    for (mesh_handle, material_handle, transform, vis) in &query {
+        if !vis.get() {
+            continue;
+        }
         debug!("extract: {mesh_handle:?}");
 
         extracted.extracted.push(ExtractedMesh {
