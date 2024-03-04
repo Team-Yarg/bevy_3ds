@@ -18,7 +18,7 @@ citro3d-sys = { git = "https://github.com/Team-Yarg/citro3d-rs", version = "0.1.
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
 ctru-sys = { git = "https://github.com/rust3ds/ctru-rs" }
 
-swizzle_3ds = { git = "https://github.com/Team-Yarg/swizzle-3ds", version = "0.1.0" }
+swizzle_3ds = { version = "0.2.0" }
 image = "0.24.7"
 
 thiserror = "1.0.56"

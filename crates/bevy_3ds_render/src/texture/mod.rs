@@ -1,11 +1,18 @@
 use bevy::{
     app::Plugin,
     asset::{Assets, Handle},
-    render::{render_asset::PrepareAssetError, texture::Image, RenderApp},
+    render::{
+        render_asset::PrepareAssetError,
+        render_resource::Extent3d,
+        texture::{Image, TextureFormatPixelInfo},
+        RenderApp,
+    },
 };
-use citro3d::texture::{Tex, TexParams};
-use image::EncodableLayout;
+use citro3d::texture::{Tex, TexFormat, TexParams};
 use log::{trace, warn};
+use swizzle_3ds::pix::ImageView;
+
+use crate::gpu_buffer::LinearBuffer;
 
 use super::prep_asset::{PrepareAsset, PrepareAssetsPlugin};
 
@@ -69,7 +76,7 @@ pub struct GpuImage(pub(super) citro3d::texture::Tex);
 const MAX_TEX_SIZE: u32 = 1024;
 
 impl GpuImage {
-    fn from_bevy(img: Image) -> Option<Self> {
+    fn from_bevy(mut img: Image) -> Option<Self> {
         assert!(
             img.width() <= MAX_TEX_SIZE,
             "image is too wide, max is {}",
@@ -80,30 +87,66 @@ impl GpuImage {
             "image is too tall, max is {}",
             MAX_TEX_SIZE
         );
-        let mut img = img.try_into_dynamic().ok()?;
+
+        use swizzle_3ds::pix as spix;
+        let img_format = match img.texture_descriptor.format {
+            bevy::render::render_resource::TextureFormat::R8Unorm
+            | bevy::render::render_resource::TextureFormat::R8Uint => spix::ImageFormat::Lum8,
+            bevy::render::render_resource::TextureFormat::Rg8Unorm => spix::ImageFormat::Luma8,
+            bevy::render::render_resource::TextureFormat::Rgba8Unorm
+            | bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb => {
+                spix::ImageFormat::Rgba8
+            }
+            _ => return None,
+        };
+
         if img.width() < 8 || img.height() < 8 {
-            img = img.resize_exact(
-                img.width().max(8),
-                img.height().max(8),
-                image::imageops::FilterType::Nearest,
-            );
+            img.resize(Extent3d {
+                width: img.width().max(8),
+                height: img.height().max(8),
+                ..Default::default()
+            });
         }
-        let img = swizzle_3ds::swizzle_image(&img);
+
+        let tex_buf = LinearBuffer::with_size(
+            img.width() as usize
+                * img.height() as usize
+                * img.texture_descriptor.format.pixel_size(),
+            0u8,
+        );
+
+        let img_view = ImageView::new(
+            img.data.as_ref(),
+            img.width() as usize,
+            img.height() as usize,
+            img_format,
+        );
+        let swiz_img = swizzle_3ds::swizzle_image_into(&img_view, tex_buf);
 
         let tex = Tex::new(
             TexParams::new_2d(
                 img.width().try_into().expect("image too wide"),
                 img.height().try_into().expect("image too tall"),
             )
-            .format(citro3d::texture::TexFormat::Rgba8),
+            .format(match img_format {
+                spix::ImageFormat::Rgba8 => TexFormat::Rgba8,
+                spix::ImageFormat::Rgb8 => TexFormat::Rgb8,
+                spix::ImageFormat::Rgba5551 => TexFormat::Rgba5551,
+                spix::ImageFormat::Rgb565 => TexFormat::Rgb565,
+                spix::ImageFormat::Rgba4 => TexFormat::Rgba4,
+                spix::ImageFormat::Luma8 => TexFormat::La8,
+                spix::ImageFormat::Hilo8 => TexFormat::HiLo8,
+                spix::ImageFormat::Lum8 => TexFormat::L8,
+                spix::ImageFormat::Alpha8 => TexFormat::A8,
+                spix::ImageFormat::Luma4 => TexFormat::La4,
+                _ => unimplemented!("unhandled texture format"),
+            })
+            .use_vram(true),
         )
         .ok()?;
-        let img = img.to_rgba8();
-        let mut bytes = img.as_bytes().to_owned();
-        for px in bytes.chunks_mut(4) {
-            px.reverse();
-        }
-        tex.upload(&bytes);
+        let bytes = swiz_img.as_raw();
+
+        tex.upload(bytes);
         Some(Self(tex))
     }
 
