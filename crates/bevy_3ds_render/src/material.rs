@@ -97,11 +97,6 @@ pub struct Uniforms {
     pub model_matrix: Index,
     pub camera_matrix: Index,
     pub projection_matrix: Index,
-    pub light_colour: Index,
-    pub material_emission: Index,
-    pub material_ambient: Index,
-    pub material_diffuse: Index,
-    pub material_specular: Index,
 }
 
 impl Uniforms {
@@ -110,22 +105,10 @@ impl Uniforms {
         let camera_matrix = vert_prog.get_uniform("camMtx").unwrap();
         let projection_matrix = vert_prog.get_uniform("projMtx").unwrap();
 
-        let light_colour = vert_prog.get_uniform("lightClr").unwrap();
-
-        let material_emission = vert_prog.get_uniform("mat_emi").unwrap();
-        let material_ambient = vert_prog.get_uniform("mat_amb").unwrap();
-        let material_diffuse = vert_prog.get_uniform("mat_dif").unwrap();
-        let material_specular = vert_prog.get_uniform("mat_spe").unwrap();
-
         Uniforms {
             model_matrix,
             camera_matrix,
             projection_matrix,
-            light_colour,
-            material_emission,
-            material_ambient,
-            material_diffuse,
-            material_specular,
         }
     }
     pub fn bind_views(&self, pass: &mut RenderPass, view: &ExtractedView) {

@@ -9,42 +9,33 @@
 ; Projection matrix uniform - loaded by the renderer before any given render
 .fvec projMtx[4]
 
-; Light colour - currently unused, but will be loaded by the renderer before any given render
-.fvec lightClr
-
-; Material properties uniforms - loaded by the renderer every time the material changes
-; Emission colour - light emitted by the object on its own
-.fvec mat_emi
-; Ambient colour - simulated light scattered around the entire scene (unused right now)
-.fvec mat_amb
-; Diffuse colour - shading (unused right now)
-.fvec mat_dif
-; Specular colour - shininess, handled separately by the GPU I think (unused right now)
-.fvec mat_spe
-
 ; Useful constants
 ; Define a vec4 with various useful values as the elements, then set aliases to get them out
-.constf useful_constants(0.0, 1.0, -1.0, 0.5)
+.constf useful_constants(0.0, 1.0, 2.0, 0.5)
 ; All zeroes - copy out the first element in all 4 places
 .alias zeroes useful_constants.xxxx
 ; All ones - copy out the second element in all 4 places
 .alias ones useful_constants.yyyy
-; All negative ones
-.alias neg_ones useful_constants.zzzz
+; All twos
+.alias twos useful_constants.zzzz
 ; All halves
 .alias halves useful_constants.wwww
+; (1.0, 0.0, 0.0, 0.0)
+.alias ozzz useful_constants.yxxx
 
 ; Output registers, written to by the shader
 .out outpos pos
 .out outcol clr
-.out outtex texcoord0
+.out outtex0 texcoord0
+.out outtex1 texcoord1
 .out outview view
-.out outnorm normalquat
+.out outnq normalquat
 
 ; Inputs (passed in through v0..=v15, with aliases for convenience)
 .in inpos
 .in intex
-.in innorm
+.in innrm
+.in intng
 
 ; The actual shader function
 .proc main
@@ -67,6 +58,8 @@
     dp4 r2.z, camMtx[2], r1
     dp4 r2.w, camMtx[3], r1
 
+    ; outview = -r2
+    ;mov outview, -r1
     mov outview, -r2
 
     ; outpos = projectionMatrix * r2
@@ -75,41 +68,119 @@
     dp4 outpos.z, projMtx[2], r2
     dp4 outpos.w, projMtx[3], r2
 
-    ; outtex = intex
-    ; mov outtex, intex
+    ; outtex{0, 1} = intex
+    mov outtex0, intex
+    mov outtex1, intex
 
-    dp3 r15.x, modelMtx[0], innorm
-    dp3 r15.y, modelMtx[1], innorm
-    dp3 r15.z, modelMtx[2], innorm
+    ; r14 = modelMatrix * innrm
+    ; r12 = modelMatrix * intng
+    ; transform the normal and tangent vectors with the model matrix
+    ; TODO: normal matrix
+    dp3 r15.x, modelMtx[0], innrm
+    dp3 r15.y, modelMtx[1], innrm
+    dp3 r15.z, modelMtx[2], innrm
+    dp3 r13.x, modelMtx[0], intng
+    dp3 r13.y, modelMtx[1], intng
+    dp3 r13.z, modelMtx[2], intng
+
     dp3 r14.x, camMtx[0], r15
     dp3 r14.y, camMtx[1], r15
     dp3 r14.z, camMtx[2], r15
+    dp3 r12.x, camMtx[0], r13
+    dp3 r12.y, camMtx[1], r13
+    dp3 r12.z, camMtx[2], r13
+
+    ; r14 = r14 * 1/sqrt(r14.x**2 + r14.y**2 + r14.z**2)
+    ; r12 = r12 * 〃
+    ; normalise r14/r12
+    ; this works because, assuming the tangent and normal are both
+    ; unit vectors, they'll have the same modulus after being
+    ; transformed
     dp3 r6.x, r14, r14
     rsq r6.x, r6.x
     mul r14.xyz, r14.xyz, r6.x
+    mul r12.xyz, r12.xyz, r6.x
 
-    mov r0, useful_constants.yxxx
-    add r4, ones, r14.z
-    mul r4, halves, r4
-    cmp zeroes, ge, ge, r4.x
-    rsq r4, r4.x
-    mul r5, halves, r14
-    jmpc cmp.x, degenerate
+	; Cross N × T = B
+	mul r13.xyz, r14.yzx, r12.zxy
+	mad r13.xyz, -r12.yzx, r14.zxy, r13
 
-    rcp r0.z, r4.x
-    mul r0.xy, r5, r4
+	; Cross B x N = T (for ensuring orthonormalisation)
+	mul r12.xyz, r13.yzx, r14.zxy
+	mad r12.xyz, -r14.yzx, r13.zxy, r12
 
-degenerate:
-    mov outnorm, r0
-    mov outcol, zeroes
+	; Readjust vectors for easier calculation:
+	; r12 = (Tx, Ty, Tz, Bz)
+	; r13 = (Tx, By, Nz, 1 )
+	; r14 = (Nx, Ny, Nz, Bx)
+	mov r12.w, r13.z
+	mov r14.w, r13.x
+	mov r13.x, r12.x
+	mov r13.z, r14.z
+	mov r13.w, ones
 
-    ; r10 = [ intex.x, (intex.y - 1.0) * -1.0 ]
-    mov r10, intex.xy
-    add r10.y, neg_ones.x, r10.y
-    mul r10.y, neg_ones.x, r10.y
-    mov outtex, r10
+	; Perform case discrimination
+	mov r11.z, zeroes
+	sge r10, zeroes, r14.z
+	mov r11.xyw, r13.zxzy
+	add r10, r10, r10
+	mad r11.y, r10, r11, -r11
+	cmp r11.xy, le, ge, r11.zw
 
+	ifc cmp.x
+		ifc cmp.y
+			; X case
+			; x = 1 + Tx - By - Nz
+			; y = +Ty + Bx
+			; z = +Tz + Nx
+			; w = +Bz - Ny
+			mov r13.yz, -r13
+			mov r14.y, -r14
+			dp4 r0.x, r13.w, r13
+			add r0.yzw, r12.yyzw, r14.wwxy
+		.else
+			; Y case
+			; x = +Ty + Bx
+			; y = 1 - Tx + By - Nz
+			; z = +Bz + Ny
+			; w = -Tz + Nx 
+			mov r13.xz, -r13
+			mov r12.z, -r12
+			dp4 r0.y, r13.w, r13
+			add r0.xzw, r12.yywz, r14.wwyx
+		.end
+	.else
+		ifc cmp.y
+			; Z case
+			; x = +Tz + Nx
+			; y = +Bz + Ny
+			; z = 1 - Tx - By + Nz
+			; w = +Ty - Bx
+			mov r13.xy, -r13
+			mov r14.w, -r14
+			dp4 r0.z, r13.w, r13
+			add r0.xyw, r12.zwwy, r14.xyyw
+		.else
+			; W case
+			; x = +Bz - Ny
+			; y = -Tz + Nx 
+			; z = +Ty - Bx  
+			; w = 1 + Tx + By + Nz
+			mov r12.z, -r12
+			mov r14.yw, -r14
+			dp4 r0.w, r13.w, r13
+			add r0.xyz, r12.wzyy, r14.yxww
+		.end
+	.end
 
-    ; Done!
-    end
+	; Renormalise quaternion and output
+	dp4 r1.x, r0, r0
+	rsq r1.x, r1.x
+	mul outnq, r0, r1.x
+
+	; Output colour
+	mov outcol, ones
+
+	; We're finished
+	end
 .end ; main
