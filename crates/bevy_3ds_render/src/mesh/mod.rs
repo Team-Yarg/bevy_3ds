@@ -81,7 +81,7 @@ impl PrepareAsset for Mesh {
             .indices()
             .map(|i| match i {
                 bevy::render::mesh::Indices::U16(u) => BufKind::Elements {
-                    index_buf: LinearBuffer::new(&u),
+                    index_buf: LinearBuffer::new(u),
                 },
                 bevy::render::mesh::Indices::U32(u) => {
                     // Convert u32 to u16 with a check for overflow.
@@ -103,7 +103,7 @@ impl PrepareAsset for Mesh {
         Ok(GpuMesh {
             vert_buf: LinearBuffer::new(vbo.as_slice()),
             nb_verts: mesh.count_vertices() as u32,
-            indices: indices,
+            indices,
             prim_kind: bevy_topology_to_citro(mesh.primitive_topology())
                 .expect("unsupported primitive type"),
         })

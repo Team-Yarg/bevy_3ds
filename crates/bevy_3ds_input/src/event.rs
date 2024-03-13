@@ -1,11 +1,11 @@
-use bevy::reflect::Reflect;
-use bevy::ecs::event::Event;
-use bevy::ecs::event::{EventReader, EventWriter};
-use bevy::ecs::system::{ResMut};
-use bevy::input::{ButtonState, Input, Axis};
-use bevy::prelude::DetectChangesMut;
 use crate::axis::{Axis3ds, Axis3dsType};
 use crate::button::{Button3ds, Button3dsType};
+use bevy::ecs::event::Event;
+use bevy::ecs::event::{EventReader, EventWriter};
+use bevy::ecs::system::ResMut;
+use bevy::input::{Axis, ButtonState, Input};
+use bevy::prelude::DetectChangesMut;
+use bevy::reflect::Reflect;
 /// 3ds event for when the "value" on the axis changes
 #[derive(Event, Debug, Clone, PartialEq, Reflect)]
 #[reflect(Debug, PartialEq)]
@@ -24,13 +24,9 @@ pub struct Axis3dsChangedEvent {
 impl Axis3dsChangedEvent {
     /// Creates a [`Axis3dsChangedEvent`].
     pub fn new(axis_type: Axis3dsType, value: f32) -> Self {
-        Self {
-            axis_type,
-            value,
-        }
+        Self { axis_type, value }
     }
 }
-
 
 /// A 3ds button input event, that only gets sent when the button state has changed.
 #[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
@@ -50,13 +46,9 @@ pub struct Button3dsChangedEvent {
 impl Button3dsChangedEvent {
     /// Creates a [`Button3dsChangedEvent`].
     pub fn new(button_type: Button3dsType, state: ButtonState) -> Self {
-        Self {
-            button_type,
-            state,
-        }
+        Self { button_type, state }
     }
 }
-
 
 /// A 3ds button input event from ctru event system.
 #[derive(Event, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
@@ -76,13 +68,9 @@ pub struct CtruButtonChangedEvent {
 impl CtruButtonChangedEvent {
     /// Creates a [`CtruButtonChangedEvent`].
     pub fn new(button_type: Button3dsType, state: ButtonState) -> Self {
-        Self {
-            button_type,
-            state,
-        }
+        Self { button_type, state }
     }
 }
-
 
 /// A 3ds event.
 ///
@@ -115,7 +103,6 @@ impl From<Axis3dsChangedEvent> for Event3ds {
     }
 }
 
-
 /// Splits the [`Event3ds`] event stream into it's component events.
 pub fn event_system_3ds(
     mut events_3ds: EventReader<Event3ds>,
@@ -126,12 +113,11 @@ pub fn event_system_3ds(
     button_input.bypass_change_detection().clear();
     for event_3ds in events_3ds.read() {
         match event_3ds {
-            Event3ds::Button(button_event) => button_events.send(button_event.clone()),
+            Event3ds::Button(button_event) => button_events.send(*button_event),
             Event3ds::Axis(axis_event) => axis_events.send(axis_event.clone()),
         }
     }
 }
-
 
 /// Uses [`Axis3dsChangedEvent`]s to update the relevant [`Input`] and [`Axis`] values.
 pub fn axis_3ds_event_system(
@@ -147,7 +133,6 @@ pub fn axis_3ds_event_system(
     }
 }
 
-
 /// Uses [`Button3dsChangedEvent`]s to update the relevant [`Input`] values.
 pub fn button_3ds_event_system(
     mut button_changed_events: EventReader<CtruButtonChangedEvent>,
@@ -158,7 +143,8 @@ pub fn button_3ds_event_system(
         let button = Button3ds::new(button_event.button_type);
         if !button_event.state.is_pressed() {
             // Check if button was previously pressed
-            if button_input.pressed(button) { //todo this if statement is redundant because ctru
+            if button_input.pressed(button) {
+                //todo this if statement is redundant because ctru
                 //already checks that button wasn't pressed in previous frame
                 button_input_events.send(Button3dsChangedEvent {
                     button_type: button.button_type,
@@ -170,7 +156,8 @@ pub fn button_3ds_event_system(
             button_input.release(button);
         } else if button_event.state.is_pressed() {
             // Check if button was previously not pressed
-            if !button_input.pressed(button) { // same as the if statement above
+            if !button_input.pressed(button) {
+                // same as the if statement above
                 button_input_events.send(Button3dsChangedEvent {
                     button_type: button.button_type,
                     state: ButtonState::Pressed,

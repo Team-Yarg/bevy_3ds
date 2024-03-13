@@ -4,12 +4,12 @@ use ctru::services::hid::KeyPad;
 ///
 /// ## Usage
 ///
-/// It is used as the generic `T` value of an [`Input`] and [`Axis`] to create `bevy` resources. These
-/// resources store the data of the buttons of a 3ds and can be accessed inside of a system.
+/// It is used as the generic `T` value of an [`Input`](bevy::input::Input) and [`Axis`](bevy::input::Axis) to create `bevy`
+/// resources. These resources store the data of the buttons of a 3ds and can be accessed inside of a system.
 ///
 /// ## Updating
 ///
-/// The 3ds button resources are updated inside of the [`button_3ds_event_system`].
+/// The 3ds button resources are updated inside of the [`button_3ds_event_system`](super::event::button_3ds_event_system).
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
 #[reflect(Debug, Hash, PartialEq)]
 #[cfg_attr(
@@ -43,7 +43,7 @@ impl Button3ds {
 ///
 /// ## Usage
 ///
-/// This is used in [`Button3ds`] which in turn is used to create the [`Input<Button3ds>`]
+/// This is used in [`Button3ds`] which in turn is used to create the [`Input<Button3ds>`](bevy::input::Input)
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Reflect)]
 #[reflect(Debug, Hash, PartialEq)]
 #[cfg_attr(
@@ -101,8 +101,6 @@ pub enum Button3dsType {
     /// The R button.
     R,
 }
-
-use std::convert::TryFrom;
 
 impl TryFrom<KeyPad> for Button3dsType {
     type Error = ();

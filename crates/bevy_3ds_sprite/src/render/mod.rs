@@ -19,7 +19,7 @@ use tracing::debug;
 
 use bevy_3ds_render::{
     gpu_buffer::LinearBuffer,
-    material::{Material, Uniforms},
+    material::Uniforms,
     pass::{RenderCommand, RenderPass, VboBuffer},
     pipeline::VertexAttrs,
     shader::PicaShader,
@@ -38,9 +38,6 @@ struct Vertex {
 struct SpriteInstance {
     transform: Mat4,
     verts: LinearBuffer<Vertex>,
-    #[allow(unused)]
-    indexes: LinearBuffer<u32>,
-    mat: Material,
 }
 
 /// A batch of sprites which all share the same image
@@ -144,15 +141,9 @@ pub(super) fn prepare_sprites(
         });
         let verts = LinearBuffer::new(&verts);
         //let colour = sprite.color.as_rgba_f32().into();
-        let indexes = LinearBuffer::new(&[0, 1, 2, 0, 2, 1]);
         let batch = SpriteBatch {
             image: sprite.image_handle_id,
-            sprites: vec![SpriteInstance {
-                verts,
-                indexes,
-                transform,
-                mat: Material::new(None, Some(sprite.color), None, None, None),
-            }],
+            sprites: vec![SpriteInstance { verts, transform }],
         };
         batches.batches.push(batch);
     }

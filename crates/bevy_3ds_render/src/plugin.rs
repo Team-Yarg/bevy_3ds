@@ -15,18 +15,14 @@ use bevy::render::view::{
 use bevy::render::{color, primitives};
 use bevy::time::TimeSender;
 use bevy::{
-    app::{App, Plugin, SubApp},
-    ecs::{
-        schedule::{Schedule, ScheduleLabel},
-        system::{Query, Resource},
-        world::World,
-    },
+    app::SubApp,
+    ecs::{schedule::ScheduleLabel, system::Resource},
     prelude::*,
     render::{
         camera::CameraPlugin,
         mesh::{morph::MorphPlugin, MeshPlugin},
         view::{self},
-        ExtractSchedule, MainWorld, Render, RenderApp, RenderSet,
+        MainWorld, Render, RenderApp, RenderSet,
     },
 };
 use citro3d::render::ClearFlags;

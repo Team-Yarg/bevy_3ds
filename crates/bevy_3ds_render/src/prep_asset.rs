@@ -4,18 +4,11 @@ use std::{
 };
 
 use bevy::{
-    app::Plugin,
-    asset::{AssetEvent, AssetId, Assets},
-    ecs::{
-        event::EventReader,
-        system::{
-            Commands, Res, ResMut, Resource, StaticSystemParam, SystemParam, SystemParamItem,
-        },
-    },
+    ecs::system::{StaticSystemParam, SystemParam, SystemParamItem},
     prelude::*,
     render::{
         render_asset::{PrepareAssetError, RenderAsset, RenderAssetDependency},
-        Extract, ExtractSchedule, RenderApp,
+        Extract, RenderApp,
     },
 };
 
