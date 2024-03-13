@@ -12,8 +12,11 @@
 ; Useful constants
 ; Define a vec4 with various useful values as the elements, then set aliases to get them out
 .constf useful_constants(0.0, 1.0, 2.0, 0.5)
+.constf useful_constants_neg(0.0, 1.0, -1.0, 0.5)
 ; All zeroes - copy out the first element in all 4 places
 .alias zeroes useful_constants.xxxx
+; All negative ones
+.alias neg_ones useful_constants_neg.zzzz
 ; All ones - copy out the second element in all 4 places
 .alias ones useful_constants.yyyy
 ; All twos
@@ -127,6 +130,13 @@
 	mad r11.y, r10, r11, -r11
 	cmp r11.xy, le, ge, r11.zw
 
+    ; r10 = [ intex.x, (intex.y - 1.0) * -1.0 ]
+    mov r10, intex.xy
+    add r10.y, neg_ones.x, r10.y
+    mul r10.y, neg_ones.x, r10.y
+    mov outtex0, r10
+	mov outtex1, r10
+
 	ifc cmp.x
 		ifc cmp.y
 			; X case
@@ -143,7 +153,7 @@
 			; x = +Ty + Bx
 			; y = 1 - Tx + By - Nz
 			; z = +Bz + Ny
-			; w = -Tz + Nx 
+			; w = -Tz + Nx
 			mov r13.xz, -r13
 			mov r12.z, -r12
 			dp4 r0.y, r13.w, r13
@@ -163,8 +173,8 @@
 		.else
 			; W case
 			; x = +Bz - Ny
-			; y = -Tz + Nx 
-			; z = +Ty - Bx  
+			; y = -Tz + Nx
+			; z = +Ty - Bx
 			; w = 1 + Tx + By + Nz
 			mov r12.z, -r12
 			mov r14.yw, -r14
@@ -179,7 +189,7 @@
 	mul outnq, r0, r1.x
 
 	; Output colour
-	mov outcol, ones
+	mov outcol, zeroes
 
 	; We're finished
 	end
