@@ -38,7 +38,6 @@ impl Axis3ds {
     }
 }
 
-
 /// A type of a [`Axis3ds`].
 ///
 /// ## Usage

@@ -1,7 +1,7 @@
 #![feature(allocator_api)]
 use bevy::{
-    input::Input,
     app::{App, Plugin, PluginsState},
+    input::Input,
     tasks::tick_global_task_pools_on_main_thread,
 };
 
@@ -13,7 +13,7 @@ pub mod sprite {
     pub use bevy_3ds_sprite::*;
 }
 
-pub mod input{
+pub mod input {
     pub use bevy_3ds_input::*;
 }
 
@@ -32,9 +32,7 @@ impl Plugin for Core3dsPlugin {
     }
 }
 
-fn app_runner(
-    mut app: App
-) {
+fn app_runner(mut app: App) {
     if app.plugins_state() == PluginsState::Ready {
         app.finish();
         app.cleanup();
@@ -42,7 +40,10 @@ fn app_runner(
 
     let apt = Apt::new().unwrap();
     while apt.main_loop() {
-        let buttons = app.world.get_resource::<Input<Button3ds>>().expect("Input<_3dsButton> resource not found");
+        let buttons = app
+            .world
+            .get_resource::<Input<Button3ds>>()
+            .expect("Input<_3dsButton> resource not found");
 
         if buttons.pressed(Button3ds::new(Button3dsType::Start)) {
             break;
