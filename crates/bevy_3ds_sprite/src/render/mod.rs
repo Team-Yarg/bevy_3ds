@@ -218,7 +218,6 @@ impl RenderCommand for DrawSprites {
             });
 
             for s in &sprite.sprites {
-                //s.mat.set_uniforms(pass, &uniforms);
                 pass.bind_vertex_uniform(uniforms.model_matrix, s.transform);
                 let mut buf = VboBuffer::new();
                 let vbo = buf

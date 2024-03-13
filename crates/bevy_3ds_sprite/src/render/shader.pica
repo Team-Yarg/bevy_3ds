@@ -9,19 +9,6 @@
 ; Projection matrix uniform - loaded by the renderer before any given render
 .fvec projMtx[4]
 
-; Light colour - currently unused, but will be loaded by the renderer before any given render
-.fvec lightClr
-
-; Material properties uniforms - loaded by the renderer every time the material changes
-; Emission colour - light emitted by the object on its own
-.fvec mat_emi
-; Ambient colour - simulated light scattered around the entire scene (unused right now)
-.fvec mat_amb
-; Diffuse colour - shading (unused right now)
-.fvec mat_dif
-; Specular colour - shininess, handled separately by the GPU I think (unused right now)
-.fvec mat_spe
-
 ; Useful constants
 ; Define a vec4 with various useful values as the elements, then set aliases to get them out
 .constf useful_constants(0.0, 1.0, -1.0, -0.5)
@@ -36,7 +23,6 @@
 
 ; Output registers, written to by the shader
 .out outpos pos
-.out outcol clr
 .out outtex texcoord0
 
 ; Inputs (passed in through v0..=v15, with aliases for convenience)
@@ -72,22 +58,6 @@
 
     ; outtex = intex
     mov outtex, intex
-
-    ; Accumulate vertex colour in r1
-    ; r1 = mat_emi
-    mov r1, mat_emi
-
-    ; Here's where specular calculations would go
-
-    ; Here's where diffuse calculations would go
-
-    ; r1 += ambientColour * lightColour
-    mov r2, lightClr
-    mad r1, r2, mat_amb, r1
-
-    ; Clamp r1 to a maximum of 1.0 when outputting
-    ; outcol = min(r1, 1.0)
-    min outcol, ones, r1
 
     ; Done!
     end
