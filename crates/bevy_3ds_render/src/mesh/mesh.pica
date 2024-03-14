@@ -71,10 +71,6 @@
     dp4 outpos.z, projMtx[2], r2
     dp4 outpos.w, projMtx[3], r2
 
-    ; outtex{0, 1} = intex
-    mov outtex0, intex
-    mov outtex1, intex
-
     ; r14 = modelMatrix * innrm
     ; r12 = modelMatrix * intng
     ; transform the normal and tangent vectors with the model matrix

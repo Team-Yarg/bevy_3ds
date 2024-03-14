@@ -3246,8 +3246,9 @@ checksum = "8fb1df15f412ee2e9dfc1c504260fa695c1c3f10fe9f4a6ee2d2184d7d6450e2"
 
 [[package]]
 name = "swizzle_3ds"
-version = "0.1.0"
-source = "git+https://github.com/Team-Yarg/swizzle-3ds#08d81b4588ac9357c653fc53cf70a9b6c04709f6"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a71fa2c757de1cf449dd41e6467fe64da14a0835b0049101589cfb9271c0c313"
 dependencies = [
  "image",
 ]
