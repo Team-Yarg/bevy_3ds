@@ -16,6 +16,7 @@ use std::{
 };
 
 pub use texture::GpuImage;
+mod bottom_screen;
 pub mod draw;
 mod extract;
 mod frame;

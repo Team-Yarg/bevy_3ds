@@ -31,7 +31,7 @@ use ctru::services::gfx::{Flush, RawFrameBuffer, Screen, Swap};
 use ctru::services::gspgpu::FramebufferFormat;
 
 use crate::lighting::GpuLights;
-use crate::{lighting, materials, BottomScreenTexture, RenderAssets};
+use crate::{bottom_screen, lighting, materials, BottomScreenTexture, RenderAssets};
 
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
@@ -110,6 +110,7 @@ impl Plugin for Render3dsPlugin {
             shader::PicaShaderPlugin,
             materials::StandardMaterialPlugin,
             lighting::LightingRenderPlugin,
+            bottom_screen::BottomScreenPlugin,
         ));
 
         app.register_type::<color::Color>()
@@ -164,12 +165,11 @@ fn init_render_app(parent: &mut App) {
         .init_resource::<DrawCommands>()
         .init_non_send_resource::<GfxInstance>()
         .insert_resource(parent.world.resource::<bevy::asset::AssetServer>().clone())
-        .add_systems(ExtractSchedule, extract_draw_bottom_screen)
         .add_systems(
             Render,
             (
                 apply_extract_commands.in_set(RenderSet::ExtractCommands),
-                (render_system, render_bottom_screen).in_set(RenderSet::Render),
+                render_system.in_set(RenderSet::Render),
                 World::clear_entities.in_set(RenderSet::Cleanup),
             ),
         );
@@ -217,46 +217,6 @@ fn extract(main_world: &mut World, render_app: &mut App) {
     let mut inserted_world = render_app.world.remove_resource::<MainWorld>().unwrap();
     std::mem::swap(main_world, &mut inserted_world);
     main_world.insert_resource(ScratchMainWorld(inserted_world));
-}
-
-fn render_bottom_screen(
-    texture: Option<Res<BottomScreenTexture>>,
-    textures: Res<RenderAssets<Image>>,
-    gfx: NonSend<GfxInstance>,
-) {
-    let Some(texture) = texture else {
-        return;
-    };
-    let texture = &texture.0;
-    assert_ne!(texture.id(), AssetId::invalid());
-    let Some(texture) = textures.get(texture) else {
-        warn!("bottom screen texture not ready yet");
-        return;
-    };
-
-    let mut bottom_screen = gfx.0.bottom_screen.borrow_mut();
-    bottom_screen.set_framebuffer_format(match texture.0.format() {
-        citro3d::texture::TexFormat::Rgba8 => FramebufferFormat::Rgba8,
-        citro3d::texture::TexFormat::Rgb8 => FramebufferFormat::Bgr8,
-        citro3d::texture::TexFormat::Rgba5551 => todo!(),
-        citro3d::texture::TexFormat::Rgb565 => todo!(),
-        citro3d::texture::TexFormat::Rgba4 => FramebufferFormat::Rgba4,
-        citro3d::texture::TexFormat::La8 => todo!(),
-        citro3d::texture::TexFormat::HiLo8 => todo!(),
-        citro3d::texture::TexFormat::L8 => todo!(),
-        citro3d::texture::TexFormat::A8 => todo!(),
-        citro3d::texture::TexFormat::La4 => todo!(),
-        citro3d::texture::TexFormat::L4 => todo!(),
-        citro3d::texture::TexFormat::A4 => todo!(),
-        citro3d::texture::TexFormat::Etc1 => todo!(),
-        citro3d::texture::TexFormat::Etc1A4 => todo!(),
-    });
-
-    let RawFrameBuffer { ptr, .. } = bottom_screen.raw_framebuffer();
-    unsafe { ptr.copy_from(texture.data().as_ptr(), texture.len()) };
-
-    bottom_screen.flush_buffers();
-    bottom_screen.swap_buffers();
 }
 
 fn render_system(world: &mut World) {
@@ -325,10 +285,4 @@ fn apply_extract_commands(render_world: &mut World) {
             .unwrap()
             .apply_deferred(render_world);
     });
-}
-
-fn extract_draw_bottom_screen(mut cmds: Commands, bot: Extract<Option<Res<BottomScreenTexture>>>) {
-    if let Some(tex) = bot.deref() {
-        cmds.insert_resource(tex.deref().clone());
-    }
 }
