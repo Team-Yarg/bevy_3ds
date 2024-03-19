@@ -2,8 +2,9 @@
 
 use self::pipeline::VertexAttrs;
 use bevy::{
+    asset::Handle,
     ecs::{schedule::SystemSet, system::Resource},
-    render::render_resource::PrimitiveTopology,
+    render::{render_resource::PrimitiveTopology, texture::Image},
 };
 use citro3d::{buffer::Primitive, Instance};
 use frame::Citro3dFrame;
@@ -31,7 +32,10 @@ pub mod shader;
 pub mod texture;
 pub mod vertattr;
 
+pub use citro3d;
+
 pub struct GfxInstance(pub ctru::services::gfx::Gfx);
+
 impl Default for GfxInstance {
     fn default() -> Self {
         Self(
@@ -41,6 +45,14 @@ impl Default for GfxInstance {
             )
             .expect("failed to init gpu"),
         )
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct BottomScreenTexture(Handle<Image>);
+impl BottomScreenTexture {
+    pub fn new(value: Handle<Image>) -> Self {
+        Self(value)
     }
 }
 

@@ -156,6 +156,12 @@ impl GpuImage {
     pub fn height(&self) -> f32 {
         self.0.height() as f32
     }
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+    pub fn data(&self) -> &[u8] {
+        self.0.data()
+    }
 }
 
 impl PrepareAsset for Image {

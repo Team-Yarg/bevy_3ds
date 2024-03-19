@@ -30,7 +30,7 @@ use ctru::services::gfx::{Flush, RawFrameBuffer, Screen, Swap};
 use ctru::services::gspgpu::FramebufferFormat;
 
 use crate::lighting::GpuLights;
-use crate::{lighting, materials};
+use crate::{lighting, materials, BottomScreenTexture, RenderAssets};
 
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
@@ -161,13 +161,14 @@ fn init_render_app(parent: &mut App) {
         .init_resource::<bevy::render::render_graph::RenderGraph>()
         .init_resource::<GpuDevice>()
         .init_resource::<DrawCommands>()
+        .init_resource::<BottomScreenTexture>()
         .init_non_send_resource::<GfxInstance>()
         .insert_resource(parent.world.resource::<bevy::asset::AssetServer>().clone())
         .add_systems(
             Render,
             (
                 apply_extract_commands.in_set(RenderSet::ExtractCommands),
-                (render_system).in_set(RenderSet::Render),
+                (render_system, render_bottom_screen).in_set(RenderSet::Render),
                 World::clear_entities.in_set(RenderSet::Cleanup),
             ),
         );
@@ -223,6 +224,31 @@ thread_local! {
     static TIMES_COPIED: RefCell<usize> = 0.into();
 }
 
+fn render_bottom_screen(
+    texture: Option<Res<BottomScreenTexture>>,
+    textures: Res<RenderAssets<Image>>,
+    gfx: NonSend<GfxInstance>,
+) {
+    let Some(texture) = texture else {
+        return;
+    };
+    let texture = &texture.0;
+    let Some(texture) = textures.get(texture) else {
+        warn!("bottom screen texture not ready yet");
+        return;
+    };
+
+    let mut bottom_screen = gfx.0.bottom_screen.borrow_mut();
+    bottom_screen.set_framebuffer_format(FramebufferFormat::Bgr8);
+    bottom_screen.set_double_buffering(true);
+
+    let RawFrameBuffer { ptr, .. } = bottom_screen.raw_framebuffer();
+
+    unsafe { ptr.copy_from(texture.data().as_ptr(), texture.len()) };
+    bottom_screen.flush_buffers();
+    bottom_screen.swap_buffers();
+}
+
 fn render_system(world: &mut World) {
     log::debug!("render on thread {:?}", std::thread::current().id());
     #[allow(clippy::type_complexity)]
@@ -247,21 +273,6 @@ fn render_system(world: &mut World) {
         Some(citro3d::render::DepthFormat::Depth16),
     )
     .expect("failed to create left render target");
-
-    let mut bottom_screen = gfx.0.bottom_screen.borrow_mut();
-    TIMES_COPIED.with(|t| {
-        let mut times = t.borrow_mut();
-        if *times < 2 {
-            *times += 1;
-            bottom_screen.set_framebuffer_format(FramebufferFormat::Bgr8);
-            bottom_screen.set_double_buffering(true);
-            let RawFrameBuffer { ptr, .. } = bottom_screen.raw_framebuffer();
-
-            unsafe { ptr.copy_from(BOTTOM_SCREEN_IMAGE.as_ptr(), BOTTOM_SCREEN_IMAGE.len()) };
-            bottom_screen.flush_buffers();
-            bottom_screen.swap_buffers();
-        }
-    });
 
     {
         let frame: crate::frame::Citro3dFrame<'_> = gpu.start_new_frame();
