@@ -48,7 +48,7 @@ impl Default for GfxInstance {
     }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Clone)]
 pub struct BottomScreenTexture(Handle<Image>);
 impl BottomScreenTexture {
     pub fn new(value: Handle<Image>) -> Self {

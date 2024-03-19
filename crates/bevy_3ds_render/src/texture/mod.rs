@@ -1,6 +1,7 @@
 use bevy::{
     app::Plugin,
     asset::{Assets, Handle},
+    log::debug,
     render::{
         render_asset::PrepareAssetError,
         render_resource::Extent3d,
@@ -101,6 +102,7 @@ impl GpuImage {
         };
 
         if img.width() < 8 || img.height() < 8 {
+            debug!("image too small {}x{}", img.width(), img.height());
             img.resize(Extent3d {
                 width: img.width().max(8),
                 height: img.height().max(8),

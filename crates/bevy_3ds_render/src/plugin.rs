@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::time::Instant;
 
 use bevy::asset::AssetLoader;
@@ -11,7 +12,7 @@ use bevy::render::extract_resource::ExtractResourcePlugin;
 use bevy::render::view::{
     ColorGrading, ExtractedView, NoFrustumCulling, RenderLayers, VisibilityPlugin, VisibleEntities,
 };
-use bevy::render::{color, primitives};
+use bevy::render::{color, primitives, Extract};
 use bevy::time::TimeSender;
 use bevy::{
     app::SubApp,
@@ -161,9 +162,9 @@ fn init_render_app(parent: &mut App) {
         .init_resource::<bevy::render::render_graph::RenderGraph>()
         .init_resource::<GpuDevice>()
         .init_resource::<DrawCommands>()
-        .init_resource::<BottomScreenTexture>()
         .init_non_send_resource::<GfxInstance>()
         .insert_resource(parent.world.resource::<bevy::asset::AssetServer>().clone())
+        .add_systems(ExtractSchedule, extract_draw_bottom_screen)
         .add_systems(
             Render,
             (
@@ -218,12 +219,6 @@ fn extract(main_world: &mut World, render_app: &mut App) {
     main_world.insert_resource(ScratchMainWorld(inserted_world));
 }
 
-const BOTTOM_SCREEN_IMAGE: &[u8] = include_bytes!("screen0.bin");
-
-thread_local! {
-    static TIMES_COPIED: RefCell<usize> = 0.into();
-}
-
 fn render_bottom_screen(
     texture: Option<Res<BottomScreenTexture>>,
     textures: Res<RenderAssets<Image>>,
@@ -233,18 +228,33 @@ fn render_bottom_screen(
         return;
     };
     let texture = &texture.0;
+    assert_ne!(texture.id(), AssetId::invalid());
     let Some(texture) = textures.get(texture) else {
         warn!("bottom screen texture not ready yet");
         return;
     };
 
     let mut bottom_screen = gfx.0.bottom_screen.borrow_mut();
-    bottom_screen.set_framebuffer_format(FramebufferFormat::Bgr8);
-    bottom_screen.set_double_buffering(true);
+    bottom_screen.set_framebuffer_format(match texture.0.format() {
+        citro3d::texture::TexFormat::Rgba8 => FramebufferFormat::Rgba8,
+        citro3d::texture::TexFormat::Rgb8 => FramebufferFormat::Bgr8,
+        citro3d::texture::TexFormat::Rgba5551 => todo!(),
+        citro3d::texture::TexFormat::Rgb565 => todo!(),
+        citro3d::texture::TexFormat::Rgba4 => FramebufferFormat::Rgba4,
+        citro3d::texture::TexFormat::La8 => todo!(),
+        citro3d::texture::TexFormat::HiLo8 => todo!(),
+        citro3d::texture::TexFormat::L8 => todo!(),
+        citro3d::texture::TexFormat::A8 => todo!(),
+        citro3d::texture::TexFormat::La4 => todo!(),
+        citro3d::texture::TexFormat::L4 => todo!(),
+        citro3d::texture::TexFormat::A4 => todo!(),
+        citro3d::texture::TexFormat::Etc1 => todo!(),
+        citro3d::texture::TexFormat::Etc1A4 => todo!(),
+    });
 
     let RawFrameBuffer { ptr, .. } = bottom_screen.raw_framebuffer();
-
     unsafe { ptr.copy_from(texture.data().as_ptr(), texture.len()) };
+
     bottom_screen.flush_buffers();
     bottom_screen.swap_buffers();
 }
@@ -315,4 +325,10 @@ fn apply_extract_commands(render_world: &mut World) {
             .unwrap()
             .apply_deferred(render_world);
     });
+}
+
+fn extract_draw_bottom_screen(mut cmds: Commands, bot: Extract<Option<Res<BottomScreenTexture>>>) {
+    if let Some(tex) = bot.deref() {
+        cmds.insert_resource(tex.deref().clone());
+    }
 }
