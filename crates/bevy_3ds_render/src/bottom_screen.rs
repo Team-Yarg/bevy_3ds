@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use bevy::{
     app::Plugin,
-    asset::Assets,
+    asset::{Assets, Handle},
     ecs::{
         schedule::IntoSystemConfigs,
         system::{Commands, NonSend, Res, ResMut, Resource},
@@ -14,7 +14,7 @@ use ctru::services::{
     gspgpu::FramebufferFormat,
 };
 
-use crate::{BottomScreenTexture, GfxInstance};
+use crate::{BottomScreenTexture, GfxInstance, RenderAssets};
 
 pub struct BottomScreenPlugin;
 
@@ -30,12 +30,20 @@ impl Plugin for BottomScreenPlugin {
 
 #[derive(Default, Resource)]
 struct ExtractedBottomScreenTexture {
-    bytes: Vec<u8>,
+    texture: Option<Handle<Image>>,
     format: Option<FramebufferFormat>,
 }
 
-fn render_bottom_screen(texture: Res<ExtractedBottomScreenTexture>, gfx: NonSend<GfxInstance>) {
+fn render_bottom_screen(
+    texture: Res<ExtractedBottomScreenTexture>,
+    textures: Res<RenderAssets<Image>>,
+    gfx: NonSend<GfxInstance>,
+) {
     let Some(format) = texture.format else {
+        return;
+    };
+    let tex = texture.texture.as_ref().unwrap();
+    let Some(tex) = textures.get(tex) else {
         return;
     };
 
@@ -43,7 +51,7 @@ fn render_bottom_screen(texture: Res<ExtractedBottomScreenTexture>, gfx: NonSend
     bottom_screen.set_framebuffer_format(format);
 
     let RawFrameBuffer { ptr, .. } = bottom_screen.raw_framebuffer();
-    unsafe { ptr.copy_from(texture.bytes.as_ptr(), texture.bytes.len()) };
+    unsafe { ptr.copy_from(tex.data().as_ptr(), tex.data().len()) };
 
     bottom_screen.flush_buffers();
     bottom_screen.swap_buffers();
@@ -58,11 +66,6 @@ fn extract_draw_bottom_screen(
         extracted.format.take();
         return;
     };
-    let Some(tex) = assets.get(&tex.0) else {
-        extracted.format.take();
-        return;
-    };
-    extracted.bytes.resize(tex.data.len(), 0u8);
-    extracted.bytes.copy_from_slice(&tex.data);
+    extracted.texture.replace(tex.0.clone());
     extracted.format.replace(FramebufferFormat::Rgba8);
 }
