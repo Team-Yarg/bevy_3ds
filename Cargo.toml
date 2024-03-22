@@ -38,3 +38,9 @@ shim-3ds = { git = "https://github.com/rust3ds/shim-3ds", version = "0.1.0" }
 
 [package.metadata.cargo-3ds]
 romfs_dir = "romfs"
+
+[dev-dependencies]
+bevy = { version = "0.12.1", default-features = false, features = ["bevy_audio", "mp3"] }
+
+[patch.crates-io]
+cpal = { git = "https://github.com/Team-Yarg/cpal", branch = "0x2a/feat/3ds-audio" }
