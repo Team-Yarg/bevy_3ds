@@ -18,7 +18,6 @@ use std::{
 };
 
 pub use texture::GpuImage;
-mod bottom_screen;
 pub mod draw;
 mod extract;
 mod frame;
@@ -56,14 +55,6 @@ impl Default for GfxInstance {
             )
             .expect("failed to init gpu"),
         )
-    }
-}
-
-#[derive(Resource, Default, Clone)]
-pub struct BottomScreenTexture(Handle<Image>);
-impl BottomScreenTexture {
-    pub fn new(value: Handle<Image>) -> Self {
-        Self(value)
     }
 }
 

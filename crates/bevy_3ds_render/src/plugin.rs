@@ -27,11 +27,10 @@ use bevy::{
 };
 use citro3d::render::{ClearFlags, Target};
 use ctru::services::apt::Apt;
-use ctru::services::gfx::{Flush, Gfx, RawFrameBuffer, Screen, Swap};
-use ctru::services::gspgpu::FramebufferFormat;
+use ctru::services::gfx::{Gfx, RawFrameBuffer, Screen, Swap};
 
 use crate::lighting::GpuLights;
-use crate::{bottom_screen, lighting, materials, BottomScreenTexture, On3dsScreen, RenderAssets};
+use crate::{lighting, materials, On3dsScreen};
 
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
@@ -110,7 +109,6 @@ impl Plugin for Render3dsPlugin {
             shader::PicaShaderPlugin,
             materials::StandardMaterialPlugin,
             lighting::LightingRenderPlugin,
-            bottom_screen::BottomScreenPlugin,
             ExtractComponentPlugin::<On3dsScreen>::default(),
         ));
 
