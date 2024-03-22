@@ -101,11 +101,11 @@ pub(super) fn prepare_sprites(
             let br = uv_r.max / batch_image_dims;
             let tr = Vec2::new(br.x, tl.y);
             let bl = Vec2::new(tl.x, br.y);
-            uvs[0] = tl;
-            uvs[2] = br;
+            uvs[0] = bl;
+            uvs[1] = tl;
 
-            uvs[1] = bl;
-            uvs[3] = tr;
+            uvs[2] = tr;
+            uvs[3] = br;
 
             bounds = uv_r.size();
         }
