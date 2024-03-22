@@ -1,18 +1,24 @@
+use super::Core3dsPlugin;
+use crate::plugins;
+
+#[cfg(feature = "render")]
+use crate::render;
+
+#[cfg(feature = "sprite")]
+use crate::sprite;
+
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
-    gltf::GltfPlugin,
     hierarchy::HierarchyPlugin,
     scene::ScenePlugin,
-    text::TextPlugin,
     transform::TransformPlugin,
     window::{Window, WindowPlugin, WindowResolution},
 };
 use bevy_3ds_input::InputPlugin;
+#[cfg(feature = "pbr")]
 use bevy_3ds_pbr::Bevy3dsPbrPlugin;
+#[cfg(feature = "render")]
 use bevy_3ds_render::texture::ImagePlugin;
-
-use super::Core3dsPlugin;
-use crate::{render, sprite};
 
 pub struct DefaultPlugins;
 
@@ -40,17 +46,27 @@ impl PluginGroup for DefaultPlugins {
                 ..Default::default()
             });
         group = group.add(bevy::asset::AssetPlugin::default());
+        #[cfg(feature = "render")]
         {
             group = group
                 .add(render::plugin::Render3dsPlugin)
                 .add(ImagePlugin::default());
         }
-        group = group.add(Bevy3dsPbrPlugin);
-        group = group.add(render::plugin::CorePipeline3ds);
-        group = group.add(sprite::SpritesPlugin).add(TextPlugin);
+        #[cfg(feature = "pbr")]
+        {
+            group = group.add(Bevy3dsPbrPlugin);
+        }
+        group = group.add(plugins::CorePipeline3ds);
+        #[cfg(feature = "sprite")]
+        {
+            group = group.add(sprite::SpritesPlugin).add(bevy::text::TextPlugin);
+        }
         //group = group.add(UiPlugin::default());
         group = group.add(ScenePlugin);
-        group = group.add(GltfPlugin::default());
+        #[cfg(feature = "gltf")]
+        {
+            group = group.add(bevy::gltf::GltfPlugin::default());
+        }
         group
     }
 }

@@ -3,7 +3,6 @@ use std::time::Instant;
 
 use bevy::asset::AssetLoader;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
-use bevy::core_pipeline::core_2d::Core2dPlugin;
 use bevy::core_pipeline::prepass::{DepthPrepass, NormalPrepass};
 use bevy::ecs::system::SystemState;
 use bevy::render::camera::ExtractedCamera;
@@ -91,33 +90,6 @@ impl Plugin for ViewPlugin3ds {
             .init_resource::<Msaa>()
             // NOTE: windows.is_changed() handles cases where a window was resized
             .add_plugins((ExtractResourcePlugin::<Msaa>::default(), VisibilityPlugin));
-    }
-}
-
-struct Core3dPlugin;
-
-impl Plugin for Core3dPlugin {
-    fn build(&self, app: &mut App) {
-        use bevy::core_pipeline::core_3d::Camera3dDepthLoadOp;
-        app.register_type::<Camera3d>()
-            .register_type::<Camera3dDepthLoadOp>()
-            .add_plugins(ExtractComponentPlugin::<Camera3d>::default());
-    }
-}
-
-pub struct CorePipeline3ds;
-impl Plugin for CorePipeline3ds {
-    fn build(&self, app: &mut App) {
-        app.register_type::<ClearColor>()
-            .register_type::<ClearColorConfig>()
-            .register_type::<DepthPrepass>()
-            .register_type::<NormalPrepass>()
-            .init_resource::<ClearColor>()
-            .add_plugins((
-                ExtractResourcePlugin::<ClearColor>::default(),
-                Core2dPlugin,
-                Core3dPlugin,
-            ));
     }
 }
 

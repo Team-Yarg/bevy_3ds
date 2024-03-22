@@ -5,10 +5,14 @@ use bevy::{
     tasks::tick_global_task_pools_on_main_thread,
 };
 
+mod plugins;
+
+#[cfg(feature = "render")]
 pub mod render {
     pub use bevy_3ds_render::*;
 }
 
+#[cfg(feature = "sprite")]
 pub mod sprite {
     pub use bevy_3ds_sprite::*;
 }
