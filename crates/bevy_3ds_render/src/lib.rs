@@ -31,7 +31,7 @@ pub mod shader;
 pub mod texture;
 pub mod vertattr;
 
-pub struct GfxInstance(ctru::services::gfx::Gfx);
+pub struct GfxInstance(pub ctru::services::gfx::Gfx);
 impl Default for GfxInstance {
     fn default() -> Self {
         Self(
