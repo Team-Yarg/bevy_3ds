@@ -3,8 +3,10 @@
 use self::pipeline::VertexAttrs;
 use bevy::{
     asset::Handle,
-    ecs::{schedule::SystemSet, system::Resource},
-    render::{render_resource::PrimitiveTopology, texture::Image},
+    ecs::{component::Component, schedule::SystemSet, system::Resource},
+    render::{
+        extract_component::ExtractComponent, render_resource::PrimitiveTopology, texture::Image,
+    },
 };
 use citro3d::{buffer::Primitive, Instance};
 use frame::Citro3dFrame;
@@ -36,6 +38,14 @@ pub mod vertattr;
 pub use citro3d;
 
 pub struct GfxInstance(pub ctru::services::gfx::Gfx);
+
+#[derive(Component, Clone, Copy, Default, ExtractComponent)]
+#[non_exhaustive]
+pub enum On3dsScreen {
+    #[default]
+    Top,
+    Bottom,
+}
 
 impl Default for GfxInstance {
     fn default() -> Self {

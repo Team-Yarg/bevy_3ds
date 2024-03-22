@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::ops::Deref;
 use std::time::Instant;
 
@@ -25,13 +25,13 @@ use bevy::{
         MainWorld, Render, RenderApp, RenderSet,
     },
 };
-use citro3d::render::ClearFlags;
+use citro3d::render::{ClearFlags, Target};
 use ctru::services::apt::Apt;
-use ctru::services::gfx::{Flush, RawFrameBuffer, Screen, Swap};
+use ctru::services::gfx::{Flush, Gfx, RawFrameBuffer, Screen, Swap};
 use ctru::services::gspgpu::FramebufferFormat;
 
 use crate::lighting::GpuLights;
-use crate::{bottom_screen, lighting, materials, BottomScreenTexture, RenderAssets};
+use crate::{bottom_screen, lighting, materials, BottomScreenTexture, On3dsScreen, RenderAssets};
 
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
@@ -111,6 +111,7 @@ impl Plugin for Render3dsPlugin {
             materials::StandardMaterialPlugin,
             lighting::LightingRenderPlugin,
             bottom_screen::BottomScreenPlugin,
+            ExtractComponentPlugin::<On3dsScreen>::default(),
         ));
 
         app.register_type::<color::Color>()
@@ -227,35 +228,60 @@ fn render_system(world: &mut World) {
         NonSend<GfxInstance>,
         Res<DrawCommands>,
         Res<ClearColor>,
-        Query<(Entity, &ExtractedCamera, &ExtractedView)>,
+        Query<(
+            Entity,
+            &ExtractedCamera,
+            &ExtractedView,
+            Option<&On3dsScreen>,
+        )>,
         Res<GpuLights>,
     )> = SystemState::new(world);
     let (gpu, gfx, commands, clear_colour, cameras, lights) = st.get(world);
     let gpu = gpu.into_inner();
     gfx.0.wait_for_vblank();
-    let mut screen = gfx.0.top_screen.borrow_mut();
-    let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
 
-    let mut target = citro3d::render::Target::new(
-        width,
-        height,
-        screen,
-        Some(citro3d::render::DepthFormat::Depth16),
-    )
-    .expect("failed to create left render target");
+    let mut targets: [_; 2] = std::array::from_fn(|_| None);
+
+    fn set_render_target<'a>(
+        ty: Option<On3dsScreen>,
+        gfx: &'a Gfx,
+        pass: &mut RenderPass,
+        targets: &mut [Option<Target<'a>>],
+        clear_colour: &ClearColor,
+    ) {
+        let ty = ty.unwrap_or_default();
+        let target_idx = ty as usize;
+        if targets[target_idx].is_none() {
+            let mut screen: RefMut<'_, dyn Screen> = match ty {
+                On3dsScreen::Top => gfx.top_screen.borrow_mut() as _,
+                On3dsScreen::Bottom => gfx.bottom_screen.borrow_mut() as _,
+            };
+            let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
+            let mut target = citro3d::render::Target::new(
+                width,
+                height,
+                screen,
+                Some(citro3d::render::DepthFormat::Depth16),
+            )
+            .expect("failed to create left render target");
+
+            target.clear(
+                ClearFlags::ALL,
+                clear_colour.as_linear_rgba_u32().to_be(),
+                0,
+            );
+            targets[target_idx] = Some(target);
+        }
+        pass.select_render_target(targets[target_idx].as_ref().unwrap());
+    }
 
     {
         let frame: crate::frame::Citro3dFrame<'_> = gpu.start_new_frame();
         let mut pass = RenderPass::new(gpu, &frame);
-        target.clear(
-            ClearFlags::ALL,
-            clear_colour.as_linear_rgba_u32().to_be(),
-            0,
-        );
-        pass.select_render_target(&target);
         commands.prepare(world);
 
-        for (id, _, view) in &cameras {
+        for (id, _, view, ty) in &cameras {
+            set_render_target(ty.copied(), &gfx.0, &mut pass, &mut targets, &clear_colour);
             let view_mtx = view.transform.compute_matrix().inverse();
             pass.set_light_positions(&lights.lights, view_mtx);
 
