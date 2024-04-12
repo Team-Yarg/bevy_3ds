@@ -141,7 +141,7 @@ impl GpuImage {
                 spix::ImageFormat::Luma4 => TexFormat::La4,
                 _ => unimplemented!("unhandled texture format"),
             })
-            .use_vram(true),
+            .use_vram(false),
         )
         .ok()?;
         let bytes = swiz_img.as_raw();
