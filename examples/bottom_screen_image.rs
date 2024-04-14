@@ -1,25 +1,24 @@
 use bevy::asset::AssetServer;
+use bevy::core_pipeline::core_3d::Camera3dBundle;
 use bevy::ecs::system::{Query, Res};
 use bevy::input::Input;
 use bevy::log::error;
-use bevy::math::{Rect, Vec2};
+use bevy::math::{Rect, Vec3};
+use bevy::pbr::{PointLight, PointLightBundle};
 use bevy::render::color::Color;
 use bevy::render::texture::Image;
+use bevy::scene::SceneBundle;
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy::transform::components::Transform;
 use bevy::{
     app::{App, Startup, Update},
-    core_pipeline::core_2d::Camera2dBundle,
     ecs::system::Commands,
 };
-use bevy_3ds::render::BottomScreenTexture;
 use bevy_3ds_input::button::*;
 use bevy_3ds_render::On3dsScreen;
 
 mod setup_logger;
 mod shims;
-
-const IMG_BYTES: &[u8] = include_bytes!("../romfs/assets/controls-1.png");
 
 fn main() {
     let _romfs = ctru::services::romfs::RomFS::new().unwrap();
@@ -41,16 +40,22 @@ fn main() {
 }
 
 fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
-    let birb = assets.load("bevy_bird.png");
-    cmds.spawn(SpriteBundle {
-        sprite: Sprite {
-            //custom_size: Some(Vec2::new(320.0, 240.0)),
-            rect: Some(Rect::new(0.0, 0.0, 320.0, 240.0)),
-            ..Default::default()
-        },
-        texture: birb,
+    cmds.spawn(SceneBundle {
+        scene: assets.load("cornell-box.glb#Scene0"),
         ..Default::default()
     });
-    cmds.spawn(Camera2dBundle::default())
-        .insert(On3dsScreen::Bottom);
+
+    cmds.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(0.0, 0.0, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    })
+    .insert(On3dsScreen::Bottom);
+    cmds.spawn(PointLightBundle {
+        point_light: PointLight {
+            color: Color::rgb(0.5, 0.5, 0.7),
+            ..Default::default()
+        },
+        transform: Transform::from_xyz(0.0, 0.0, 0.2),
+        ..Default::default()
+    });
 }
