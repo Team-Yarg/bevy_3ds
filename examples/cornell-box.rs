@@ -50,6 +50,7 @@ fn update(time: Res<Time>, mut s: Query<(&mut Transform), With<CornellBox>>) {
     }
 }
 
+// this should maybe be moved somewhere else
 fn copy_view(view: &ExtractedView, mul_by: Transform) -> ExtractedView {
     ExtractedView {
         projection: view.projection.clone(),
@@ -61,15 +62,22 @@ fn copy_view(view: &ExtractedView, mul_by: Transform) -> ExtractedView {
     }
 }
 
-fn stereo_displacement(view: &ExtractedView) -> (ExtractedView, ExtractedView) {
+fn stereo_displacement(view: &ExtractedView) -> Option<(ExtractedView, ExtractedView)> {
     let slider_val = ctru::os::current_3d_slider_state();
+
+    #[allow(clippy::float_cmp)]
+    if slider_val == 0.0 {
+        // uncomment this to disable drawing when the slider is at 0
+        //return None;
+    }
+
     let interocular_distance = slider_val / 2.0;
     let displacement = interocular_distance / 2.0;
 
     let left = Transform::from_translation(Vec3::new(-displacement, 0.0, 0.0));
     let right = Transform::from_translation(Vec3::new(displacement, 0.0, 0.0));
 
-    (copy_view(view, left), copy_view(view, right))
+    Some((copy_view(view, left), copy_view(view, right)))
 }
 
 fn setup(mut cmds: Commands, assets: Res<AssetServer>) {

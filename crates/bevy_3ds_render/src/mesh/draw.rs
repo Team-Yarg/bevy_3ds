@@ -45,7 +45,7 @@ impl RenderCommand for MeshDraw {
             Res<ExtractedMeshes>,
         ),
         pass: &mut crate::pass::RenderPass<'w, 'f>,
-        view: &ExtractedView
+        view: &ExtractedView,
     ) -> Result<(), crate::pass::RenderError> {
         let meshes = meshes.into_inner();
         let images = images.into_inner();

@@ -364,7 +364,10 @@ fn render_system(world: &mut World) {
                     }
 
                     On3dsScreen::Top(Some(f)) => {
-                        let (left_view, right_view) = f(view);
+                        let (left_view, right_view) = match f(view) {
+                            Some(v) => v,
+                            None => continue,
+                        };
                         let left_mtx = left_view.transform.compute_matrix().inverse();
                         let right_mtx = right_view.transform.compute_matrix().inverse();
 

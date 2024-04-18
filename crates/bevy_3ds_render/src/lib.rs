@@ -40,7 +40,7 @@ pub use citro3d;
 
 pub struct GfxInstance(pub ctru::services::gfx::Gfx);
 
-pub type StereoFunction = fn(&ExtractedView) -> (ExtractedView, ExtractedView);
+pub type StereoFunction = fn(&ExtractedView) -> Option<(ExtractedView, ExtractedView)>;
 
 #[derive(Component, Clone, Copy, ExtractComponent)]
 #[non_exhaustive]
