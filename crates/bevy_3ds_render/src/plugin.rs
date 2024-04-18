@@ -296,16 +296,6 @@ fn render_system(world: &mut World) {
         ]
     };
 
-    for t in &mut targets {
-        if let Some(ta) = t {
-            ta.clear(
-                ClearFlags::ALL,
-                clear_colour.as_linear_rgba_u32().to_be(),
-                0,
-            );
-        }
-    }
-
     fn set_render_target<'a>(
         ty: Option<On3dsScreen>,
         gfx: &'a Gfx,
@@ -322,6 +312,16 @@ fn render_system(world: &mut World) {
         let frame: crate::frame::Citro3dFrame<'_> = gpu.start_new_frame();
         let mut pass = RenderPass::new(gpu, &frame);
         commands.prepare(world);
+
+        for t in &mut targets {
+            if let Some(ta) = t {
+                ta.clear(
+                    ClearFlags::ALL,
+                    clear_colour.as_linear_rgba_u32().to_be(),
+                    0,
+                );
+            }
+        }
 
         for (_, view, ty) in &cameras {
             let view_mtx = view.transform.compute_matrix().inverse();

@@ -58,11 +58,10 @@ impl Default for On3dsScreen {
 impl On3dsScreen {
     pub fn to_target_index(&self, side: Option<Side>) -> usize {
         match (side, self) {
-            (None, On3dsScreen::Bottom) => 0,
-            (None, On3dsScreen::Top(_)) => 1,
-            (Some(_), On3dsScreen::Bottom) => 0,
-            (Some(Side::Left), On3dsScreen::Top(_)) => 1,
-            (Some(Side::Right), On3dsScreen::Top(_)) => 2,
+            (_, Self::Bottom) => 0,
+            (None, Self::Top(_)) => 1,
+            (Some(Side::Left), Self::Top(_)) => 1,
+            (Some(Side::Right), Self::Top(_)) => 2,
         }
     }
 }
