@@ -6,9 +6,11 @@ use bevy::{
     ecs::{component::Component, schedule::SystemSet, system::Resource},
     render::{
         extract_component::ExtractComponent, render_resource::PrimitiveTopology, texture::Image,
+        view::ExtractedView,
     },
 };
 use citro3d::{buffer::Primitive, Instance};
+use ctru::services::gfx::Side;
 use frame::Citro3dFrame;
 pub use plugin::Render3dsPlugin;
 pub use prep_asset::RenderAssets;
@@ -38,12 +40,30 @@ pub use citro3d;
 
 pub struct GfxInstance(pub ctru::services::gfx::Gfx);
 
-#[derive(Component, Clone, Copy, Default, ExtractComponent)]
+pub type StereoFunction = fn(&ExtractedView) -> Option<(ExtractedView, ExtractedView)>;
+
+#[derive(Component, Clone, Copy, ExtractComponent)]
 #[non_exhaustive]
 pub enum On3dsScreen {
-    #[default]
-    Top,
     Bottom,
+    Top(Option<StereoFunction>),
+}
+
+impl Default for On3dsScreen {
+    fn default() -> Self {
+        Self::Top(None)
+    }
+}
+
+impl On3dsScreen {
+    pub fn to_target_index(&self, side: Option<Side>) -> usize {
+        match (side, self) {
+            (_, Self::Bottom) => 0,
+            (None, Self::Top(_)) => 1,
+            (Some(Side::Left), Self::Top(_)) => 1,
+            (Some(Side::Right), Self::Top(_)) => 2,
+        }
+    }
 }
 
 impl Default for GfxInstance {

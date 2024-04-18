@@ -1,3 +1,4 @@
+use std::borrow::{Borrow, BorrowMut};
 use std::cell::{RefCell, RefMut};
 use std::ops::Deref;
 use std::time::Instant;
@@ -27,7 +28,9 @@ use bevy::{
 };
 use citro3d::render::{ClearFlags, Target};
 use ctru::services::apt::Apt;
-use ctru::services::gfx::{Gfx, RawFrameBuffer, Screen, Swap};
+use ctru::services::gfx::{
+    Gfx, RawFrameBuffer, Screen, Side, Swap, TopScreen3D, TopScreenLeft, TopScreenRight,
+};
 
 use crate::lighting::GpuLights;
 use crate::{lighting, materials, On3dsScreen};
@@ -226,50 +229,82 @@ fn render_system(world: &mut World) {
         NonSend<GfxInstance>,
         Res<DrawCommands>,
         Res<ClearColor>,
-        Query<(
-            Entity,
-            &ExtractedCamera,
-            &ExtractedView,
-            Option<&On3dsScreen>,
-        )>,
+        Query<(&ExtractedCamera, &ExtractedView, Option<&On3dsScreen>)>,
         Res<GpuLights>,
     )> = SystemState::new(world);
     let (gpu, gfx, commands, clear_colour, cameras, lights) = st.get(world);
     let gpu = gpu.into_inner();
     gfx.0.wait_for_vblank();
 
-    let mut targets: [_; 2] = std::array::from_fn(|_| None);
+    let use_3d = cameras.iter().any(|c| {
+        c.2.is_some_and(|s| {
+            if let On3dsScreen::Top(t) = s {
+                t.is_some()
+            } else {
+                false
+            }
+        })
+    });
+
+    let top_screen_3d: Option<TopScreen3D> = if use_3d {
+        Some((&gfx.0.top_screen).into())
+    } else {
+        None
+    };
+
+    let (top_screen_left, top_screen_right) =
+        match top_screen_3d.as_ref().map(TopScreen3D::split_mut) {
+            None => (None, None),
+            Some((l, r)) => (Some(l), Some(r)),
+        };
+
+    fn create_target<'a>(
+        mut screen: RefMut<'a, dyn Screen>,
+        clear_colour: &ClearColor,
+    ) -> Target<'a> {
+        let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
+        let mut target = citro3d::render::Target::new(
+            width,
+            height,
+            screen,
+            Some(citro3d::render::DepthFormat::Depth16),
+        )
+        .expect("failed to create render target");
+        target
+    }
+
+    let mut targets = if use_3d {
+        [
+            Some(create_target(
+                gfx.0.bottom_screen.borrow_mut() as _,
+                &clear_colour,
+            )),
+            Some(create_target(top_screen_left.unwrap() as _, &clear_colour)),
+            Some(create_target(top_screen_right.unwrap() as _, &clear_colour)),
+        ]
+    } else {
+        [
+            Some(create_target(
+                gfx.0.bottom_screen.borrow_mut() as _,
+                &clear_colour,
+            )),
+            Some(create_target(
+                gfx.0.top_screen.borrow_mut() as _,
+                &clear_colour,
+            )),
+            None,
+        ]
+    };
 
     fn set_render_target<'a>(
         ty: Option<On3dsScreen>,
         gfx: &'a Gfx,
         pass: &mut RenderPass,
         targets: &mut [Option<Target<'a>>],
-        clear_colour: &ClearColor,
+        side: Option<Side>,
     ) {
         let ty = ty.unwrap_or_default();
-        let target_idx = ty as usize;
-        if targets[target_idx].is_none() {
-            let mut screen: RefMut<'_, dyn Screen> = match ty {
-                On3dsScreen::Top => gfx.top_screen.borrow_mut() as _,
-                On3dsScreen::Bottom => gfx.bottom_screen.borrow_mut() as _,
-            };
-            let RawFrameBuffer { width, height, .. } = screen.raw_framebuffer();
-            let mut target = citro3d::render::Target::new(
-                width,
-                height,
-                screen,
-                Some(citro3d::render::DepthFormat::Depth16),
-            )
-            .expect("failed to create left render target");
-
-            target.clear(
-                ClearFlags::ALL,
-                clear_colour.as_linear_rgba_u32().to_be(),
-                0,
-            );
-            targets[target_idx] = Some(target);
-        }
+        let target_idx = ty.to_target_index(side);
         pass.select_render_target(targets[target_idx].as_ref().unwrap());
     }
 
@@ -278,14 +313,98 @@ fn render_system(world: &mut World) {
         let mut pass = RenderPass::new(gpu, &frame);
         commands.prepare(world);
 
-        for (id, _, view, ty) in &cameras {
-            set_render_target(ty.copied(), &gfx.0, &mut pass, &mut targets, &clear_colour);
-            let view_mtx = view.transform.compute_matrix().inverse();
-            pass.set_light_positions(&lights.lights, view_mtx);
+        for t in &mut targets {
+            if let Some(ta) = t {
+                ta.clear(
+                    ClearFlags::ALL,
+                    clear_colour.as_linear_rgba_u32().to_be(),
+                    0,
+                );
+            }
+        }
 
-            commands
-                .run(world, &mut pass, id)
-                .expect("failed to run draws");
+        for (_, view, ty) in &cameras {
+            let view_mtx = view.transform.compute_matrix().inverse();
+
+            if use_3d {
+                match ty.copied().unwrap_or_default() {
+                    On3dsScreen::Bottom => {
+                        set_render_target(ty.copied(), &gfx.0, &mut pass, &mut targets, None);
+                        pass.set_light_positions(&lights.lights, view_mtx);
+
+                        commands
+                            .run(world, &mut pass, view)
+                            .expect("failed to run draws");
+                    }
+
+                    On3dsScreen::Top(None) => {
+                        pass.set_light_positions(&lights.lights, view_mtx);
+
+                        set_render_target(
+                            ty.copied(),
+                            &gfx.0,
+                            &mut pass,
+                            &mut targets,
+                            Some(Side::Left),
+                        );
+                        commands
+                            .run(world, &mut pass, view)
+                            .expect("failed to run left draws");
+
+                        set_render_target(
+                            ty.copied(),
+                            &gfx.0,
+                            &mut pass,
+                            &mut targets,
+                            Some(Side::Right),
+                        );
+                        commands
+                            .run(world, &mut pass, view)
+                            .expect("failed to run right draws");
+                    }
+
+                    On3dsScreen::Top(Some(f)) => {
+                        let (left_view, right_view) = match f(view) {
+                            Some(v) => v,
+                            None => continue,
+                        };
+                        let left_mtx = left_view.transform.compute_matrix().inverse();
+                        let right_mtx = right_view.transform.compute_matrix().inverse();
+
+                        set_render_target(
+                            ty.copied(),
+                            &gfx.0,
+                            &mut pass,
+                            &mut targets,
+                            Some(Side::Left),
+                        );
+                        pass.set_light_positions(&lights.lights, left_mtx);
+                        commands
+                            .run(world, &mut pass, &left_view)
+                            .expect("failed to run left draws");
+
+                        set_render_target(
+                            ty.copied(),
+                            &gfx.0,
+                            &mut pass,
+                            &mut targets,
+                            Some(Side::Right),
+                        );
+                        pass.set_light_positions(&lights.lights, right_mtx);
+                        commands
+                            .run(world, &mut pass, &right_view)
+                            .expect("failed to run right draws");
+                    }
+                }
+            } else {
+                set_render_target(ty.copied(), &gfx.0, &mut pass, &mut targets, None);
+
+                pass.set_light_positions(&lights.lights, view_mtx);
+
+                commands
+                    .run(world, &mut pass, view)
+                    .expect("failed to run draws");
+            }
         }
     }
 

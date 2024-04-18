@@ -158,24 +158,15 @@ lazy_static! {
 pub struct DrawSprites;
 
 impl RenderCommand for DrawSprites {
-    type Param = (
-        SRes<SpriteBatches>,
-        SRes<RenderAssets<Image>>,
-        Query<'static, 'static, &'static ExtractedView>,
-    );
+    type Param = (SRes<SpriteBatches>, SRes<RenderAssets<Image>>);
 
     fn render<'w: 'f, 'f>(
-        (entity, images, views): (
-            Res<'w, SpriteBatches>,
-            Res<'w, RenderAssets<Image>>,
-            Query<&ExtractedView>,
-        ),
+        (entity, images): (Res<'w, SpriteBatches>, Res<'w, RenderAssets<Image>>),
         pass: &mut RenderPass<'_, 'f>,
-        view_id: Entity,
+        view: &ExtractedView,
     ) -> Result<(), bevy_3ds_render::pass::RenderError> {
         let entity = entity.into_inner();
         let images = images.into_inner();
-        let view = views.get(view_id).expect("failed to find view for draw");
         pass.set_vertex_shader(&SPRITE_SHADER, 0)
             .expect("failed to set sprite shader");
         let uniforms = Uniforms::build(&SPRITE_SHADER);

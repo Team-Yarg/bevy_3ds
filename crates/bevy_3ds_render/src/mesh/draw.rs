@@ -34,24 +34,21 @@ impl RenderCommand for MeshDraw {
         SRes<RenderAssets<Mesh>>,
         SRes<RenderAssets<Image>>,
         SRes<RenderMaterials>,
-        Query<'static, 'static, &'static ExtractedView>,
         SRes<ExtractedMeshes>,
     );
 
     fn render<'w: 'f, 'f>(
-        (meshes, images, assets, views, query): (
+        (meshes, images, assets, query): (
             Res<'w, RenderAssets<Mesh>>,
             Res<'w, RenderAssets<Image>>,
             Res<'w, RenderMaterials>,
-            Query<&ExtractedView>,
             Res<ExtractedMeshes>,
         ),
         pass: &mut crate::pass::RenderPass<'w, 'f>,
-        view_id: bevy::prelude::Entity,
+        view: &ExtractedView,
     ) -> Result<(), crate::pass::RenderError> {
         let meshes = meshes.into_inner();
         let images = images.into_inner();
-        let view = views.get(view_id).expect("failed to find view for draw");
 
         pass.set_vertex_shader(&MESH_SHADER, 0)
             .expect("failed to set mesh shader");
