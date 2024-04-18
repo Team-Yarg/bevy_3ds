@@ -9,7 +9,7 @@ use bevy::{
         system::{SystemParam, SystemParamItem},
     },
     math::Mat4,
-    render::color::Color,
+    render::{color::Color, view::ExtractedView},
 };
 use citro3d::{buffer::Primitive, render::Target, shader::Program, uniform::Index};
 use std::{marker::PhantomData, ops::Deref, sync::Arc};
@@ -184,7 +184,7 @@ pub trait RenderCommand {
     fn render<'w: 'f, 'f>(
         param: SystemParamItem<'w, '_, Self::Param>,
         pass: &mut RenderPass<'w, 'f>,
-        view: Entity,
+        view: &ExtractedView,
     ) -> Result<(), RenderError>;
 }
 

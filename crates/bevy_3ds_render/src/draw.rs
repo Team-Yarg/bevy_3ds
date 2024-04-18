@@ -7,6 +7,7 @@ use bevy::{
         system::{ReadOnlySystemParam, Resource, SystemState},
         world::World,
     },
+    render::view::ExtractedView,
 };
 
 use super::pass::{RenderCommand, RenderError, RenderPass};
@@ -30,7 +31,7 @@ where
         &mut self,
         world: &'g World,
         pass: &mut RenderPass<'g, 'f>,
-        view: Entity,
+        view: &ExtractedView,
     ) -> Result<(), RenderError> {
         let param = self.state.get_manual(world);
         C::render(param, pass, view)
@@ -51,7 +52,7 @@ pub trait Draw {
         &mut self,
         world: &'g World,
         pass: &mut RenderPass<'g, 'f>,
-        view: Entity,
+        view: &ExtractedView,
     ) -> Result<(), RenderError>;
 }
 
@@ -75,7 +76,7 @@ impl DrawCommands {
         &'f self,
         world: &'g World,
         pass: &mut RenderPass<'g, 'f>,
-        view: Entity,
+        view: &ExtractedView,
     ) -> Result<(), RenderError> {
         let mut cmds = self.inner.write().unwrap();
         for act in cmds.commands.iter_mut() {
