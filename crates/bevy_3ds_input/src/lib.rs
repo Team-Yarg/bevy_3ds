@@ -7,6 +7,7 @@ use bevy::input::{Axis, ButtonState, Input};
 use bevy::prelude::IntoSystemConfigs;
 use button::{Button3ds, Button3dsType};
 use ctru::services::hid::Hid;
+use ctru::services::hid::KeyPad;
 use event::{
     axis_3ds_event_system, button_3ds_event_system, event_system_3ds, Axis3dsChangedEvent,
     Button3dsChangedEvent, CtruButtonChangedEvent, Event3ds,
@@ -52,39 +53,82 @@ pub fn ctru_event_system(mut events: EventWriter<Event3ds>) {
     let mut hid = Hid::new().unwrap();
     hid.scan_input();
     for key in hid.keys_down() {
-        if let Ok(button_type) = Button3dsType::try_from(key) {
-            events.send(CtruButtonChangedEvent::new(button_type, ButtonState::Pressed).into());
+        if !matches!(
+            key,
+            KeyPad::CPAD_DOWN | KeyPad::CPAD_UP | KeyPad::CPAD_LEFT | KeyPad::CPAD_RIGHT,
+        ) {
+            if let Ok(button_type) = Button3dsType::try_from(key) {
+                events.send(CtruButtonChangedEvent::new(button_type, ButtonState::Pressed).into());
+            }
         }
     }
 
     for key in hid.keys_up() {
-        if let Ok(button_type) = Button3dsType::try_from(key) {
-            events.send(CtruButtonChangedEvent::new(button_type, ButtonState::Released).into());
+        if !matches!(
+            key,
+            KeyPad::CPAD_DOWN | KeyPad::CPAD_UP | KeyPad::CPAD_LEFT | KeyPad::CPAD_RIGHT,
+        ) {
+            if let Ok(button_type) = Button3dsType::try_from(key) {
+                events.send(CtruButtonChangedEvent::new(button_type, ButtonState::Released).into());
+            }
         }
     }
     let (cpad_x, cpad_y) = hid.circlepad_position();
     let mut cpad_x: f32 = cpad_x as f32;
     let mut cpad_y: f32 = cpad_y as f32;
+
     // calculate the distance from the origin
-    // clippy can't tell that rustc fails to work out which sqrt it should call
-    #[allow(clippy::unnecessary_cast)]
-    let distance = ((cpad_x.pow(2) + cpad_y.pow(2)) as f32).sqrt();
+    let distance = (cpad_x * cpad_x + cpad_y * cpad_y).sqrt();
 
     if distance < DEADZONE_BOUND {
         cpad_x = 0.0;
         cpad_y = 0.0;
+        events.send(
+            CtruButtonChangedEvent::new(Button3dsType::CPadDown, ButtonState::Released).into(),
+        );
+        events
+            .send(CtruButtonChangedEvent::new(Button3dsType::CPadUp, ButtonState::Released).into());
+        events.send(
+            CtruButtonChangedEvent::new(Button3dsType::CPadLeft, ButtonState::Released).into(),
+        );
+        events.send(
+            CtruButtonChangedEvent::new(Button3dsType::CPadRight, ButtonState::Released).into(),
+        );
     } else {
         if cpad_x < 0.0 {
-            cpad_x += DEADZONE_BOUND;
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CPadRight, ButtonState::Released).into(),
+            );
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CPadLeft, ButtonState::Pressed).into(),
+            );
         } else {
-            cpad_x -= DEADZONE_BOUND;
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CPadLeft, ButtonState::Released).into(),
+            );
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CPadRight, ButtonState::Pressed).into(),
+            );
         }
 
         if cpad_y < 0.0 {
-            cpad_y += DEADZONE_BOUND;
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CPadUp, ButtonState::Released).into(),
+            );
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CPadDown, ButtonState::Pressed).into(),
+            );
         } else {
-            cpad_y -= DEADZONE_BOUND;
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CPadDown, ButtonState::Released).into(),
+            );
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CPadUp, ButtonState::Pressed).into(),
+            );
         }
+
+        cpad_x -= cpad_x * DEADZONE_BOUND / distance;
+        cpad_y -= cpad_y * DEADZONE_BOUND / distance;
     }
     let adjusted_livezone_bound = LIVEZONE_BOUND - DEADZONE_BOUND; // so that scale is smooth
     events.send(
