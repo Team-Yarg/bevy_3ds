@@ -1,5 +1,7 @@
 use bevy::{
+    asset::Handle,
     ecs::system::{lifetimeless::SRes, Query, Res},
+    pbr::StandardMaterial,
     render::{mesh::Mesh, texture::Image, view::ExtractedView},
 };
 use citro3d::{macros::include_shader, texenv::Stage};
@@ -55,6 +57,8 @@ impl RenderCommand for MeshDraw {
         let uniforms = Uniforms::build(&MESH_SHADER);
         uniforms.bind_views(pass, view);
 
+        let mut curr_mat: Option<&Handle<StandardMaterial>> = None;
+
         for ExtractedMesh {
             mesh: mesh_handle,
             transform,
@@ -62,6 +66,10 @@ impl RenderCommand for MeshDraw {
         } in &query.extracted
         {
             debug!("draw: {mesh_handle:?}");
+            let mat_updated = curr_mat != Some(material_handle);
+            if mat_updated {
+                curr_mat.replace(material_handle);
+            }
             let Some(mesh) = meshes.get(mesh_handle) else {
                 debug!("mesh not loaded yet: {:?}", mesh_handle);
                 continue;
@@ -123,7 +131,9 @@ impl RenderCommand for MeshDraw {
                 );
             });
 
-            pass.set_lighting_material(material.to_owned().into());
+            if mat_updated {
+                pass.set_lighting_material(material.to_owned().into());
+            }
             //mat.set_uniforms(pass, &uniforms);
             pass.bind_vertex_uniform(uniforms.model_matrix, *transform);
 
@@ -135,11 +145,9 @@ impl RenderCommand for MeshDraw {
             pass.set_attr_info(&VertexAttrs::from_citro3d(MeshVertex::vert_attrs()));
             match &mesh.indices {
                 crate::mesh::gpu::BufKind::Array => {
-                    debug!("draw array");
                     pass.draw(mesh.prim_kind, vbo);
                 }
                 crate::mesh::gpu::BufKind::Elements { index_buf } => {
-                    debug!("draw indexed");
                     pass.draw_indexed(mesh.prim_kind, &vbo, index_buf);
                 }
             }

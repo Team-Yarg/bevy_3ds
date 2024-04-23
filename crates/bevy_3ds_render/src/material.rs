@@ -66,19 +66,23 @@ impl From<bevy::pbr::StandardMaterial> for Material {
         // - https://marmoset.co/posts/basic-theory-of-physically-based-rendering/
         // - https://google.github.io/filament/Filament.html
         //
-        luts.push((
-            LightLutId::D0,
-            LutInput::NormalHalf,
-            LightLut::from_fn(
-                |x| ((r * r) / (PI * ((x * x) * ((r * r) - 1.0) + 1.0).powf(2.0))).min(1.0),
-                false,
-            ),
-        ));
-        luts.push((
-            LightLutId::Fresnel,
-            LutInput::CosPhi,
-            LightLut::from_fn(|_| (1.0 - value.diffuse_transmission), false),
-        ));
+        if r > 0.089 {
+            luts.push((
+                LightLutId::D0,
+                LutInput::NormalHalf,
+                LightLut::from_fn(
+                    |x| ((r * r) / (PI * ((x * x) * ((r * r) - 1.0) + 1.0).powf(2.0))).min(1.0),
+                    false,
+                ),
+            ));
+        }
+        if value.diffuse_transmission > 0.0 {
+            luts.push((
+                LightLutId::Fresnel,
+                LutInput::CosPhi,
+                LightLut::from_fn(|_| (1.0 - value.diffuse_transmission), false),
+            ));
+        }
 
         let diffuse = Color::rgb(diffuse.x, diffuse.y, diffuse.z);
         let spec = Color::rgb(f_0.x, f_0.y, f_0.z);

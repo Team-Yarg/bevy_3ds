@@ -12,7 +12,7 @@ use bevy::{
     render::{color::Color, view::ExtractedView},
 };
 use citro3d::{buffer::Primitive, render::Target, shader::Program, uniform::Index};
-use std::{marker::PhantomData, ops::Deref, sync::Arc};
+use std::{char::MAX, marker::PhantomData, ops::Deref, sync::Arc};
 type Result<T, E = RenderError> = std::result::Result<T, E>;
 
 pub struct VboSlice<'vbo, 'buf> {
@@ -49,13 +49,21 @@ impl Default for VboBuffer {
     }
 }
 
+// Maximum number of LUTs the GPU can handle
+const MAX_LUTS_PER_PASS: usize = 99;
+
 pub struct RenderPass<'g, 'f> {
     gpu: &'g GpuDevice,
     _frame: &'f Citro3dFrame<'g>,
+    used_luts: usize,
 }
 impl<'g, 'f> RenderPass<'g, 'f> {
     pub fn new(gpu: &'g GpuDevice, _frame: &'f Citro3dFrame<'g>) -> Self {
-        Self { gpu, _frame }
+        Self {
+            gpu,
+            _frame,
+            used_luts: 0,
+        }
     }
     pub fn select_render_target(&mut self, target: &Target) {
         self.gpu
@@ -134,7 +142,11 @@ impl<'g, 'f> RenderPass<'g, 'f> {
         let mut gpu = self.gpu.inst();
         let mut light_env = gpu.light_env_mut();
         for (i, u, d) in mat.luts {
+            if self.used_luts >= MAX_LUTS_PER_PASS {
+                panic!("Too many lighting LUTs, the maximum is {MAX_LUTS_PER_PASS}. You have too many unique materials in the scene for the 3ds GPU to handle");
+            }
             light_env.as_mut().connect_lut(i, u, d);
+            self.used_luts += 1;
         }
         light_env
             .as_mut()

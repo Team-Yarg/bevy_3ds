@@ -60,11 +60,20 @@ fn extract_meshes(
             continue;
         }
         debug!("extract: {mesh_handle:?}");
-
-        extracted.extracted.push(ExtractedMesh {
+        let to = &mut extracted.extracted;
+        let add = ExtractedMesh {
             mesh: mesh_handle.to_owned(),
             transform: transform.compute_matrix(),
             material: material_handle.to_owned(),
-        })
+        };
+        if let Some(pos) = to
+            .iter()
+            .rev()
+            .position(|mesh| mesh.material == *material_handle)
+        {
+            to.insert(to.len() - pos, add);
+        } else {
+            to.push(add);
+        }
     }
 }
