@@ -61,7 +61,7 @@ pub enum Axis3dsType {
     /// The horizontal value of the right CSTICK.
     CStickX,
     /// The vertical value of the right CSTICK.
-    CstickY,
+    CStickY,
 
     // volume slider
     Volume,

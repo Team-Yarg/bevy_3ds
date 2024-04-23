@@ -14,6 +14,8 @@ use event::{
 };
 use num_traits::pow::Pow;
 
+use std::mem::MaybeUninit;
+
 pub mod axis;
 pub mod button;
 pub mod event;
@@ -46,6 +48,18 @@ impl Plugin for InputPlugin {
     }
 }
 
+// this relies on irrst already being initialised, which is the case currently
+// but cannot be depended on in general (it will probably crash on Old 3DS)
+pub fn cstick_position() -> (i16, i16) {
+    let res = unsafe {
+        let mut res = MaybeUninit::uninit();
+        ctru_sys::irrstCstickRead(res.as_mut_ptr());
+        res.assume_init()
+    };
+
+    (res.dx, res.dy)
+}
+
 const DEADZONE_BOUND: f32 = 20.0;
 const LIVEZONE_BOUND: f32 = 150.0;
 pub fn ctru_event_system(mut events: EventWriter<Event3ds>) {
@@ -53,29 +67,19 @@ pub fn ctru_event_system(mut events: EventWriter<Event3ds>) {
     let mut hid = Hid::new().unwrap();
     hid.scan_input();
     for key in hid.keys_down() {
-        if !matches!(
-            key,
-            KeyPad::CPAD_DOWN | KeyPad::CPAD_UP | KeyPad::CPAD_LEFT | KeyPad::CPAD_RIGHT,
-        ) {
-            if let Ok(button_type) = Button3dsType::try_from(key) {
-                events.send(CtruButtonChangedEvent::new(button_type, ButtonState::Pressed).into());
-            }
+        if let Ok(button_type) = Button3dsType::try_from(key) {
+            events.send(CtruButtonChangedEvent::new(button_type, ButtonState::Pressed).into());
         }
     }
 
     for key in hid.keys_up() {
-        if !matches!(
-            key,
-            KeyPad::CPAD_DOWN | KeyPad::CPAD_UP | KeyPad::CPAD_LEFT | KeyPad::CPAD_RIGHT,
-        ) {
-            if let Ok(button_type) = Button3dsType::try_from(key) {
-                events.send(CtruButtonChangedEvent::new(button_type, ButtonState::Released).into());
-            }
+        if let Ok(button_type) = Button3dsType::try_from(key) {
+            events.send(CtruButtonChangedEvent::new(button_type, ButtonState::Released).into());
         }
     }
     let (cpad_x, cpad_y) = hid.circlepad_position();
-    let mut cpad_x: f32 = cpad_x as f32;
-    let mut cpad_y: f32 = cpad_y as f32;
+    let mut cpad_x = cpad_x as f32;
+    let mut cpad_y = cpad_y as f32;
 
     // calculate the distance from the origin
     let distance = (cpad_x * cpad_x + cpad_y * cpad_y).sqrt();
@@ -136,6 +140,75 @@ pub fn ctru_event_system(mut events: EventWriter<Event3ds>) {
     );
     events.send(
         Axis3dsChangedEvent::new(Axis3dsType::CPadY, cpad_y / adjusted_livezone_bound).into(),
+    );
+
+    let (cstick_x, cstick_y) = cstick_position();
+    let mut cstick_x = cstick_x as f32;
+    let mut cstick_y = cstick_y as f32;
+
+    // calculate the distance from the origin
+    let distance = (cstick_x * cstick_x + cstick_y * cstick_y).sqrt();
+
+    if distance < DEADZONE_BOUND {
+        cstick_x = 0.0;
+        cstick_y = 0.0;
+        events.send(
+            CtruButtonChangedEvent::new(Button3dsType::CStickDown, ButtonState::Released).into(),
+        );
+        events.send(
+            CtruButtonChangedEvent::new(Button3dsType::CStickUp, ButtonState::Released).into(),
+        );
+        events.send(
+            CtruButtonChangedEvent::new(Button3dsType::CStickLeft, ButtonState::Released).into(),
+        );
+        events.send(
+            CtruButtonChangedEvent::new(Button3dsType::CStickRight, ButtonState::Released).into(),
+        );
+    } else {
+        if cstick_x < 0.0 {
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CStickRight, ButtonState::Released)
+                    .into(),
+            );
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CStickLeft, ButtonState::Pressed).into(),
+            );
+        } else {
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CStickLeft, ButtonState::Released)
+                    .into(),
+            );
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CStickRight, ButtonState::Pressed)
+                    .into(),
+            );
+        }
+
+        if cstick_y < 0.0 {
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CStickUp, ButtonState::Released).into(),
+            );
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CStickDown, ButtonState::Pressed).into(),
+            );
+        } else {
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CStickDown, ButtonState::Released)
+                    .into(),
+            );
+            events.send(
+                CtruButtonChangedEvent::new(Button3dsType::CStickUp, ButtonState::Pressed).into(),
+            );
+        }
+
+        cstick_x -= cstick_x * DEADZONE_BOUND / distance;
+        cstick_y -= cstick_y * DEADZONE_BOUND / distance;
+    }
+    events.send(
+        Axis3dsChangedEvent::new(Axis3dsType::CStickX, cstick_x / adjusted_livezone_bound).into(),
+    );
+    events.send(
+        Axis3dsChangedEvent::new(Axis3dsType::CStickY, cstick_y / adjusted_livezone_bound).into(),
     );
 
     let volume: f32 = hid.volume_slider();
