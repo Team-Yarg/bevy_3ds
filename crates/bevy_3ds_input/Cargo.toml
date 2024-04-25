@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.12.1", default-features = false }
+ctru-sys = { git = "https://github.com/rust3ds/ctru-rs" }
 
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
 num-traits = "0.2.17"
