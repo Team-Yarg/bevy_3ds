@@ -66,6 +66,44 @@ impl On3dsScreen {
     }
 }
 
+#[derive(Component, Clone, Copy, ExtractComponent, PartialEq, Eq)]
+pub struct CameraID(u32);
+
+impl Default for CameraID {
+    fn default() -> Self {
+        Self(0)
+    }
+}
+
+impl CameraID {
+    pub fn into_inner(self) -> u32 {
+        self.0
+    }
+}
+
+#[derive(Component, Clone, Copy, ExtractComponent)]
+pub enum RenderOn {
+    Specific(Vec<CameraID>),
+    Only(CameraID),
+    Except(CameraID),
+}
+
+impl Default for RenderOn {
+    fn default() -> Self {
+        Self::Only(CameraID::default())
+    }
+}
+
+impl RenderOn {
+    pub fn should_render_in(&self, cam: CameraID) -> bool {
+        match self {
+            RenderOn::Specific(ids) => ids.contains(&cam),
+            RenderOn::Only(id) => id == &cam,
+            RenderOn::Except(id) => id != &cam,
+        }
+    }
+}
+
 impl Default for GfxInstance {
     fn default() -> Self {
         Self(

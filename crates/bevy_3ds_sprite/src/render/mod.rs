@@ -24,7 +24,7 @@ use bevy_3ds_render::{
     pipeline::VertexAttrs,
     shader::PicaShader,
     vertattr::{VertAttrBuilder, VertAttrs},
-    RenderAssets,
+    CameraID, RenderAssets,
 };
 
 #[repr(C)]
@@ -164,6 +164,7 @@ impl RenderCommand for DrawSprites {
         (entity, images): (Res<'w, SpriteBatches>, Res<'w, RenderAssets<Image>>),
         pass: &mut RenderPass<'_, 'f>,
         view: &ExtractedView,
+        _: CameraID,
     ) -> Result<(), bevy_3ds_render::pass::RenderError> {
         let entity = entity.into_inner();
         let images = images.into_inner();

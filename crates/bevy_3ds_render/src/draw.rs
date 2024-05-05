@@ -10,6 +10,8 @@ use bevy::{
     render::view::ExtractedView,
 };
 
+use crate::CameraID;
+
 use super::pass::{RenderCommand, RenderError, RenderPass};
 
 struct RenderCommandState<C: RenderCommand> {
@@ -32,9 +34,10 @@ where
         world: &'g World,
         pass: &mut RenderPass<'g, 'f>,
         view: &ExtractedView,
+        cam: CameraID
     ) -> Result<(), RenderError> {
         let param = self.state.get_manual(world);
-        C::render(param, pass, view)
+        C::render(param, pass, view, cam)
     }
 
     fn prepare(&mut self, world: &'_ World) {
@@ -53,6 +56,7 @@ pub trait Draw {
         world: &'g World,
         pass: &mut RenderPass<'g, 'f>,
         view: &ExtractedView,
+        cam: CameraID,
     ) -> Result<(), RenderError>;
 }
 
@@ -77,10 +81,11 @@ impl DrawCommands {
         world: &'g World,
         pass: &mut RenderPass<'g, 'f>,
         view: &ExtractedView,
+        cam: CameraID,
     ) -> Result<(), RenderError> {
         let mut cmds = self.inner.write().unwrap();
         for act in cmds.commands.iter_mut() {
-            act.draw(world, pass, view)?;
+            act.draw(world, pass, view, cam)?;
         }
         Ok(())
     }

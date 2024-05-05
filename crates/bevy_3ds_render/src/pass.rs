@@ -197,6 +197,7 @@ pub trait RenderCommand {
         param: SystemParamItem<'w, '_, Self::Param>,
         pass: &mut RenderPass<'w, 'f>,
         view: &ExtractedView,
+        cam: CameraID,
     ) -> Result<(), RenderError>;
 }
 

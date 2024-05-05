@@ -48,6 +48,7 @@ impl RenderCommand for MeshDraw {
         ),
         pass: &mut crate::pass::RenderPass<'w, 'f>,
         view: &ExtractedView,
+        cam: CameraID,
     ) -> Result<(), crate::pass::RenderError> {
         let meshes = meshes.into_inner();
         let images = images.into_inner();
@@ -63,8 +64,13 @@ impl RenderCommand for MeshDraw {
             mesh: mesh_handle,
             transform,
             material: material_handle,
+            render_on: render,
         } in &query.extracted
         {
+            if !render.should_render_in(cam) {
+                continue;
+            }
+
             debug!("draw: {mesh_handle:?}");
             let mat_updated = curr_mat != Some(material_handle);
             if mat_updated {
