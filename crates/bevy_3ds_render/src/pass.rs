@@ -1,5 +1,5 @@
 use crate::{
-    frame::Citro3dFrame, gpu_buffer::LinearBuffer, lighting::GpuLight, material::Material,
+    frame::Citro3dFrame, gpu_buffer::LinearBuffer, lighting::GpuLight, material::Material, CameraID,
 };
 
 use super::{pipeline::VertexAttrs, shader::PicaShader, GpuDevice, GpuImage};

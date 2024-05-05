@@ -11,7 +11,7 @@ use bevy::{
 };
 use log::debug;
 
-use crate::{draw::AppDrawCommandsExtra, prep_asset::PrepareAssetsPlugin, RenderOn};
+use crate::{draw::AppDrawCommandsExtra, prep_asset::PrepareAssetsPlugin, CameraID, RenderOn};
 
 use super::draw::MeshDraw;
 
@@ -19,10 +19,7 @@ pub struct MeshPlugin;
 
 impl Plugin for MeshPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins((
-            PrepareAssetsPlugin::<Mesh, Image>::default(),
-            ExtractComponentPlugin::<CameraID>::default(),
-        ));
+        app.add_plugins(PrepareAssetsPlugin::<Mesh, Image>::default());
 
         if let Ok(render_app) = app.get_sub_app_mut(RenderApp) {
             render_app
@@ -65,12 +62,17 @@ fn extract_meshes(
             continue;
         }
         debug!("extract: {mesh_handle:?}");
+
+        debug!("render: {render:?}");
+        let render_on = render.map(|c| c.to_owned()).unwrap_or_default();
+        debug!("render_on: {render_on:?}");
+
         let to = &mut extracted.extracted;
         let add = ExtractedMesh {
             mesh: mesh_handle.to_owned(),
             transform: transform.compute_matrix(),
             material: material_handle.to_owned(),
-            render_on: render.unwrap_or_default().to_owned(),
+            render_on,
         };
         if let Some(pos) = to
             .iter()

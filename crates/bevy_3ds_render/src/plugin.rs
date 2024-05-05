@@ -33,7 +33,7 @@ use ctru::services::gfx::{
 };
 
 use crate::lighting::GpuLights;
-use crate::{lighting, materials, On3dsScreen, CameraID};
+use crate::{lighting, materials, CameraID, On3dsScreen, RenderOn};
 
 use super::draw::DrawCommands;
 use super::pass::RenderPass;
@@ -114,6 +114,7 @@ impl Plugin for Render3dsPlugin {
             lighting::LightingRenderPlugin,
             ExtractComponentPlugin::<On3dsScreen>::default(),
             ExtractComponentPlugin::<CameraID>::default(),
+            ExtractComponentPlugin::<RenderOn>::default(),
         ));
 
         app.register_type::<color::Color>()
@@ -230,7 +231,12 @@ fn render_system(world: &mut World) {
         NonSend<GfxInstance>,
         Res<DrawCommands>,
         Res<ClearColor>,
-        Query<(&ExtractedCamera, &ExtractedView, Option<&On3dsScreen>, Option<&CameraID>)>,
+        Query<(
+            &ExtractedCamera,
+            &ExtractedView,
+            Option<&On3dsScreen>,
+            Option<&CameraID>,
+        )>,
         Res<GpuLights>,
     )> = SystemState::new(world);
     let (gpu, gfx, commands, clear_colour, cameras, lights) = st.get(world);
@@ -327,7 +333,7 @@ fn render_system(world: &mut World) {
         for (_, view, ty, cam) in &cameras {
             let view_mtx = view.transform.compute_matrix().inverse();
 
-            let cam = cam.unwrap_or_default().to_owned();
+            let cam = cam.map(|c| c.to_owned()).unwrap_or_default();
 
             if use_3d {
                 match ty.copied().unwrap_or_default() {

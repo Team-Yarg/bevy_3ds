@@ -58,7 +58,7 @@ fn prepare_point_lights(
     gpu: Res<GpuDevice>,
     mut gpu_lights: ResMut<GpuLights>,
 ) {
-    let mut gpu_raw = gpu.inst();
+    let mut gpu_raw: std::sync::MutexGuard<citro3d::Instance> = gpu.inst();
     let mut light_env = gpu_raw.light_env_mut();
     let nb_lights = lights.iter().len();
     ensure_all_lights_created(light_env.as_mut(), nb_lights);

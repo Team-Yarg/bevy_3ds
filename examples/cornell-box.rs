@@ -23,7 +23,7 @@ use bevy::{
     ecs::system::Commands,
     hierarchy::BuildChildren,
 };
-use bevy_3ds_render::On3dsScreen;
+use bevy_3ds_render::{pending_render_system, CameraID, On3dsScreen, RenderOn};
 
 mod shims;
 
@@ -37,6 +37,7 @@ fn main() {
     app.add_plugins(bevy_3ds::DefaultPlugins);
     app.add_systems(Startup, setup);
     app.add_systems(Update, update);
+    app.add_systems(Update, pending_render_system);
 
     app.run();
 }
@@ -85,7 +86,8 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
         scene: assets.load("cornell-box.glb#Scene0"),
         ..Default::default()
     })
-    .insert(CornellBox);
+    .insert(CornellBox)
+    .insert(RenderOn::Only(0.into()).make_pending());
 
     cmds.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 0.0, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -100,4 +102,11 @@ fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
         transform: Transform::from_xyz(0.0, 0.0, 0.2),
         ..Default::default()
     });
+
+    cmds.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(0.0, 0.0, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    })
+    .insert(On3dsScreen::Bottom)
+    .insert(CameraID::from(1));
 }

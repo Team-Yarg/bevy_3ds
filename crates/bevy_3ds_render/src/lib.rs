@@ -3,7 +3,14 @@
 use self::pipeline::VertexAttrs;
 use bevy::{
     asset::Handle,
-    ecs::{component::Component, schedule::SystemSet, system::Resource},
+    ecs::{
+        component::Component,
+        entity::Entity,
+        query::Without,
+        schedule::SystemSet,
+        system::{Commands, Query, Resource},
+    },
+    hierarchy::Children,
     render::{
         extract_component::ExtractComponent, render_resource::PrimitiveTopology, texture::Image,
         view::ExtractedView,
@@ -66,12 +73,18 @@ impl On3dsScreen {
     }
 }
 
-#[derive(Component, Clone, Copy, ExtractComponent, PartialEq, Eq)]
+#[derive(Component, Clone, Copy, ExtractComponent, PartialEq, Eq, Debug)]
 pub struct CameraID(u32);
 
 impl Default for CameraID {
     fn default() -> Self {
         Self(0)
+    }
+}
+
+impl From<u32> for CameraID {
+    fn from(value: u32) -> Self {
+        Self(value)
     }
 }
 
@@ -81,7 +94,7 @@ impl CameraID {
     }
 }
 
-#[derive(Component, Clone, Copy, ExtractComponent)]
+#[derive(Component, Clone, ExtractComponent, Debug)]
 pub enum RenderOn {
     Specific(Vec<CameraID>),
     Only(CameraID),
@@ -101,6 +114,39 @@ impl RenderOn {
             RenderOn::Only(id) => id == &cam,
             RenderOn::Except(id) => id != &cam,
         }
+    }
+
+    pub fn make_pending(self) -> PendingRenderOn {
+        PendingRenderOn(self)
+    }
+}
+
+#[derive(Component)]
+pub struct PendingRenderOn(RenderOn);
+
+fn set_render_on(
+    commands: &mut Commands,
+    children: &Children,
+    pending_render_on: &PendingRenderOn,
+    scene_elements: &Query<&Children, Without<PendingRenderOn>>,
+) {
+    for child in children {
+        if let Ok(children) = scene_elements.get(*child) {
+            set_render_on(commands, children, pending_render_on, scene_elements)
+        }
+
+        commands.entity(*child).insert(pending_render_on.0.clone());
+    }
+}
+
+pub fn pending_render_system(
+    mut commands: Commands,
+    scenes: Query<(Entity, &Children, &PendingRenderOn)>,
+    scene_elements: Query<&Children, Without<PendingRenderOn>>,
+) {
+    for (entity, children, pending_render_on) in &scenes {
+        set_render_on(&mut commands, children, pending_render_on, &scene_elements);
+        commands.entity(entity).remove::<PendingRenderOn>();
     }
 }
 

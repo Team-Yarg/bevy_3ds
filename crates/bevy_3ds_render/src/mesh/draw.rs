@@ -9,15 +9,7 @@ use lazy_static::lazy_static;
 use log::debug;
 
 use crate::{
-    material::Uniforms,
-    materials::RenderMaterials,
-    mesh::{gpu::MeshVertex, plugin::ExtractedMesh},
-    pass::{RenderCommand, VboBuffer},
-    pipeline::VertexAttrs,
-    shader::PicaShader,
-    texture::BLANK_TEXTURE,
-    vertattr::VertAttrBuilder,
-    RenderAssets,
+    material::Uniforms, materials::RenderMaterials, mesh::{gpu::MeshVertex, plugin::ExtractedMesh}, pass::{RenderCommand, VboBuffer}, pipeline::VertexAttrs, shader::PicaShader, texture::BLANK_TEXTURE, vertattr::VertAttrBuilder, CameraID, RenderAssets
 };
 
 use super::plugin::ExtractedMeshes;
