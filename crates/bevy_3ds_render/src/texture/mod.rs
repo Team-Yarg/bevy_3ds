@@ -9,7 +9,7 @@ use bevy::{
         RenderApp,
     },
 };
-use citro3d::texture::{Tex, TexFormat, TexParams};
+use citro3d::texture::{Tex, TexFormat, TexParams, TextureFilterParam};
 use log::{trace, warn};
 use swizzle_3ds::pix::ImageView;
 
@@ -147,6 +147,8 @@ impl GpuImage {
         )
         .ok()?;
         let bytes = swiz_img.as_raw();
+
+        //tex.set_filter(TextureFilterParam::Linear, TextureFilterParam::Linear);
 
         tex.upload(bytes);
         Some(Self(tex))
