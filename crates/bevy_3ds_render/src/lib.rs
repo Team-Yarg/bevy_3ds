@@ -85,6 +85,7 @@ pub struct GpuDevice {
 impl Default for GpuDevice {
     fn default() -> Self {
         let instance = Mutex::new(citro3d::Instance::new().unwrap());
+        unsafe {citro3d_sys::C3D_AlphaTest(true, ctru_sys::GPU_GREATER, 0)};
         Self { instance }
     }
 }
