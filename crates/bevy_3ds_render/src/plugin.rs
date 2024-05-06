@@ -243,15 +243,19 @@ fn render_system(world: &mut World) {
     let gpu = gpu.into_inner();
     gfx.0.wait_for_vblank();
 
-    let use_3d = cameras.iter().any(|c| {
-        c.2.is_some_and(|s| {
-            if let On3dsScreen::Top(t) = s {
-                t.is_some()
-            } else {
-                false
-            }
-        })
-    });
+    let slider_val = ctru::os::current_3d_slider_state();
+
+    //#[allow(clippy::float_cmp)]
+    let use_3d = slider_val > 0.0
+        && cameras.iter().any(|c| {
+            c.2.is_some_and(|s| {
+                if let On3dsScreen::Top(t) = s {
+                    t.is_some()
+                } else {
+                    false
+                }
+            })
+        });
 
     let top_screen_3d: Option<TopScreen3D> = if use_3d {
         Some((&gfx.0.top_screen).into())
